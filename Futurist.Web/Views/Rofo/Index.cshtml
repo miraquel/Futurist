@@ -1,0 +1,107 @@
+﻿@model Futurist.Service.Dto.Common.ServiceResponse<Futurist.Service.Dto.Common.PagedListDto<Futurist.Service.Dto.RofoDto>>
+
+@{
+    ViewBag.Title = "Starter";
+    ViewBag.pTitle = "Starter";
+    ViewBag.pageTitle = "Pages";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <!--datatable css-->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" />
+    <!--datatable responsive css-->
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-12">
+        @if (ViewBag.Errors != null)
+        {
+            @foreach(var error in ViewBag.Errors)
+            {
+                <div class="alert alert-danger mb-xl-0" role="alert">
+                    @error
+                </div>
+            }
+        }
+        @if (ViewBag.Message != null)
+        {
+            <div class="alert alert-success mb-xl-0" role="alert">
+                @ViewBag.Message
+            </div>
+        }
+    </div>
+</div>
+                
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0 flex-grow-1">Base Example</h4>
+                <form asp-controller="Rofo" asp-action="Import" method="post" enctype="multipart/form-data">
+                    <input type="file" id="fileInput" name="file" style="display: none;" onchange="this.form.submit()">
+                    <label for="fileInput" class="btn btn-primary">
+                        <svg class="me-2" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                            <path fill="currentColor"
+                                  d="M18 15v3H6v-3H4v3c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-3zM7 9l1.41 1.41L11 7.83V16h2V7.83l2.59 2.58L17 9l-5-5z"/>
+                        </svg>
+                        Upload Data
+                    </label>
+                </form>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <table id="datatables-rofo" class="display table table-bordered dt-responsive" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>Room</th>
+                        <th>Rofo Date</th>
+                        <th>Item Id</th>
+                        <th>Item Name</th>
+                        <th>Qty</th>
+                        <th>Qty Rem</th>
+                        <th>Created By</th>
+                        <th>Created Date</th>
+                        <th>RecId</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>Room</th>
+                            <th>Rofo Date</th>
+                            <th>Item Id</th>
+                            <th>Item Name</th>
+                            <th>Qty</th>
+                            <th>Qty Rem</th>
+                            <th>Created By</th>
+                            <th>Created Date</th>
+                            <th>RecId</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
+            
+@section scripts{
+    <!--datatable js-->
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <!-- gridjs init -->
+    <script src="~/assets/js/pages/rofo.index.js"></script>
+}

@@ -1,0 +1,23 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "Access Denied";
+    Layout = "_Layout";
+}
+
+<h2>Access Denied</h2>
+<p>You do not have permission to access this resource.</p>
+
+@if (!string.IsNullOrEmpty(ViewBag.ReturnUrl))
+{
+    <p>
+        <a href="@ViewBag.ReturnUrl" class="btn btn-primary">Try again</a>
+    </p>
+}
+
+@if (!string.IsNullOrEmpty(ViewBag.PreviousUrl))
+{
+    <p>
+        <a href="@ViewBag.PreviousUrl" class="btn btn-secondary">Return to the previous page</a>
+    </p>
+}

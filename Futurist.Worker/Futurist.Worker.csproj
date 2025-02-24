@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>dotnet-Futurist.Worker-7ffa4497-9ab2-404d-b5b6-c02e10848533</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Hangfire.Core" Version="1.8.18" />
+        <PackageReference Include="Hangfire.SqlServer" Version="1.8.18" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2"/>
+    </ItemGroup>
+</Project>

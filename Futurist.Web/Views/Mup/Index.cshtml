@@ -1,0 +1,103 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "MUP Calculation";
+    Layout = "_Layout";
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>BOM Standard</h1>
+                <!-- Dropdown for room ids -->
+                <div class="form-group mb-3">
+                    <label for="roomSelect">Select Room:</label>
+                    <select id="roomSelect" name="roomId" class="form-control">
+                        @foreach(var id in ViewBag.RoomIds)
+                        {
+                            <option value="@id">@id</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <button class="btn btn-success" id="processBomLink" onclick="processBom()">Process BOM</button>
+                    <button class="btn btn-warning" id="checkErrorBtn" onclick="loadBomErrors()">Check Errors</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <table id="bomErrorTable" class="display" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>Room</th>
+                        <th>Product Id</th>
+                        <th>Product Name</th>
+                        <th>Bom Id</th>
+                        <th>Item Id</th>
+                        <th>Item Name</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Data is loaded via AJAX -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" />
+    
+    <script>
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        // 
+        function processBom(){
+            const roomId = $("#roomSelect").val();
+            $.ajax({
+                url: '/api/BomStdApi/ProcessBomStd',
+                type: 'POST',
+                data: { roomId: roomId },
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader("RequestVerificationToken", token);
+                },
+                success: function(data){
+                    alert(data);
+                },
+                error: function(err){
+                    alert(err);
+                }
+            });
+        }
+
+        // Load errors using selected room id from dropdown
+        function loadBomErrors(){
+            const roomId = $("#roomSelect").val();
+            $('#bomErrorTable').DataTable({
+                destroy: true,
+                ajax: {
+                    url: '/api/BomStdApi/BomErrorCheck/',
+                    data: { roomId: roomId },
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("RequestVerificationToken", token);
+                    },
+                    dataSrc: '',
+                },
+                columns: [
+                    { data: 'Room', defaultContent: '' },
+                    { data: 'ProductId', defaultContent: '' },
+                    { data: 'ProductName', defaultContent: '' },
+                    { data: 'BomId', defaultContent: '' },
+                    { data: 'ItemId', defaultContent: '' },
+                    { data: 'ItemName', defaultContent: '' }
+                ]
+            });
+        }
+    
+    </script>
+}
