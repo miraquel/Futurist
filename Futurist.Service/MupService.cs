@@ -2,6 +2,8 @@
 using Futurist.Service.Dto;
 using Futurist.Service.Dto.Common;
 using Futurist.Service.Interface;
+using Hangfire;
+using Hangfire.Storage;
 
 namespace Futurist.Service;
 
@@ -25,7 +27,7 @@ public class MupService : IMupService
             return new ServiceResponse<IEnumerable<MupSpDto>>
             {
                 Message = ServiceMessageConstants.MupProcessed,
-                Data = _mapper.MapToIEnumerableDto(await _unitOfWork.MupRepository.ProcessMupAsync(roomId))
+                Data = _mapper.MapToIEnumerableDto(response)
             };
         }
         catch (Exception e)
@@ -46,7 +48,7 @@ public class MupService : IMupService
             return new ServiceResponse<IEnumerable<MupSpDto>>
             {
                 Message = ServiceMessageConstants.MupResultFound,
-                Data = _mapper.MapToIEnumerableDto(await _unitOfWork.MupRepository.MupResultAsync(roomId))
+                Data = _mapper.MapToIEnumerableDto(response)
             };
         }
         catch (Exception e)
@@ -77,5 +79,20 @@ public class MupService : IMupService
                 Errors = [e.Message]
             };
         }
+    }
+
+    public void ProcessMupJob(int roomId)
+    {
+        BackgroundJob.Enqueue(() => ProcessMupAsync(roomId));
+    }
+
+    public IEnumerable<int> MupInProcessRoomIds()
+    {
+        var monitoringApi = JobStorage.Current.GetMonitoringApi();
+        var processingJobs = monitoringApi.ProcessingJobs(0, 1000);
+        var processingJobsFiltered = processingJobs.Where(j => j.Value.Job.Method.Name == nameof(ProcessMupAsync));
+        
+        // get the room ids
+        return processingJobsFiltered.Select(j => j.Value.Job.Args[0] as int? ?? 0);
     }
 }

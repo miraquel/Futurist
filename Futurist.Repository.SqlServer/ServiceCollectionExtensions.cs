@@ -14,6 +14,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRofoRepository, RofoRepository>();
         services.AddScoped<IBomStdRepository, BomStdRepository>();
         services.AddScoped<ICommonRepository, CommonRepository>();
+        services.AddScoped<IMupRepository, MupRepository>();
         
         services.AddScoped<IDbConnection>(s =>
         {

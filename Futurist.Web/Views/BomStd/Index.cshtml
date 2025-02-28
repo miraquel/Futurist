@@ -95,7 +95,32 @@
                     { data: 'BomId', defaultContent: '' },
                     { data: 'ItemId', defaultContent: '' },
                     { data: 'ItemName', defaultContent: '' }
-                ]
+                ],
+                searchDelay: 1000,
+                processing: true,
+                paging: true,
+                searching: true,
+                ordering: true,
+                initComplete: function () {
+                    this.api()
+                        .columns()
+                        .every(function () {
+                            let column = this;
+                            let title = column.footer().textContent;
+
+                            // Create input element
+                            let input = document.createElement('input');
+                            input.placeholder = title;
+                            column.footer().replaceChildren(input);
+
+                            // Debounced event listener for user input (1 second delay)
+                            input.addEventListener('keyup', debounce(() => {
+                                if (column.search() !== input.value) {
+                                    column.search(input.value).draw();
+                                }
+                            }, 1000));
+                        });
+                }
             });
         }
     

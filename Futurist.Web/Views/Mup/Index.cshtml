@@ -5,13 +5,21 @@
     Layout = "_Layout";
 }
 
+@section styles{
+    <!--datatable css-->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" />
+    <!--datatable responsive css-->
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
+}
+
 @Html.AntiForgeryToken()
 
 <div class="row">
     <div class="col-lg-12">
         <div class="card">
             <div class="card-header">
-                <h1>BOM Standard</h1>
+                <h1>MUP Service</h1>
                 <!-- Dropdown for room ids -->
                 <div class="form-group mb-3">
                     <label for="roomSelect">Select Room:</label>
@@ -24,22 +32,38 @@
                 </div>
 
                 <div class="mb-3">
-                    <button class="btn btn-success" id="processBomLink" onclick="processBom()">Process BOM</button>
-                    <button class="btn btn-warning" id="checkErrorBtn" onclick="loadBomErrors()">Check Errors</button>
+                    <button class="btn btn-success" id="processMupLink" onclick="processMup()">Process MUP</button>
+                    <button class="btn btn-warning" id="checkMupBtn" onclick="loadMupResult()">Check MUP Result</button>
                 </div>
             </div>
             <div class="card-body">
-                <table id="bomErrorTable" class="display" style="width:100%">
+                <table id="mupResultTable" class="display table table-bordered dt-responsive" style="width:100%">
                     <thead>
                     <tr>
                         <th>Room</th>
+                        <th>Rofo Id</th>
                         <th>Product Id</th>
                         <th>Product Name</th>
-                        <th>Bom Id</th>
-                        <th>Item Id</th>
+                        <th>Rofo Date</th>
+                        <th>Qty Rofo</th>
+                        <th>Mup Item Id</th>
                         <th>Item Name</th>
+                        <th>Group Substitusi</th>
                     </tr>
                     </thead>
+                    <tfoot>
+                    <tr>
+                        <th>Room</th>
+                        <th>Rofo Id</th>
+                        <th>Product Id</th>
+                        <th>Product Name</th>
+                        <th>Rofo Date</th>
+                        <th>Qty Rofo</th>
+                        <th>Mup Item Id</th>
+                        <th>Item Name</th>
+                        <th>Group Substitusi</th>
+                    </tr>
+                    </tfoot>
                     <tbody>
                     <!-- Data is loaded via AJAX -->
                     </tbody>
@@ -50,19 +74,26 @@
 </div>
 
 @section Scripts {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" />
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
     
     <script>
         const token = $('input[name="__RequestVerificationToken"]').val();
-        // 
-        function processBom(){
+        
+        function processMup(){
             const roomId = $("#roomSelect").val();
             $.ajax({
-                url: '/api/BomStdApi/ProcessBomStd',
+                url: '/api/MupApi/ProcessMup',
                 type: 'POST',
-                data: { roomId: roomId },
+                data: JSON.stringify(parseInt(roomId) || 0),
+                contentType: 'application/json',
                 beforeSend: function(xhr) {
                     xhr.setRequestHeader("RequestVerificationToken", token);
                 },
@@ -75,29 +106,66 @@
             });
         }
 
-        // Load errors using selected room id from dropdown
-        function loadBomErrors(){
+        function loadMupResult(){
             const roomId = $("#roomSelect").val();
-            $('#bomErrorTable').DataTable({
-                destroy: true,
+            if ($.fn.DataTable.isDataTable('#mupResultTable')) {
+                $('#mupResultTable').DataTable().clear().destroy();
+            }
+            $('#mupResultTable').DataTable({
+                autoWidth: false,
+                responsive: true,
+                scrollX: true,
                 ajax: {
-                    url: '/api/BomStdApi/BomErrorCheck/',
+                    url: '/api/MupApi/MupResult',
                     data: { roomId: roomId },
                     beforeSend: function(xhr) {
                         xhr.setRequestHeader("RequestVerificationToken", token);
                     },
-                    dataSrc: '',
+                    dataSrc: function(json) {
+                        return json;
+                    }
                 },
                 columns: [
-                    { data: 'Room', defaultContent: '' },
-                    { data: 'ProductId', defaultContent: '' },
-                    { data: 'ProductName', defaultContent: '' },
-                    { data: 'BomId', defaultContent: '' },
-                    { data: 'ItemId', defaultContent: '' },
-                    { data: 'ItemName', defaultContent: '' }
-                ]
+                    { data: 'room', width: '80px', defaultContent: '' },
+                    { data: 'rofoId', width: '80px', defaultContent: '' },
+                    { data: 'productId', width: '100px', defaultContent: '' },
+                    { data: 'productName', width: '150px', defaultContent: '' },
+                    { data: 'rofoDate', width: '120px', defaultContent: '' },
+                    { data: 'qtyRofo', width: '80px', defaultContent: '' },
+                    { data: 'mupItemId', width: '100px', defaultContent: '' },
+                    { data: 'itemName', width: '150px', defaultContent: '' },
+                    { data: 'groupSubstitusi', width: '120px', defaultContent: '' }
+                ],
+                paging: true,
+                searching: true,
+                ordering: true,
+                initComplete: function () {
+                    this.api().columns().every(function () {
+                        let column = this;
+                        let title = column.footer().textContent;
+
+                        // Create input element and set its width to 100%
+                        let input = document.createElement('input');
+                        input.placeholder = title;
+                        column.footer().replaceChildren(input);
+
+                        // Debounced event listener for user input (1 second delay)
+                        input.addEventListener('keyup', debounce(() => {
+                            if (column.search() !== input.value) {
+                                column.search(input.value).draw();
+                            }
+                        }, 1000));
+                    });
+                }
             });
         }
-    
+
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
     </script>
 }

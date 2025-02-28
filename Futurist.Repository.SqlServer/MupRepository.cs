@@ -19,12 +19,17 @@ public class MupRepository : IMupRepository
     public async Task<IEnumerable<MupSp>> ProcessMupAsync(int roomId)
     {
         const string query = "EXEC CogsProjection.dbo.MupCalcRoom @Room";
-        return await _sqlConnection.QueryAsync<MupSp>(query, new { Room = roomId }, _dbTransaction);
+        return await _sqlConnection.QueryAsync<MupSp>(
+            query, 
+            new { Room = roomId }, 
+            _dbTransaction, 
+            commandTimeout: 3600
+        );
     }
 
     public async Task<IEnumerable<MupSp>> MupResultAsync(int roomId)
     {
-        const string query = "EXEC CogsProjection.dbo.MupResult @Room";
+        const string query = "EXEC CogsProjection.dbo.MupSelect @Room";
         return await _sqlConnection.QueryAsync<MupSp>(query, new { Room = roomId }, _dbTransaction);
     }
 

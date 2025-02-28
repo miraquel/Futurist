@@ -2,11 +2,27 @@ using System.Security.Claims;
 using Futurist.Repository.SqlServer;
 using Futurist.Repository.UnitOfWork;
 using Futurist.Service;
+using Futurist.Web.Hubs;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Hangfire
+// Add Hangfire services.
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")));
+
+// Add the processing server as IHostedService
+builder.Services.AddHangfireServer();
+
+// Add SignalR
+builder.Services.AddSignalR();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -55,11 +71,15 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
+app.UseHangfireDashboard();
+
 app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 app.MapControllers();
+app.MapHangfireDashboard();
+app.MapHub<FuturistHub>("futurist");
 
 app.Run();

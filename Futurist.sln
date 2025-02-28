@@ -24,8 +24,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Futurist.Repository.UnitOfW
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Futurist.Common", "Futurist.Common\Futurist.Common.csproj", "{5CABB7D2-4CAF-451E-AA79-27BC450940CB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Futurist.Worker", "Futurist.Worker\Futurist.Worker.csproj", "{897D491E-D501-463D-BA8C-B72A52248913}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -68,10 +66,6 @@ Global
 		{5CABB7D2-4CAF-451E-AA79-27BC450940CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5CABB7D2-4CAF-451E-AA79-27BC450940CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5CABB7D2-4CAF-451E-AA79-27BC450940CB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{897D491E-D501-463D-BA8C-B72A52248913}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{897D491E-D501-463D-BA8C-B72A52248913}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{897D491E-D501-463D-BA8C-B72A52248913}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{897D491E-D501-463D-BA8C-B72A52248913}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0C7D4D5E-E95A-4CF5-A634-09775591F413} = {8A557E11-3592-4B48-834B-46C0EE646464}

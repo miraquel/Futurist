@@ -1,6 +1,7 @@
 ﻿using Futurist.Service.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis;
 
 namespace Futurist.Web.Controllers;
 
@@ -47,16 +48,10 @@ public class MupApiController : ControllerBase
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ProcessMup([FromQuery] int roomId)
+    public IActionResult ProcessMup([FromBody] int roomId)
     {
-        var response = await _mupService.ProcessMupAsync(roomId);
-        
-        if (response.IsSuccess)
-        {
-            return Ok(response.Message);
-        }
-        
-        return BadRequest(response.Errors);
+        _mupService.ProcessMupJob(roomId);
+        return Ok();
     }
     
     [HttpGet]
@@ -71,5 +66,12 @@ public class MupApiController : ControllerBase
         }
         
         return BadRequest(response.Errors);
+    }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public IActionResult MupInProcessRoomIds()
+    {
+        return Ok(_mupService.MupInProcessRoomIds());
     }
 }

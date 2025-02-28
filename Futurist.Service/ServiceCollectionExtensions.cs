@@ -11,5 +11,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<MapperlyMapper>();
         services.AddScoped<IRofoService, RofoService>();
         services.AddScoped<IBomStdService, BomStdService>();
+        services.AddScoped<IMupService, MupService>();
     }
 }
