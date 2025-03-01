@@ -18,12 +18,26 @@ public class BomStdService : IBomStdService
 
     public async Task<ServiceResponse> ProcessBomStdAsync(int roomId)
     {
-        var response = await _unitOfWork.BomStdRepository.ProcessBomStdAsync(roomId);
-        
-        return new ServiceResponse
+        try
         {
-            Message = response
-        };
+            var response = await _unitOfWork.BomStdRepository.ProcessBomStdAsync(roomId, _unitOfWork.BeginTransaction());
+            
+            await _unitOfWork.CommitAsync();
+
+            return new ServiceResponse
+            {
+                Message = response
+            };
+        }
+        catch (Exception e)
+        {
+            await _unitOfWork.RollbackAsync();
+            
+            return new ServiceResponse
+            {
+                Errors = [e.Message]
+            };
+        }
     }
 
     public async Task<ServiceResponse<IEnumerable<BomStdDto>>> BomErrorCheckAsync(int roomId)

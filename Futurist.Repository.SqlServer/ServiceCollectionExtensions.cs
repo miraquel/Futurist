@@ -20,13 +20,14 @@ public static class ServiceCollectionExtensions
         {
             var config = s.GetRequiredService<IConfiguration>();
             var connectionString = config.GetConnectionString("DefaultConnection");
-            return new SqlConnection(connectionString);
+            var connection = new SqlConnection(connectionString);
+            connection.Open();
+            return connection;
         });
-        services.AddScoped(s =>
+        services.AddScoped<Func<IDbTransaction>>(provider => 
         {
-            var conn = s.GetRequiredService<IDbConnection>();
-            conn.Open();
-            return conn.BeginTransaction();
+            var connection = provider.GetRequiredService<IDbConnection>();
+            return () => connection.BeginTransaction();
         });
     }
 }

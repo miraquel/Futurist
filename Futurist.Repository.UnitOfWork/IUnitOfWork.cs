@@ -1,4 +1,5 @@
-﻿using Futurist.Repository.Interface;
+﻿using System.Data;
+using Futurist.Repository.Interface;
 
 namespace Futurist.Repository.UnitOfWork;
 
@@ -8,6 +9,8 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     ICommonRepository CommonRepository { get; }
     IBomStdRepository BomStdRepository { get; }
     IMupRepository MupRepository { get; }
-    Task Commit();
-    Task Rollback();
+    IDbTransaction? CurrentTransaction { get; }
+    IDbTransaction BeginTransaction();
+    Task CommitAsync();
+    Task RollbackAsync();
 }

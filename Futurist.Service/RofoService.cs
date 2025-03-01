@@ -45,66 +45,90 @@ public class RofoService : IRofoService
 
     public async Task<ServiceResponse> ImportAsync(Stream stream)
     {
-        var rofoDtos = ExcelHelper.ParseExcel(stream, row =>
+        try
         {
-            var rofoDto = new RofoDto
+            var rofoDtos = ExcelHelper.ParseExcel(stream, row =>
             {
-                Room = row.Cell(1).TryGetValue(out int room) ? room : 0,
-                RofoDate = row.Cell(2).TryGetValue(out DateTime rofoDate) ? rofoDate : DateTime.MinValue,
-                ItemId = row.Cell(3).Value.ToString(),
-                ItemName = row.Cell(4).Value.ToString(),
-                Qty = row.Cell(5).TryGetValue(out decimal qty) ? qty : 0,
-            };
-            return rofoDto;
-        }).ToArray();
-            
-        if (rofoDtos.Length == 0)
-        {
-            throw new ServiceException(ServiceMessageConstants.RofoMustNotBeEmpty);
-        }
-        
-        var errors = new List<string>();
-        if (rofoDtos.Any(x => x.Room == 0))
-        {
-            var roomErrors = rofoDtos.Where(x => x.Room == 0).Select(x => x.RecId).ToArray();
-            errors.Add($"{ServiceMessageConstants.RofoRoomInvalid}. Rows: {string.Join(", ", roomErrors.Length > 10 ? $"{roomErrors.Take(10)}..." : roomErrors)}");
-        }
-        if (rofoDtos.Any(x => x.RofoDate == DateTime.MinValue))
-        {
-            var rofoDateErrors = rofoDtos.Where(x => x.RofoDate == DateTime.MinValue).Select(x => x.RecId).ToArray();
-            errors.Add($"{ServiceMessageConstants.RofoDateInvalid}. Rows: {string.Join(", ", rofoDateErrors.Length > 10 ? $"{rofoDateErrors.Take(10)}..." : rofoDateErrors)}");
-        }
-        if (rofoDtos.Any(x => string.IsNullOrWhiteSpace(x.ItemId)))
-        {
-            var itemIdErrors = rofoDtos.Where(x => string.IsNullOrWhiteSpace(x.ItemId)).Select(x => x.RecId).ToArray();
-            errors.Add($"{ServiceMessageConstants.RofoItemIdInvalid}. Rows: {string.Join(", ", itemIdErrors.Length > 10 ? $"{itemIdErrors.Take(10)}..." : itemIdErrors)}");
-        }
-        if (rofoDtos.Any(x => x.Qty <= 0))
-        {
-            var qtyErrors = rofoDtos.Where(x => x.Qty <= 0).Select(x => x.RecId).ToArray();
-            errors.Add($"{ServiceMessageConstants.RofoQtyInvalid}. Rows: {string.Join(", ", qtyErrors.Length > 10 ? $"{qtyErrors.Take(10)}..." : qtyErrors)}");
-        }
-        
-        if (errors.Count != 0)
-        {
+                var rofoDto = new RofoDto
+                {
+                    Room = row.Cell(1).TryGetValue(out int room) ? room : 0,
+                    RofoDate = row.Cell(2).TryGetValue(out DateTime rofoDate) ? rofoDate : DateTime.MinValue,
+                    ItemId = row.Cell(3).Value.ToString(),
+                    ItemName = row.Cell(4).Value.ToString(),
+                    Qty = row.Cell(5).TryGetValue(out decimal qty) ? qty : 0,
+                };
+                return rofoDto;
+            }).ToArray();
+
+            if (rofoDtos.Length == 0)
+            {
+                throw new ServiceException(ServiceMessageConstants.RofoMustNotBeEmpty);
+            }
+
+            var errors = new List<string>();
+            if (rofoDtos.Any(x => x.Room == 0))
+            {
+                var roomErrors = rofoDtos.Where(x => x.Room == 0).Select(x => x.RecId).ToArray();
+                errors.Add(
+                    $"{ServiceMessageConstants.RofoRoomInvalid}. Rows: {string.Join(", ", roomErrors.Length > 10 ? $"{roomErrors.Take(10)}..." : roomErrors)}");
+            }
+
+            if (rofoDtos.Any(x => x.RofoDate == DateTime.MinValue))
+            {
+                var rofoDateErrors =
+                    rofoDtos.Where(x => x.RofoDate == DateTime.MinValue).Select(x => x.RecId).ToArray();
+                errors.Add(
+                    $"{ServiceMessageConstants.RofoDateInvalid}. Rows: {string.Join(", ", rofoDateErrors.Length > 10 ? $"{rofoDateErrors.Take(10)}..." : rofoDateErrors)}");
+            }
+
+            if (rofoDtos.Any(x => string.IsNullOrWhiteSpace(x.ItemId)))
+            {
+                var itemIdErrors = rofoDtos.Where(x => string.IsNullOrWhiteSpace(x.ItemId)).Select(x => x.RecId)
+                    .ToArray();
+                errors.Add(
+                    $"{ServiceMessageConstants.RofoItemIdInvalid}. Rows: {string.Join(", ", itemIdErrors.Length > 10 ? $"{itemIdErrors.Take(10)}..." : itemIdErrors)}");
+            }
+
+            if (rofoDtos.Any(x => x.Qty <= 0))
+            {
+                var qtyErrors = rofoDtos.Where(x => x.Qty <= 0).Select(x => x.RecId).ToArray();
+                errors.Add(
+                    $"{ServiceMessageConstants.RofoQtyInvalid}. Rows: {string.Join(", ", qtyErrors.Length > 10 ? $"{qtyErrors.Take(10)}..." : qtyErrors)}");
+            }
+
+            if (errors.Count != 0)
+            {
+                return new ServiceResponse
+                {
+                    Errors = errors
+                };
+            }
+
+            var rofoRooms = rofoDtos.Select(x => x.Room).Distinct().ToArray();
+            if (rofoRooms.Length != 1)
+            {
+                throw new ServiceException(ServiceMessageConstants.RofoMustBeInOneRoom);
+            }
+
+            _unitOfWork.BeginTransaction();
+
+            await _unitOfWork.RofoRepository.DeleteRofoByRoomAsync(rofoRooms.First());
+            await _unitOfWork.RofoRepository.BulkInsertRofoAsync(_mapper.MapToIEnumerable(rofoDtos));
+            await _unitOfWork.CommitAsync();
+
             return new ServiceResponse
             {
-                Errors = errors
+                Message = ServiceMessageConstants.RofoImported
             };
         }
-        
-        var rofoRooms = rofoDtos.Select(x => x.Room).Distinct().ToArray();
-        if (rofoRooms.Length != 1)
+        catch (Exception e)
         {
-            throw new ServiceException(ServiceMessageConstants.RofoMustBeInOneRoom);
+            await _unitOfWork.RollbackAsync();
+            
+            return new ServiceResponse
+            {
+                Errors = [e.Message]
+            };
         }
-        await _unitOfWork.RofoRepository.DeleteRofoByRoomAsync(rofoRooms.First());
-        await _unitOfWork.RofoRepository.BulkInsertRofoAsync(_mapper.MapToIEnumerable(rofoDtos));
-        await _unitOfWork.Commit();
-        
-        return new ServiceResponse
-        {
-            Message = ServiceMessageConstants.RofoImported
-        };
     }
 }

@@ -1,10 +1,11 @@
-﻿using Futurist.Domain;
+﻿using System.Data;
+using Futurist.Domain;
 
 namespace Futurist.Repository.Interface;
 
 public interface IBomStdRepository
 {
-    Task<string?> ProcessBomStdAsync(int roomId);
+    Task<string?> ProcessBomStdAsync(int roomId, IDbTransaction? transaction);
     Task<IEnumerable<BomStd>> BomErrorCheckAsync(int roomId);
     Task<IEnumerable<int>> GetRoomIdsAsync();
 }

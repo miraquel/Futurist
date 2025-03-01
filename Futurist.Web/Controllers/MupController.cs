@@ -51,7 +51,7 @@ public class MupApiController : ControllerBase
     public IActionResult ProcessMup([FromBody] int roomId)
     {
         _mupService.ProcessMupJob(roomId);
-        return Ok();
+        return Ok("Job has been queued. Please check back later.");
     }
     
     [HttpGet]
@@ -73,5 +73,13 @@ public class MupApiController : ControllerBase
     public IActionResult MupInProcessRoomIds()
     {
         return Ok(_mupService.MupInProcessRoomIds());
+    }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GetRoomIds()
+    {
+        var response = await _mupService.GetRoomIdsAsync();
+        return Ok(response.Data);
     }
 }

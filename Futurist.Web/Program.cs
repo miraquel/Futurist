@@ -18,8 +18,8 @@ builder.Services.AddHangfire(configuration => configuration
     .UseRecommendedSerializerSettings()
     .UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")));
 
-// Add the processing server as IHostedService
-builder.Services.AddHangfireServer();
+// // Add the processing server as IHostedService
+// builder.Services.AddHangfireServer();
 
 // Add SignalR
 builder.Services.AddSignalR();

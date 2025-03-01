@@ -22,8 +22,10 @@ public class MupService : IMupService
     {
         try
         {
-            var response = await _unitOfWork.MupRepository.ProcessMupAsync(roomId);
+            var response = await _unitOfWork.MupRepository.ProcessMupAsync(roomId, _unitOfWork.BeginTransaction());
 
+            await _unitOfWork.CommitAsync();
+            
             return new ServiceResponse<IEnumerable<MupSpDto>>
             {
                 Message = ServiceMessageConstants.MupProcessed,
@@ -32,6 +34,8 @@ public class MupService : IMupService
         }
         catch (Exception e)
         {
+            await _unitOfWork.RollbackAsync();
+            
             return new ServiceResponse<IEnumerable<MupSpDto>>
             {
                 Errors = [e.Message]
@@ -83,7 +87,7 @@ public class MupService : IMupService
 
     public void ProcessMupJob(int roomId)
     {
-        BackgroundJob.Enqueue(() => ProcessMupAsync(roomId));
+        BackgroundJob.Enqueue<IMupService>(s => s.ProcessMupAsync(roomId));
     }
 
     public IEnumerable<int> MupInProcessRoomIds()

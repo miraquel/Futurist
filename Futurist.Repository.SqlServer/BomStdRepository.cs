@@ -7,25 +7,27 @@ namespace Futurist.Repository.SqlServer;
 
 public class BomStdRepository : IBomStdRepository
 {
-    private readonly IDbTransaction _dbTransaction;
     private readonly IDbConnection _sqlConnection;
 
-    public BomStdRepository(IDbTransaction dbTransaction, IDbConnection sqlConnection)
+    public BomStdRepository(IDbConnection sqlConnection)
     {
-        _dbTransaction = dbTransaction;
         _sqlConnection = sqlConnection;
     }
 
-    public async Task<string?> ProcessBomStdAsync(int roomId)
+    public async Task<string?> ProcessBomStdAsync(int roomId, IDbTransaction? transaction)
     {
         const string query = "EXEC CogsProjection.dbo.BomStd_insert @Room";
-        return await _sqlConnection.ExecuteScalarAsync<string>(query, new { Room = roomId }, _dbTransaction);
+        
+        if (transaction?.Connection != null)
+            return await transaction.Connection.ExecuteScalarAsync<string>(query, new { Room = roomId }, transaction);
+        
+        return await _sqlConnection.ExecuteScalarAsync<string>(query, new { Room = roomId });
     }
 
     public async Task<IEnumerable<BomStd>> BomErrorCheckAsync(int roomId)
     {
         const string query = "EXEC CogsProjection.dbo.BomStd_Check @Room";
-        return await _sqlConnection.QueryAsync<BomStd>(query, new { Room = roomId }, _dbTransaction);
+        return await _sqlConnection.QueryAsync<BomStd>(query, new { Room = roomId });
     }
 
     public async Task<IEnumerable<int>> GetRoomIdsAsync()
@@ -40,6 +42,6 @@ public class BomStdRepository : IBomStdRepository
                              FROM BomStd
                              """;
         
-        return await _sqlConnection.QueryAsync<int>(query, transaction: _dbTransaction);
+        return await _sqlConnection.QueryAsync<int>(query);
     }
 }

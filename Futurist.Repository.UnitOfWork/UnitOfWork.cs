@@ -7,22 +7,30 @@ namespace Futurist.Repository.UnitOfWork;
 public class UnitOfWork : IUnitOfWork
 {
     private readonly IDbConnection _dbConnection;
-    private readonly IDbTransaction _dbTransaction;
+    private readonly Func<IDbTransaction> _transactionFactory;
 
     public UnitOfWork(
-        IDbTransaction dbTransaction, 
         IDbConnection dbConnection, 
         IRofoRepository rofoRepository, 
         ICommonRepository commonRepository, 
         IBomStdRepository bomStdRepository, 
-        IMupRepository mupRepository)
+        IMupRepository mupRepository, 
+        Func<IDbTransaction> transactionFactory)
     {
         _dbConnection = dbConnection;
-        _dbTransaction = dbTransaction;
         RofoRepository = rofoRepository;
         CommonRepository = commonRepository;
         BomStdRepository = bomStdRepository;
         MupRepository = mupRepository;
+        _transactionFactory = transactionFactory;
+    }
+    
+    public IDbTransaction? CurrentTransaction { get; private set; }
+
+    public IDbTransaction BeginTransaction()
+    {
+        CurrentTransaction ??= _transactionFactory();
+        return CurrentTransaction;
     }
 
     public IRofoRepository RofoRepository { get; }
@@ -30,9 +38,9 @@ public class UnitOfWork : IUnitOfWork
     public IBomStdRepository BomStdRepository { get; }
     public IMupRepository MupRepository { get; }
 
-    public async Task Commit()
+    public async Task CommitAsync()
     {
-        if (_dbTransaction is DbTransaction dbTransaction)
+        if (CurrentTransaction is DbTransaction dbTransaction)
         {
             try
             {
@@ -47,25 +55,25 @@ public class UnitOfWork : IUnitOfWork
         {
             try
             {
-                _dbTransaction.Commit();
+                CurrentTransaction?.Commit();
                 _dbConnection.BeginTransaction();
             }
             catch (Exception)
             {
-                _dbTransaction.Rollback();
+                CurrentTransaction?.Rollback();
             }
         }
     }
 
-    public async Task Rollback()
+    public async Task RollbackAsync()
     {
-        if (_dbTransaction is DbTransaction dbTransaction)
+        if (CurrentTransaction is DbTransaction dbTransaction)
         {
             await dbTransaction.RollbackAsync();
         }
         else
         {
-            _dbTransaction.Rollback();
+            CurrentTransaction?.Rollback();
         }
     }
     
@@ -80,7 +88,7 @@ public class UnitOfWork : IUnitOfWork
                 //Close the SQL Connection and dispose the objects
                 _dbConnection.Close();
                 _dbConnection.Dispose();
-                _dbTransaction.Dispose();
+                CurrentTransaction?.Dispose();
             }
         }
         _disposed = true;
@@ -104,7 +112,7 @@ public class UnitOfWork : IUnitOfWork
         }
         
         await CastAndDispose(_dbConnection);
-        await CastAndDispose(_dbTransaction);
+        if (CurrentTransaction != null) await CastAndDispose(CurrentTransaction);
 
         return;
 

@@ -10,12 +10,10 @@ namespace Futurist.Repository.SqlServer;
 
 internal class RofoRepository : IRofoRepository
 {
-    private readonly IDbTransaction _dbTransaction;
     private readonly IDbConnection _sqlConnection;
 
-    public RofoRepository(IDbTransaction dbTransaction, IDbConnection sqlConnection)
+    public RofoRepository(IDbConnection sqlConnection)
     {
-        _dbTransaction = dbTransaction;
         _sqlConnection = sqlConnection;
     }
 
@@ -78,30 +76,29 @@ internal class RofoRepository : IRofoRepository
         sqlBuilder.AddParameters(new { Offset = (pagedListRequest.PageNumber - 1) * pagedListRequest.PageSize, pagedListRequest.PageSize });
         
         var queryTemplate = sqlBuilder.AddTemplate(query);
-        var rofoList = await _sqlConnection.QueryAsync<Rofo>(queryTemplate.RawSql, queryTemplate.Parameters, _dbTransaction);
+        var rofoList = await _sqlConnection.QueryAsync<Rofo>(queryTemplate.RawSql, queryTemplate.Parameters);
         // select from count using sql builder
         queryTemplate = sqlBuilder.AddTemplate("SELECT COUNT(*) FROM Rofo /**where**/");
-        var rofoCount = await _sqlConnection.ExecuteScalarAsync<int>(queryTemplate.RawSql, queryTemplate.Parameters, _dbTransaction);
+        var rofoCount = await _sqlConnection.ExecuteScalarAsync<int>(queryTemplate.RawSql, queryTemplate.Parameters);
         return new PagedList<Rofo>(rofoList, pagedListRequest.PageNumber, pagedListRequest.PageSize, rofoCount);
     }
 
     public async Task<Rofo?> GetByIdAsync(int id)
     {
-        return await _sqlConnection.QueryFirstOrDefaultAsync<Rofo>("SELECT * FROM Rofo WHERE RecId = @Id", new { Id = id }, _dbTransaction);
+        return await _sqlConnection.QueryFirstOrDefaultAsync<Rofo>("SELECT * FROM Rofo WHERE RecId = @Id", new { Id = id });
     }
 
     public async Task DeleteRofoByRoomAsync(int roomId)
     {
-        await _sqlConnection.ExecuteAsync("DELETE FROM Rofo WHERE Room = @Room", new { Room = roomId }, _dbTransaction);
+        await _sqlConnection.ExecuteAsync("DELETE FROM Rofo WHERE Room = @Room", new { Room = roomId });
     }
 
     public async Task BulkInsertRofoAsync(IEnumerable<Rofo> rofo)
     {
         // insert new rofo
         var sqlServerConnection = _sqlConnection as SqlConnection ?? throw new InvalidOperationException("Invalid SQL connection");
-        var sqlServerTransaction = _dbTransaction as SqlTransaction ?? throw new InvalidOperationException("Invalid SQL transaction");
         
-        using var sqlBulkCopy = new SqlBulkCopy(sqlServerConnection, SqlBulkCopyOptions.Default, sqlServerTransaction);
+        using var sqlBulkCopy = new SqlBulkCopy(sqlServerConnection);
         sqlBulkCopy.DestinationTableName = "Rofo";
         sqlBulkCopy.BatchSize = 1000;
 
@@ -127,6 +124,6 @@ internal class RofoRepository : IRofoRepository
     public async Task<IEnumerable<int>> GetRoomIdsAsync()
     {
         const string query = "SELECT DISTINCT Room FROM Rofo";
-        return await _sqlConnection.QueryAsync<int>(query, transaction: _dbTransaction);
+        return await _sqlConnection.QueryAsync<int>(query);
     }
 }
