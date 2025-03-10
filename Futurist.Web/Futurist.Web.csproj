@@ -29,6 +29,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Futurist.Infrastructure.SignalR\Futurist.Infrastructure.SignalR.csproj" />
       <ProjectReference Include="..\Futurist.Repository.SqlServer\Futurist.Repository.SqlServer.csproj" />
       <ProjectReference Include="..\Futurist.Service\Futurist.Service.csproj" />
     </ItemGroup>

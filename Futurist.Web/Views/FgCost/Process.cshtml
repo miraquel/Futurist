@@ -1,0 +1,92 @@
+@model dynamic
+
+@{
+    ViewBag.Title = "FG Cost Calculation";
+    Layout = "_Layout";
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>FG Cost Calculation Process</h1>
+                <!-- Dropdown for room ids -->
+                <div class="form-group row mb-3">
+                    <label class="col-sm-1" for="roomSelect">Select Room</label>
+                    <div class="col-sm-11">
+                        <select id="roomSelect" name="roomId" class="form-control">
+                            @foreach (var id in ViewBag.RoomIds)
+                            {
+                                <option value="@id">@id</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <button class="btn btn-success btn-lg" id="processFgBtn" onclick="processFgCalc()">Calculate FG</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="calculationStatus" class="alert alert-info" style="display: none;">
+                    <h4>Calculation Status</h4>
+                    <p id="statusMessage">No calculation has been performed yet.</p>
+                </div>
+                
+                <div class="mt-4">
+                    <h4>After calculation is complete:</h4>
+                    <div class="d-flex gap-2 mt-2">
+                        <a href="@Url.Action("Index", "FgCost")" class="btn btn-primary">View Summary</a>
+                        <a href="@Url.Action("Details", "FgCost")" class="btn btn-info">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const roomSelect = $("#roomSelect");
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        
+        function processFgCalc() {
+            const roomId = roomSelect.val();
+            const statusDiv = $('#calculationStatus');
+            const statusMessage = $('#statusMessage');
+            
+            // Show status div with loading message
+            statusMessage.text("Calculating FG Cost... Please wait.");
+            statusDiv.removeClass("alert-success alert-danger").addClass("alert-info").show();
+            
+            // Disable button during calculation
+            $('#processFgBtn').prop('disabled', true);
+            
+            $.ajax({
+                url: '/api/FgCostApi/CalculateFgCost',
+                type: 'POST',
+                data: JSON.stringify(parseInt(roomId) || 0),
+                contentType: 'application/json',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader("RequestVerificationToken", token);
+                },
+                success: function(data) {
+                    // Update status with success message
+                    statusMessage.text(data);
+                    statusDiv.removeClass("alert-info alert-danger").addClass("alert-success");
+                },
+                error: function(err) {
+                    // Update status with error message
+                    statusMessage.text(err.responseText || "An error occurred during calculation.");
+                    statusDiv.removeClass("alert-info alert-success").addClass("alert-danger");
+                },
+                complete: function() {
+                    // Re-enable button
+                    $('#processFgBtn').prop('disabled', false);
+                }
+            });
+        }
+    </script>
+}

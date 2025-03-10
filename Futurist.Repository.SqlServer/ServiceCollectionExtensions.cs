@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using Futurist.Repository.Interface;
+using Futurist.Repository.UnitOfWork;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,18 +16,20 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IBomStdRepository, BomStdRepository>();
         services.AddScoped<ICommonRepository, CommonRepository>();
         services.AddScoped<IMupRepository, MupRepository>();
+        services.AddScoped<IFgCostRepository, FgCostRepository>();
         
         services.AddScoped<IDbConnection>(s =>
         {
             var config = s.GetRequiredService<IConfiguration>();
             var connectionString = config.GetConnectionString("DefaultConnection");
-            return new SqlConnection(connectionString);
+            var connection = new SqlConnection(connectionString);
+            connection.Open();
+            return connection;
         });
-        services.AddScoped(s =>
+        services.AddScoped<Func<IDbTransaction>>(provider => 
         {
-            var conn = s.GetRequiredService<IDbConnection>();
-            conn.Open();
-            return conn.BeginTransaction();
+            var connection = provider.GetRequiredService<IDbConnection>();
+            return () => connection.BeginTransaction();
         });
     }
 }

@@ -38,4 +38,24 @@ public partial class MapperlyMapper
     public partial PagedListRequestDto<MupSpDto> MapToPagedListRequestDto(PagedListRequest<MupSp> entity);
     public partial PagedList<MupSp> MapToPagedList(PagedListDto<MupSpDto> dto);
     public partial PagedListDto<MupSpDto> MapToPagedListDto(PagedList<MupSp> entity);
+    
+    // FgCostSp
+    public partial FgCostSp MapToEntity(FgCostSpDto dto);
+    public partial FgCostSpDto MapToDto(FgCostSp entity);
+    public partial IEnumerable<FgCostSp> MapToIEnumerable(IEnumerable<FgCostSpDto> dtos);
+    public partial IEnumerable<FgCostSpDto> MapToIEnumerableDto(IEnumerable<FgCostSp> entities);
+    public partial PagedListRequest<FgCostSp> MapToPagedListRequest(PagedListRequestDto<FgCostSpDto> dto);
+    public partial PagedListRequestDto<FgCostSpDto> MapToPagedListRequestDto(PagedListRequest<FgCostSp> entity);
+    public partial PagedList<FgCostSp> MapToPagedList(PagedListDto<FgCostSpDto> dto);
+    public partial PagedListDto<FgCostSpDto> MapToPagedListDto(PagedList<FgCostSp> entity);
+    
+    // FgCostDetailSp
+    public partial FgCostDetailSp MapToEntity(FgCostDetailSpDto dto);
+    public partial FgCostDetailSpDto MapToDto(FgCostDetailSp entity);
+    public partial IEnumerable<FgCostDetailSp> MapToIEnumerable(IEnumerable<FgCostDetailSpDto> dtos);
+    public partial IEnumerable<FgCostDetailSpDto> MapToIEnumerableDto(IEnumerable<FgCostDetailSp> entities);
+    public partial PagedListRequest<FgCostDetailSp> MapToPagedListRequest(PagedListRequestDto<FgCostDetailSpDto> dto);
+    public partial PagedListRequestDto<FgCostDetailSpDto> MapToPagedListRequestDto(PagedListRequest<FgCostDetailSp> entity);
+    public partial PagedList<FgCostDetailSp> MapToPagedList(PagedListDto<FgCostDetailSpDto> dto);
+    public partial PagedListDto<FgCostDetailSpDto> MapToPagedListDto(PagedList<FgCostDetailSp> entity);
 }

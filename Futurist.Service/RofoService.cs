@@ -1,4 +1,5 @@
 ﻿using Futurist.Common.Helpers;
+using Futurist.Repository.Command.RofoCommand;
 using Futurist.Repository.UnitOfWork;
 using Futurist.Service.Dto;
 using Futurist.Service.Dto.Common;
@@ -20,7 +21,13 @@ public class RofoService : IRofoService
     public async Task<ServiceResponse<PagedListDto<RofoDto>>> GetPagedListAsync(PagedListRequestDto<RofoDto> pagedListRequest)
     {
         var filter = _mapper.MapToPagedListRequest(pagedListRequest);
-        var result = await _unitOfWork.RofoRepository.GetPagedListAsync(filter);
+        
+        var command = new GetRofoPagedListCommand
+        {
+            PagedListRequest = filter
+        };
+        
+        var result = await _unitOfWork.RofoRepository.GetRofoPagedListAsync(command);
             
         return new ServiceResponse<PagedListDto<RofoDto>>
         {
@@ -31,11 +38,18 @@ public class RofoService : IRofoService
 
     public async Task<ServiceResponse<RofoDto>> GetByIdAsync(int rofoId)
     {
-        var result = await _unitOfWork.RofoRepository.GetByIdAsync(rofoId);
+        var command = new GetRofoByIdCommand
+        {
+            Id = rofoId
+        };
+        
+        var result = await _unitOfWork.RofoRepository.GetRofoByIdAsync(command);
+        
         if (result == null)
         {
             throw new ServiceException(ServiceMessageConstants.RofoNotFound);
         }
+        
         return new ServiceResponse<RofoDto>
         {
             Message = ServiceMessageConstants.RofoFound,
@@ -69,16 +83,19 @@ public class RofoService : IRofoService
             var roomErrors = rofoDtos.Where(x => x.Room == 0).Select(x => x.RecId).ToArray();
             errors.Add($"{ServiceMessageConstants.RofoRoomInvalid}. Rows: {string.Join(", ", roomErrors.Length > 10 ? $"{roomErrors.Take(10)}..." : roomErrors)}");
         }
+        
         if (rofoDtos.Any(x => x.RofoDate == DateTime.MinValue))
         {
             var rofoDateErrors = rofoDtos.Where(x => x.RofoDate == DateTime.MinValue).Select(x => x.RecId).ToArray();
             errors.Add($"{ServiceMessageConstants.RofoDateInvalid}. Rows: {string.Join(", ", rofoDateErrors.Length > 10 ? $"{rofoDateErrors.Take(10)}..." : rofoDateErrors)}");
         }
+        
         if (rofoDtos.Any(x => string.IsNullOrWhiteSpace(x.ItemId)))
         {
             var itemIdErrors = rofoDtos.Where(x => string.IsNullOrWhiteSpace(x.ItemId)).Select(x => x.RecId).ToArray();
             errors.Add($"{ServiceMessageConstants.RofoItemIdInvalid}. Rows: {string.Join(", ", itemIdErrors.Length > 10 ? $"{itemIdErrors.Take(10)}..." : itemIdErrors)}");
         }
+        
         if (rofoDtos.Any(x => x.Qty <= 0))
         {
             var qtyErrors = rofoDtos.Where(x => x.Qty <= 0).Select(x => x.RecId).ToArray();
@@ -98,13 +115,50 @@ public class RofoService : IRofoService
         {
             throw new ServiceException(ServiceMessageConstants.RofoMustBeInOneRoom);
         }
-        await _unitOfWork.RofoRepository.DeleteRofoByRoomAsync(rofoRooms.First());
-        await _unitOfWork.RofoRepository.BulkInsertRofoAsync(_mapper.MapToIEnumerable(rofoDtos));
-        await _unitOfWork.Commit();
+        
+        var transaction = _unitOfWork.BeginTransaction();
+        
+        var deleteCommand = new DeleteRofoByRoomCommand
+        {
+            RoomId = rofoRooms.First(),
+            DbTransaction = transaction
+        };
+        await _unitOfWork.RofoRepository.DeleteRofoByRoomAsync(deleteCommand);
+        
+        var bulkInsertCommand = new BulkInsertRofoCommand
+        {
+            Rofos = _mapper.MapToIEnumerable(rofoDtos),
+            DbTransaction = transaction
+        };
+        await _unitOfWork.RofoRepository.BulkInsertRofoAsync(bulkInsertCommand);
+        
+        await _unitOfWork.CommitAsync();
         
         return new ServiceResponse
         {
             Message = ServiceMessageConstants.RofoImported
         };
+    }
+
+    public async Task<ServiceResponse<IEnumerable<int>>> GetRofoRoomIdsAsync()
+    {
+        try
+        {
+            var command = new GetRofoRoomIdsCommand();
+            var response = await _unitOfWork.RofoRepository.GetRofoRoomIdsAsync(command);
+
+            return new ServiceResponse<IEnumerable<int>>
+            {
+                Message = ServiceMessageConstants.RoomIdsFound,
+                Data = response
+            };
+        }
+        catch (Exception e)
+        {
+            return new ServiceResponse<IEnumerable<int>>
+            {
+                Errors = [e.Message]
+            };
+        }
     }
 }

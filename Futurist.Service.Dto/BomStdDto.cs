@@ -2,9 +2,10 @@
 
 public class BomStdDto
 {
-    public int? Room { get; set; }
+    public int Room { get; set; }
     public string BomId { get; set; } = string.Empty;
     public string ProductId { get; set; } = string.Empty;
+    public string ProductName { get; set; } = string.Empty;
     public string ItemId { get; set; } = string.Empty;
     public string ItemName { get; set; } = string.Empty;
     public decimal BomQty { get; set; }

@@ -3,7 +3,7 @@
     <!-- LOGO -->
     <div class="navbar-brand-box">
         <!-- Dark Logo-->
-        <a href="@Url.Action("Index", "Dashboard")" class="logo logo-dark">
+        <a href="@Url.Action("Index", "Home")" class="logo logo-dark">
             <span class="logo-sm">
                 <img src="~/assets/images/logo-sm.png" alt="" height="22">
             </span>
@@ -12,7 +12,7 @@
             </span>
         </a>
         <!-- Light Logo-->
-        <a href="@Url.Action("Index", "Dashboard")" class="logo logo-light">
+        <a href="@Url.Action("Index", "Home")" class="logo logo-light">
             <span class="logo-sm">
                 <img src="~/assets/images/logo-sm.png" alt="" height="22">
             </span>
@@ -36,15 +36,40 @@
                     <a class="nav-link menu-link" href="@Url.Action("Index", "Home")">
                         <i class="ri-dashboard-line"></i> <span>Dashboard</span>
                     </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link menu-link" href="@Url.Action("Index", "Rofo")">
                         <i class="ri-upload-line"></i> <span>Upload Rofo</span>
                     </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link menu-link" href="@Url.Action("Index", "BomStd")">
                         <i class="ri-file-list-3-line"></i> <span>BOM Standard</span>
                     </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link menu-link" href="@Url.Action("Index", "Mup")">
                         <i class="ri-calculator-line"></i> <span>MUP Calculation</span>
                     </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#sidebarProjects" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
+                       aria-expanded="false" aria-controls="sidebarProjects" data-key="t-projects">
+                        <i class="ri-product-hunt-line"></i> <span>FG Calculation</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarProjects">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="@Url.Action("Process", "FgCost")" class="nav-link" data-key="t-process"> Process </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("Index", "FgCost")" class="nav-link" data-key="t-list"> Summary </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("Details", "FgCost")" class="nav-link" data-key="t-details"> Details </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
             </ul>
         </div>

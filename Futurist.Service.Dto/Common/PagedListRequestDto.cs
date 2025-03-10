@@ -8,4 +8,5 @@ public class PagedListRequestDto<T> where T : new()
     public bool IsSortAscending { get; set; }   
     public string Search { get; set; } = string.Empty;
     public T Filter { get; set; } = new();
+    public Dictionary<string, string> Filters { get; set; } = new();
 }

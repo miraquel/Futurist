@@ -16,7 +16,7 @@ public class RofoController : Controller
     }
 
     // GET: RofoController with pagination
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
         if (TempData["Success"] != null)
         {
@@ -26,6 +26,18 @@ public class RofoController : Controller
         {
             ViewBag.Errors = TempData["Errors"];
         }
+        
+        var response = await _rofoService.GetRofoRoomIdsAsync();
+        
+        if (response.IsSuccess)
+        {
+            ViewBag.RoomIds = response.Data;
+        }
+        else
+        {
+            ViewBag.Error = response.ErrorMessage;
+        }
+        
         return View();
     }
 

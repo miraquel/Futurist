@@ -1,4 +1,8 @@
-﻿using Futurist.Service.Interface;
+﻿using ClosedXML.Excel;
+using Futurist.Common.Helpers;
+using Futurist.Service.Dto;
+using Futurist.Service.Dto.Common;
+using Futurist.Service.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +21,7 @@ public class BomStdController : Controller
     
     public async Task<IActionResult> Index()
     {
-        var response = await _bomStdService.GetRoomIdsAsync();
+        var response = await _bomStdService.GetBomStdRoomIdsAsync();
         
         if (response.IsSuccess)
         {
@@ -29,6 +33,25 @@ public class BomStdController : Controller
         }
         
         return View();
+    }
+
+    public async Task<IActionResult> DownloadBomErrorCheck([FromQuery] int room)
+    {
+        var response = await _bomStdService.BomErrorCheckAsync(room);
+
+        if (response is not { IsSuccess: true, Data: not null }) return BadRequest(response.Errors);
+        
+        var stream = ExcelHelper.ExportExcel(response.Data, (row, dto) =>
+        {
+            row.Cell(1).Value = dto.Room;
+            row.Cell(2).Value = dto.ProductId;
+            row.Cell(3).Value = dto.ProductName;
+            row.Cell(4).Value = dto.BomId;
+            row.Cell(5).Value = dto.ItemId;
+            row.Cell(6).Value = dto.ItemName;
+        });
+        
+        return File(stream, "text/csv", $"BomErrorCheck_{DateTime.Now:yyyyMMddHHmmss}.csv");
     }
 }
 
@@ -58,17 +81,30 @@ public class BomStdApiController : ControllerBase
         return BadRequest(response.Errors);
     }
     
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ProcessBomStd([FromQuery] int roomId)
+    [HttpGet]
+    public async Task<IActionResult> BomErrorCheckPagedList([FromQuery] PagedListRequestDto<BomStdDto> pagedListRequestDto)
     {
-        var response = await _bomStdService.ProcessBomStdAsync(roomId);
+        var response = await _bomStdService.BomErrorCheckPagedListAsync(pagedListRequestDto);
         
         if (response.IsSuccess)
         {
-            return Ok(response.Message);
+            return Ok(response);
         }
         
-        return BadRequest(response.Errors);
+        return BadRequest(response);
+    }
+    
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ProcessBomStd([FromBody] int roomId)
+    {
+        return Ok(_bomStdService.ProcessBomStdJob(roomId));
+    }
+
+    [HttpGet]
+    public IActionResult GetInProcessRoomIds()
+    {
+        var inProcessRoomIds = _bomStdService.GetBomStdInProcessRoomIds();
+        return Ok(inProcessRoomIds);
     }
 }

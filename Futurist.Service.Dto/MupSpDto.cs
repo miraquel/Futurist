@@ -1,26 +1,44 @@
-﻿namespace Futurist.Service.Dto;
+﻿using System.ComponentModel;
+using System.Data.SqlTypes;
+
+namespace Futurist.Service.Dto;
 
 public class MupSpDto
 {
-    public int RofoId { get; set; }
-    public int ProductId { get; set; }
-    public string ProductName { get; set; } = string.Empty;
-    public DateTime RofoDate { get; set; }
-    public decimal QtyRofo { get; set; }
-    public int MupItemId { get; set; }
-    public string ItemName { get; set; } = string.Empty;
-    public string GroupSubstitusi { get; set; } = string.Empty;
-    public int ItemAllocatedId { get; set; }
-    public string ItemAllocatedName { get; set; } = string.Empty;
-    public string InventBatch { get; set; } = string.Empty;
-    public decimal AllocatedQty { get; set; }
-    public string UnitId { get; set; } = string.Empty;
-    public decimal Price { get; set; }
-    public decimal RmPrice { get; set; }
-    public decimal PmPrice { get; set; }
-    public decimal StdCostPrice { get; set; }
-    public string Source { get; set; } = string.Empty;
-    public string RefId { get; set; } = string.Empty;
-    public decimal LatestPurchasePrice { get; set; }
+    [DisplayName("Room")]
     public int Room { get; set; }
+    [DisplayName("Product ID")]
+    public string ProductId { get; set; } = string.Empty;
+    [DisplayName("Product Name")]
+    public string ProductName { get; set; } = string.Empty;
+    [DisplayName("Rofo Date")]
+    public DateTime RofoDate { get; set; } = SqlDateTime.MinValue.Value;
+    [DisplayName("Qty Rofo")]
+    public decimal QtyRofo { get; set; }
+    [DisplayName("Item ID")]
+    public string ItemId { get; set; } = string.Empty;
+    [DisplayName("Item Name")]
+    public string ItemName { get; set; } = string.Empty;
+    [DisplayName("Group Substitusi")]
+    public string GroupSubstitusi { get; set; } = string.Empty;
+    [DisplayName("Item Allocated ID")]
+    public string ItemAllocatedId { get; set; } = string.Empty;
+    [DisplayName("Item Allocated Name")]
+    public string ItemAllocatedName { get; set; } = string.Empty;
+    [DisplayName("Unit")]
+    public string UnitId { get; set; } = string.Empty;
+    [DisplayName("Batch")]
+    public string InventBatch { get; set; } = string.Empty;
+    [DisplayName("Qty")]
+    public decimal Qty { get; set; }
+    [DisplayName("Price")]
+    public decimal Price { get; set; }
+    [DisplayName("Source")]
+    public string Source { get; set; } = string.Empty;
+    [DisplayName("Ref ID")]
+    public string RefId { get; set; } = string.Empty;
+    [DisplayName("Latest Purchase Price")]
+    public decimal LatestPurchasePrice { get; set; }
+    [DisplayName("Gap")]
+    public decimal Gap { get; set; }
 }

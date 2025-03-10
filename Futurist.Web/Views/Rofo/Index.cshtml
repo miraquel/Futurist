@@ -1,18 +1,15 @@
 ﻿@model Futurist.Service.Dto.Common.ServiceResponse<Futurist.Service.Dto.Common.PagedListDto<Futurist.Service.Dto.RofoDto>>
 
 @{
-    ViewBag.Title = "Starter";
-    ViewBag.pTitle = "Starter";
+    ViewBag.Title = "Upload Rofo";
+    ViewBag.pTitle = "Upload Rofo";
     ViewBag.pageTitle = "Pages";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 @section styles{
-    <!--datatable css-->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" />
-    <!--datatable responsive css-->
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
+    <link href="/assets/css/datatables.min.css" rel="stylesheet">
+    <link href="/assets/css/flatpickr.min.css" rel="stylesheet">
 }
 
 @Html.AntiForgeryToken()
@@ -42,17 +39,33 @@
     <div class="col-lg-12">
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title mb-0 flex-grow-1">Base Example</h4>
-                <form asp-controller="Rofo" asp-action="Import" method="post" enctype="multipart/form-data">
-                    <input type="file" id="fileInput" name="file" style="display: none;" onchange="this.form.submit()">
-                    <label for="fileInput" class="btn btn-primary">
-                        <svg class="me-2" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                  d="M18 15v3H6v-3H4v3c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-3zM7 9l1.41 1.41L11 7.83V16h2V7.83l2.59 2.58L17 9l-5-5z"/>
-                        </svg>
-                        Upload Data
-                    </label>
-                </form>
+                <h1 class="mb-3">Upload Rofo</h1>
+                <!-- Dropdown for room ids -->
+                <div class="form-group row mb-3">
+                    <label class="col-sm-1" for="roomSelect">Select Room</label>
+                    <div class="col-sm-11">
+                        <select id="roomSelect" name="roomId" class="form-control">
+                            @foreach (var id in ViewBag.RoomIds)
+                            {
+                                <option value="@id">@id</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <form asp-controller="Rofo" asp-action="Import" method="post" enctype="multipart/form-data">
+                        <input type="file" id="fileInput" name="file" style="display: none;" onchange="this.form.submit()">
+                        <label for="fileInput" class="btn btn-primary">
+                            <svg class="me-2" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                      d="M18 15v3H6v-3H4v3c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-3zM7 9l1.41 1.41L11 7.83V16h2V7.83l2.59 2.58L17 9l-5-5z"/>
+                            </svg>
+                            Upload Data
+                        </label>
+                    </form>
+                </div>
+               
             </div><!-- end card header -->
 
             <div class="card-body">
@@ -64,24 +77,15 @@
                         <th>Item Id</th>
                         <th>Item Name</th>
                         <th>Qty</th>
-                        <th>Qty Rem</th>
-                        <th>Created By</th>
-                        <th>Created Date</th>
-                        <th>RecId</th>
                     </tr>
                     </thead>
                     <tfoot>
                         <tr>
                             <th>Room</th>
                             <th>Rofo Date</th>
-                            <th>Item Id</th>
+                            <th>Item ID</th>
                             <th>Item Name</th>
                             <th>Qty</th>
-                            <th>Qty Rem</th>
-                            <th>Created By</th>
-                            <th>Created Date</th>
-                            <th>RecId</th>
-                        </tr>
                     </tfoot>
                 </table>
             </div><!-- end card-body -->
@@ -92,16 +96,153 @@
 <!-- end row -->
             
 @section scripts{
-    <!--datatable js-->
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-    <!-- gridjs init -->
-    <script src="~/assets/js/pages/rofo.index.js"></script>
+    <script src="/assets/js/datatables.min.js"></script>
+    <script src="/assets/js/flatpickr.js"></script>
+
+    <script>
+        // get AntiForgeryToken using jquery
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
+        $("#roomSelect").change(function () {
+            $('#datatables-rofo').DataTable().ajax.reload();
+        });
+
+        // Debounce helper function
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        // Replace gridjs initialization with DataTables initialization following RofoDto structure
+        if (document.getElementById("datatable-rofo") || document.getElementById("datatables-rofo")) {
+            $('#datatables-rofo').DataTable({
+                searchDelay: 1000,
+                ajax: {
+                    url: `/api/RofoApi/GetRofoPagedList`,
+                    data: function(d) {
+                        const query = {
+                            pageNumber: (d.start / d.length) + 1,
+                            pageSize: d.length,
+                        };
+                        if (d.search && d.search.value) {
+                            query.Search = d.search.value;
+                        }
+                        if (d.order && d.order.length) {
+                            query.SortBy = d.columns[d.order[0].column].data;
+                            query.IsSortAscending = d.order[0].dir === 'asc';
+                        }
+
+                        d.columns.forEach((column, _) => {
+                            if (column.search && column.search.value) {
+                                // Encode the search value for URL safety.
+                                query[`Filter.${column.data}`] = column.search.value.replace(/\*/g, '%2A');
+                            }
+                        });
+
+                        // get room id from dropdown and add to query
+                        query['Filter.Room'] = $("#roomSelect").val();
+                        
+                        return query;
+                    },
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("RequestVerificationToken", token);
+                    },
+                    dataSrc: function(json) {
+                        // Check if response follows ServiceResponse<PagedListDto<RofoDto>> structure:
+                        if (json.data && Array.isArray(json.data.items)) {
+                            json.recordsTotal = json.data.totalCount;
+                            json.recordsFiltered = json.data.totalCount;
+                            return json.data.items;
+                        }
+                        // Fallback: if json itself is an array.
+                        return json;
+                    }
+                },
+                columns: [
+                    { data: 'room', width: '50px' },
+                    {
+                        data: 'rofoDate',
+                        defaultContent: '',
+                        render: function(data) {
+                            return moment(data).format("DD MMM YYYY");
+                        },
+                        width: '100px'
+                    },
+                    { data: 'itemId', width: '100px' },
+                    { data: 'itemName' },
+                    { data: 'qty', width: '80px' }
+                ],
+                columnDefs: [
+                    {
+                        targets: [0, 1, 2], // Column indices for Room, QtyRofo, Qty, etc.
+                        className: 'text-center'
+                    }
+                ],
+                processing: true,
+                serverSide: true,
+                paging: true,
+                searching: true,
+                ordering: true,
+                autoWidth: false,
+                responsive: true,
+                scrollX: true,
+                initComplete: function () {
+                    this.api()
+                        .columns()
+                        .every(function () {
+                            let column = this;
+                            let title = column.footer().textContent;
+
+                            let header = column.header();
+                            // change the background
+                            header.style.backgroundColor = '#4F81BD';
+                            header.style.color = 'white';
+
+                            // Special handling for Rofo Date column
+                            if (title.trim() === "Rofo Date") {
+                                // Create flatpickr input for date
+                                let dateInput = document.createElement('input');
+                                dateInput.placeholder = title;
+                                dateInput.className = "form-control";
+                                dateInput.style.width = '100%';
+
+                                column.footer().replaceChildren(dateInput);
+
+                                // Initialize flatpickr
+                                flatpickr(dateInput, {
+                                    dateFormat: "Y/m/d",
+                                    onChange: function(selectedDates, dateStr) {
+                                        // Only search and draw when both dates are selected in range mode
+                                        //if (selectedDates.length === 2) {
+                                        // Replace "to" with "-" in the date range string
+                                        //    const formattedDateStr = dateStr.replace(" to ", "-");
+                                        //    column.search(formattedDateStr).draw();
+                                        //}
+                                        column.search(dateStr).draw();
+                                    },
+                                    //mode: "range",
+                                });
+                            } else {
+                                // Default handling for other columns
+                                let input = document.createElement('input');
+                                input.placeholder = title;
+                                input.className = "form-control";
+                                input.style.width = '100%';
+                                column.footer().replaceChildren(input);
+
+                                // Debounced event listener for user input (1 second delay)
+                                input.addEventListener('keyup', debounce(() => {
+                                    if (column.search() !== input.value) {
+                                        column.search(input.value).draw();
+                                    }
+                                }, 1000));
+                            }
+                        });
+                }
+            });
+        }
+    </script>
 }

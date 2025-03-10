@@ -1,4 +1,8 @@
-﻿using Futurist.Service.Interface;
+﻿using ClosedXML.Excel;
+using Futurist.Common.Helpers;
+using Futurist.Service.Dto;
+using Futurist.Service.Dto.Common;
+using Futurist.Service.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis;
@@ -19,7 +23,7 @@ public class MupController : Controller
     // GET
     public async Task<IActionResult> Index()
     {
-        var response = await _mupService.GetRoomIdsAsync();
+        var response = await _mupService.GetMupRoomIdsAsync();
         
         if (response.IsSuccess)
         {
@@ -30,7 +34,53 @@ public class MupController : Controller
             ViewBag.Error = response.ErrorMessage;
         }
         
-        return View();
+        return View(new MupSpDto());
+    }
+
+    public async Task<IActionResult> DownloadMupResult([FromQuery] int room)
+    {
+        var response = await _mupService.MupResultAsync(room);
+
+        if (response is not { IsSuccess: true, Data: not null }) return BadRequest(response.Errors);
+
+        var stream = ExcelHelper.ExportExcel(response.Data, (row, dto) =>
+        {
+            row.Cell(1).Value = dto.Room;
+            row.Cell(2).Value = dto.ProductId;
+            row.Cell(3).Value = dto.ProductName;
+            
+            row.Cell(4).Value = dto.RofoDate;
+            row.Cell(4).Style.NumberFormat.Format = "dd MMM yyyy";
+            
+            row.Cell(5).Value = dto.QtyRofo;
+            row.Cell(5).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+            
+            row.Cell(6).Value = dto.ItemId;
+            row.Cell(7).Value = dto.ItemName;
+            row.Cell(8).Value = dto.GroupSubstitusi;
+            row.Cell(9).Value = dto.ItemAllocatedId;
+            row.Cell(10).Value = dto.ItemAllocatedName;
+            row.Cell(11).Value = dto.UnitId;
+            row.Cell(12).Value = dto.InventBatch;
+            
+            row.Cell(13).Value = dto.Qty;
+            row.Cell(13).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2WithSeparatorAndParens;
+            
+            row.Cell(14).Value = dto.Price;
+            row.Cell(14).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+            
+            row.Cell(15).Value = dto.Source;
+            row.Cell(16).Value = dto.RefId;
+            
+            row.Cell(17).Value = dto.LatestPurchasePrice;
+            row.Cell(17).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+            
+            row.Cell(18).Value = dto.Gap;
+            row.Cell(18).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+        });
+        
+        // download as excel file
+        return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"MupResult_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
     }
 }
 
@@ -50,8 +100,7 @@ public class MupApiController : ControllerBase
     [ValidateAntiForgeryToken]
     public IActionResult ProcessMup([FromBody] int roomId)
     {
-        _mupService.ProcessMupJob(roomId);
-        return Ok();
+        return Ok(_mupService.ProcessMupJob(roomId));
     }
     
     [HttpGet]
@@ -62,10 +111,24 @@ public class MupApiController : ControllerBase
         
         if (response.IsSuccess)
         {
-            return Ok(response.Data);
+            return Ok(response);
         }
         
         return BadRequest(response.Errors);
+    }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MupResultPagedList([FromQuery] PagedListRequestDto<MupSpDto> pagedListRequestDto)
+    {
+        var response = await _mupService.MupResultPagedListAsync(pagedListRequestDto);
+        
+        if (response.IsSuccess)
+        {
+            return Ok(response);
+        }
+        
+        return BadRequest(response);
     }
     
     [HttpGet]

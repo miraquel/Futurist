@@ -1,8 +1,8 @@
 using System.Security.Claims;
+using Futurist.Infrastructure.SignalR.Hubs;
 using Futurist.Repository.SqlServer;
 using Futurist.Repository.UnitOfWork;
 using Futurist.Service;
-using Futurist.Web.Hubs;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -80,6 +80,6 @@ app.MapControllerRoute(
 
 app.MapControllers();
 app.MapHangfireDashboard();
-app.MapHub<FuturistHub>("futurist");
+app.MapHub<FuturistHub>("futuristHub");
 
 app.Run();
