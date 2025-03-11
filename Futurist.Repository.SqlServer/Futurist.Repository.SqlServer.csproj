@@ -15,6 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Futurist.Common\Futurist.Common.csproj" />
       <ProjectReference Include="..\Futurist.Repository.Interface\Futurist.Repository.Interface.csproj" />
       <ProjectReference Include="..\Futurist.Repository.UnitOfWork\Futurist.Repository.UnitOfWork.csproj" />
     </ItemGroup>

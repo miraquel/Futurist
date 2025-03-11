@@ -1,7 +1,7 @@
 ﻿@model dynamic
 
 @{
-    ViewBag.Title = "FG Cost Summary";
+    ViewBag.Title = "FG Cost Details By Rofo";
     Layout = "_Layout";
 }
 
@@ -12,28 +12,15 @@
 
 @Html.AntiForgeryToken()
 
+
 <div class="row">
     <div class="col-lg-12">
         <div class="card">
             <div class="card-header">
-                <h1>FG Cost Summary</h1>
-                <!-- Dropdown for room ids -->
-                <div class="form-group row mb-3">
-                    <label class="col-sm-1" for="roomSelect">Select Room</label>
-                    <div class="col-sm-11">
-                        <select id="roomSelect" name="roomId" class="form-control">
-                            @foreach (var id in ViewBag.RoomIds)
-                            {
-                                <option value="@id">@id</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-
                 <div class="mb-3">
-                    <button class="btn btn-success" id="checkMupBtn" onclick="reloadTable()">Refresh Table</button>
-                    <a asp-controller="Mup" asp-action="DownloadMupResult" asp-route-room="0" onclick="downloadFgCostResult()" id="linkDownload" class="btn btn-primary">Download FG Cost Summary</a>
+                    <a href="javascript:history.back();" class="btn btn-info"><span class="ri-arrow-left-fill"></span> Back</a>
                 </div>
+                <h1>FG Cost Details for Rofo #@ViewBag.RofoId</h1>
             </div>
             <div class="card-body">
                 <table id="datatables-fgcost-result" class="display table table-bordered" style="width:100%">
@@ -43,15 +30,22 @@
                         <th>Rofo ID</th>
                         <th>Product ID</th>
                         <th>Product Name</th>
-                        <th>Unit</th>
-                        <th>Unit in Kg</th>
                         <th>Rofo Date</th>
                         <th>Qty Rofo</th>
-                        <th>Yield</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Group Substitusi</th>
+                        <th>Item Allocated ID</th>
+                        <th>Item Allocated Name</th>
+                        <th>Batch</th>
+                        <th>Qty</th>
+                        <th>Price</th>
                         <th>RM Price</th>
                         <th>PM Price</th>
                         <th>Std Cost Price</th>
-                        <th>Cost Price</th>
+                        <th>Source</th>
+                        <th>Ref ID</th>
+                        <th>Latest Purchase Price</th>
                     </tr>
                     </thead>
                     <tfoot>
@@ -60,15 +54,22 @@
                         <th>Rofo ID</th>
                         <th>Product ID</th>
                         <th>Product Name</th>
-                        <th>Unit</th>
-                        <th>Unit in Kg</th>
                         <th>Rofo Date</th>
                         <th>Qty Rofo</th>
-                        <th>Yield</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Group Substitusi</th>
+                        <th>Item Allocated ID</th>
+                        <th>Item Allocated Name</th>
+                        <th>Batch</th>
+                        <th>Qty</th>
+                        <th>Price</th>
                         <th>RM Price</th>
                         <th>PM Price</th>
                         <th>Std Cost Price</th>
-                        <th>Cost Price</th>
+                        <th>Source</th>
+                        <th>Ref ID</th>
+                        <th>Latest Purchase Price</th>
                     </tr>
                     </tfoot>
                 </table>
@@ -82,8 +83,7 @@
     <script src="/assets/js/flatpickr.js"></script>  
     
     <script>        
-        const roomSelect = $("#roomSelect");
-        const roomId = roomSelect.val();
+        const rofoId = @ViewBag.RofoId;
         const token = $('input[name="__RequestVerificationToken"]').val();
         
         // Debounce helper function
@@ -98,25 +98,13 @@
         function reloadTable() {
             $('#datatables-fgcost-result').DataTable().ajax.reload();
         }
-
-        $('#roomSelect').change(function () {
-            reloadTable();
-        });
         
-        function downloadFgCostResult() {
-            // change the room id in the download link
-            const room = roomSelect.val();
-            const linkDownload = $("#linkDownload")[0];
-            // edit the query room
-            linkDownload.href = linkDownload.href.replace(/room=\d+/, `room=${room}`);
-        }
-
-        // Load errors using selected room id from dropdown
-        if (document.getElementById("datatables-fgcost-result") || document.getElementById("datatables-fgcost-result")) {
+        // Load details for the specific RofoId
+        if (document.getElementById("datatables-fgcost-result")) {
             $('#datatables-fgcost-result').DataTable({
                 searchDelay: 1000,
                 ajax: {
-                    url: '/api/FgCostApi/GetSummaryFgCostPagedList',
+                    url: '/api/FgCostApi/GetFgCostDetailsByRofoIdPagedList',
                     data: function(d) {
                         const query = {
                             pageNumber: (d.start / d.length) + 1,
@@ -133,14 +121,12 @@
                         d.columns.forEach((column, _) => {
                             if (column.search && column.search.value) {
                                 // Encode the search value for URL safety.
-                                // capitalize the first letter of the column name
-                                //query[`Filters.${column.data}`] = column.search.value;
                                 query[`Filters.${column.data.charAt(0).toUpperCase() + column.data.slice(1)}`] = column.search.value;
                             }
                         });
 
-                        // get room id from dropdown and add to query
-                        query['Filters.Room'] = roomSelect.val();
+                        // Filter by RofoId
+                        query['Filters.RofoId'] = rofoId;
 
                         return query;
                     },
@@ -163,19 +149,12 @@
                 },
                 columns: [
                     { data: 'room', defaultContent: '' },
-                    { 
-                        data: 'rofoId', 
-                        defaultContent: '',
-                        render: function(data) {
-                            return '<a href="/FgCost/DetailsByRofoId/' + data + '">' + data + '</a>';
-                        }
-                    },
+                    { data: 'rofoId', defaultContent: '' },
                     { data: 'productId', defaultContent: '' },
-                    { data: 'productName', defaultContent: '' },
-                    { data: 'unit', defaultContent: '' },
-                    { data: 'unitInKg', defaultContent: '' },
+                    { data: 'productName', width: '200px', defaultContent: '' },
                     { 
-                        data: 'rofoDate', 
+                        data: 'rofoDate',
+                        width: '100px',
                         defaultContent: '',
                         render: function(data) {
                             return moment(data).format("DD MMM YYYY");
@@ -194,21 +173,14 @@
                             return data ? Math.round(parseFloat(data)).toLocaleString() : '';
                         }
                     },
+                    { data: 'itemId', defaultContent: '' },
+                    { data: 'itemName', width: '200px', defaultContent: '' },
+                    { data: 'groupSubstitusi', defaultContent: '' },
+                    { data: 'itemAllocatedId', defaultContent: '' },
+                    { data: 'itemAllocatedName', width: '200px', defaultContent: '' },
+                    { data: 'inventBatch', defaultContent: '' },
                     { 
-                        data: 'yield', 
-                        defaultContent: '',
-                        //render: function(data, type) {
-                        //    // For sorting/filtering use the raw number
-                        //    if (type === 'sort' || type === 'filter') {
-                        //        return data ? parseFloat(data) : 0;
-                        //    }
-                        
-                            // For display, round and format with thousands separator
-                        //    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
-                        //}
-                    },
-                    { 
-                        data: 'rmPrice',
+                        data: 'qty',
                         defaultContent: '',
                         render: function(data, type) {
                             // For sorting/filtering use the raw number
@@ -221,7 +193,7 @@
                         }
                     },
                     { 
-                        data: 'pmPrice',
+                        data: 'price', 
                         defaultContent: '',
                         render: function(data, type) {
                             // For sorting/filtering use the raw number
@@ -234,7 +206,7 @@
                         }
                     },
                     { 
-                        data: 'stdCostPrice',
+                        data: 'rmPrice', 
                         defaultContent: '',
                         render: function(data, type) {
                             // For sorting/filtering use the raw number
@@ -247,7 +219,7 @@
                         }
                     },
                     { 
-                        data: 'costPrice',
+                        data: 'pmPrice', 
                         defaultContent: '',
                         render: function(data, type) {
                             // For sorting/filtering use the raw number
@@ -258,11 +230,39 @@
                             // For display, round and format with thousands separator
                             return data ? Math.round(parseFloat(data)).toLocaleString() : '';
                         }
-                    }
+                    },
+                    { 
+                        data: 'stdCostPrice', 
+                        defaultContent: '',
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw number
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? parseFloat(data) : 0;
+                            }
+
+                            // For display, round and format with thousands separator
+                            return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                        }
+                    },
+                    { data: 'source', defaultContent: '' },
+                    { data: 'refId', defaultContent: '' },
+                    { 
+                        data: 'latestPurchasePrice',
+                        defaultContent: '',
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw number
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? parseFloat(data) : 0;
+                            }
+
+                            // For display, round and format with thousands separator
+                            return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                        }
+                    },
                 ],
                 columnDefs: [
                     {
-                        targets: [0, 1, 2, 4], // Column indices to center
+                        targets: [0, 1, 2, 4, 6, 8, 9, 11, 15, 16], // Column indices to center
                         className: 'text-center'
                     }
                 ],
@@ -300,15 +300,8 @@
                                 flatpickr(dateInput, {
                                     dateFormat: "Y/m/d",
                                     onChange: function(selectedDates, dateStr) {
-                                        // Only search and draw when both dates are selected in range mode
-                                        //if (selectedDates.length === 2) {
-                                            // Replace "to" with "-" in the date range string
-                                        //    const formattedDateStr = dateStr.replace(" to ", "-");
-                                        //    column.search(formattedDateStr).draw();
-                                        //}
                                         column.search(dateStr).draw();
                                     },
-                                    //mode: "range",
                                 });
                             } else {
                                 // Default handling for other columns
@@ -329,7 +322,5 @@
                 }
             });
         }
-    
-    
     </script>
 }

@@ -147,7 +147,7 @@
                         d.columns.forEach((column, _) => {
                             if (column.search && column.search.value) {
                                 // Encode the search value for URL safety.
-                                query[`Filters.${column.data}`] = column.search.value;
+                                query[`Filters.${column.data.charAt(0).toUpperCase() + column.data.slice(1)}`] = column.search.value;
                             }
                         });
 
@@ -175,11 +175,18 @@
                 },
                 columns: [
                     { data: 'room', defaultContent: '' },
-                    { data: 'rofoId', defaultContent: '' },
+                    { 
+                        data: 'rofoId', 
+                        defaultContent: '',
+                        render: function(data) {
+                            return '<a href="/FgCost/DetailsByRofoId/' + data + '">' + data + '</a>';
+                        }
+                    },
                     { data: 'productId', defaultContent: '' },
-                    { data: 'productName', defaultContent: '' },
+                    { data: 'productName', width: '200px', defaultContent: '' },
                     { 
                         data: 'rofoDate', 
+                        width: '100px',
                         defaultContent: '',
                         render: function(data) {
                             return moment(data).format("DD MMM YYYY");
@@ -199,10 +206,10 @@
                         }
                     },
                     { data: 'itemId', defaultContent: '' },
-                    { data: 'itemName', defaultContent: '' },
+                    { data: 'itemName', width: '200px', defaultContent: '' },
                     { data: 'groupSubstitusi', defaultContent: '' },
                     { data: 'itemAllocatedId', defaultContent: '' },
-                    { data: 'itemAllocatedName', defaultContent: '' },
+                    { data: 'itemAllocatedName', width: '200px', defaultContent: '' },
                     { data: 'inventBatch', defaultContent: '' },
                     { 
                         data: 'qty',

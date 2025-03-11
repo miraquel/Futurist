@@ -11,8 +11,9 @@ public interface IFgCostService
         PagedListRequestDto<FgCostSpDto> dto);
     
     public Task<ServiceResponse<IEnumerable<FgCostDetailSpDto>>> GetFgCostDetailAsync(int roomId);
-    public Task<ServiceResponse<PagedListDto<FgCostDetailSpDto>>> GetFgCostDetailPagedListAsync(
-        PagedListRequestDto<FgCostDetailSpDto> dto);
+    public Task<ServiceResponse<PagedListDto<FgCostDetailSpDto>>> GetFgCostDetailPagedListAsync(PagedListRequestDto<FgCostDetailSpDto> dto);
+    public Task<ServiceResponse<IEnumerable<FgCostDetailSpDto>>> GetFgCostDetailsByRofoIdAsync(int id);
+    public Task<ServiceResponse<PagedListDto<FgCostDetailSpDto>>> GetFgCostDetailsByRofoIdPagedListAsync(PagedListRequestDto<FgCostDetailSpDto> dto);
     
     public Task<ServiceResponse<IEnumerable<int>>> GetFgCostRoomIdsAsync();
 }

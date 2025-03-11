@@ -14,8 +14,7 @@ public class FgCostController : Controller
     {
         _fgCostService = fgCostService;
     }
-
-    // GET
+    
     public async Task<IActionResult> Index()
     {
         var response = await _fgCostService.GetFgCostRoomIdsAsync();
@@ -63,6 +62,12 @@ public class FgCostController : Controller
         
         return View();
     }
+    
+    public IActionResult DetailsByRofoId(int id)
+    {
+        ViewBag.RofoId = id;
+        return View();
+    }
 }
 
 [ApiController]
@@ -96,6 +101,20 @@ public class FgCostApiController : ControllerBase
     public async Task<IActionResult> GetFgCostDetailPagedListAsync([FromQuery] PagedListRequestDto<FgCostDetailSpDto> dto)
     {
         var response = await _fgCostService.GetFgCostDetailPagedListAsync(dto);
+
+        if (response.IsSuccess)
+        {
+            return Ok(response);
+        }
+
+        return BadRequest(response);
+    }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GetFgCostDetailsByRofoIdPagedListAsync([FromQuery] PagedListRequestDto<FgCostDetailSpDto> dto)
+    {
+        var response = await _fgCostService.GetFgCostDetailsByRofoIdPagedListAsync(dto);
 
         if (response.IsSuccess)
         {

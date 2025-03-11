@@ -96,7 +96,7 @@ public class FgCostService : IFgCostService
     {
         try
         {
-            var result = await _unitOfWork.FgCostRepository.GetFgCostDetailAsync(new GetFgCostDetailCommand { RoomId = roomId });
+            var result = await _unitOfWork.FgCostRepository.GetFgCostDetailsAsync(new GetFgCostDetailCommand { RoomId = roomId });
             return new ServiceResponse<IEnumerable<FgCostDetailSpDto>>
             {
                 Data = _mapper.MapToIEnumerableDto(result),
@@ -121,8 +121,58 @@ public class FgCostService : IFgCostService
             {
                 PagedListRequest = _mapper.MapToPagedListRequest(dto)
             };
-            var result = await _unitOfWork.FgCostRepository.GetFgCostDetailPagedListAsync(command);
+            var result = await _unitOfWork.FgCostRepository.GetFgCostDetailsPagedListAsync(command);
             
+            return new ServiceResponse<PagedListDto<FgCostDetailSpDto>>
+            {
+                Data = _mapper.MapToPagedListDto(result),
+                Message = ServiceMessageConstants.FgCostDetailFound
+            };
+        }
+        catch (Exception e)
+        {
+            return new ServiceResponse<PagedListDto<FgCostDetailSpDto>>
+            {
+                Errors = [e.Message],
+                Message = ServiceMessageConstants.FgCostDetailNotFound
+            };
+        }
+    }
+
+    public async Task<ServiceResponse<IEnumerable<FgCostDetailSpDto>>> GetFgCostDetailsByRofoIdAsync(int rofoId)
+    {
+        try
+        {
+            var command = new GetFgCostDetailsByRofoIdCommand
+            {
+                RofoId = rofoId
+            };
+            var result = await _unitOfWork.FgCostRepository.GetFgCostDetailsByRofoIdAsync(command);
+            return new ServiceResponse<IEnumerable<FgCostDetailSpDto>>
+            {
+                Data = _mapper.MapToIEnumerableDto(result),
+                Message = ServiceMessageConstants.FgCostDetailFound
+            };
+        }
+        catch (Exception e)
+        {
+            return new ServiceResponse<IEnumerable<FgCostDetailSpDto>>
+            {
+                Errors = [e.Message],
+                Message = ServiceMessageConstants.FgCostDetailNotFound
+            };
+        }
+    }
+
+    public async Task<ServiceResponse<PagedListDto<FgCostDetailSpDto>>> GetFgCostDetailsByRofoIdPagedListAsync(PagedListRequestDto<FgCostDetailSpDto> dto)
+    {
+        try
+        {
+            var command = new GetFgCostDetailsByRofoIdPagedListCommand
+            {
+                PagedListRequest = _mapper.MapToPagedListRequest(dto)
+            };
+            var result = await _unitOfWork.FgCostRepository.GetFgCostDetailsByRofoIdPagedListAsync(command);
             return new ServiceResponse<PagedListDto<FgCostDetailSpDto>>
             {
                 Data = _mapper.MapToPagedListDto(result),

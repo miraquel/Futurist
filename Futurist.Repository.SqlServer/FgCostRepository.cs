@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using Dapper;
+using Futurist.Common.Helpers;
 using Futurist.Domain;
 using Futurist.Domain.Common;
 using Futurist.Repository.Command.FgCostCommand;
@@ -64,7 +65,6 @@ public class FgCostRepository : IFgCostRepository
         
         var pagedListRequest = command.PagedListRequest;
         
-        // get room from filters and covert to int
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.Room), out var roomFilter) && int.TryParse(roomFilter, out var room))
         {
             sqlBuilder.Where($"a.[Room] = @room", new { room });
@@ -77,22 +77,57 @@ public class FgCostRepository : IFgCostRepository
         
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.ProductId), out var productIdFilter))
         {
-            sqlBuilder.Where($"a.[ProductId] = @productId", new { productId = productIdFilter });
+            if (productIdFilter.Contains('*') || productIdFilter.Contains('%'))
+            {
+                productIdFilter = productIdFilter.Replace('*', '%');
+                sqlBuilder.Where($"a.[ProductId] LIKE @productId", new { productId = productIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"a.[ProductId] = @productId", new { productId = productIdFilter });
+            }
         }
 
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.ProductName), out var productNameFilter))
         {
-            sqlBuilder.Where($"a.[ProductName] LIKE @productName", new { productName = $"%{productNameFilter}%" });
+            if (productNameFilter.Contains('*') || productNameFilter.Contains('%'))
+            {
+                productNameFilter = productNameFilter.Replace('*', '%');
+                sqlBuilder.Where($"a.[ProductName] LIKE @productName", new { productName = productNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"a.[ProductName] = @productName", new { productName = productNameFilter });
+            }
         }
         
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.Unit), out var unitFilter))
         {
-            sqlBuilder.Where($"i.UNITID = @unit", new { unit = unitFilter });
+            if (unitFilter.Contains('*') || unitFilter.Contains('%'))
+            {
+                unitFilter = unitFilter.Replace('*', '%');
+                sqlBuilder.Where($"i.UNITID LIKE @unit", new { unit = unitFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"i.UNITID = @unit", new { unit = unitFilter });
+            }
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.UnitInKg), out var unitInKgFilter) && decimal.TryParse(unitInKgFilter, out var unitInKg))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.UnitInKg), out var unitInKgFilter))
         {
-            sqlBuilder.Where($"i.NETWEIGHT / 1000 = @unitInKg", new { unitInKg });
+            if (decimal.TryParse(unitInKgFilter, out var unitInKg))
+            {
+                sqlBuilder.Where($"i.NETWEIGHT / 1000 = @unitInKg", new { unitInKg });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(unitInKgFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"i.NETWEIGHT / 1000 {match.Groups[1].Value} @unitInKg", new { unitInKg = match.Groups[2].Value });
+                }
+            }
         }
         
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.RofoDate), out var rofoDateFilter) && DateTime.TryParse(rofoDateFilter, out var rofoDate))
@@ -100,34 +135,100 @@ public class FgCostRepository : IFgCostRepository
             sqlBuilder.Where($"a.[RofoDate] = @rofoDate", new { rofoDate });
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.QtyRofo), out var qtyRofoFilter) && decimal.TryParse(qtyRofoFilter, out var qtyRofo))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.QtyRofo), out var qtyRofoFilter))
         {
-            sqlBuilder.Where($"a.[QtyRofo] = @qtyRofo", new { qtyRofo });
+            if (decimal.TryParse(qtyRofoFilter, out var qtyRofo))
+            {
+                sqlBuilder.Where($"a.[QtyRofo] = @qtyRofo", new { qtyRofo });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(qtyRofoFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"a.[QtyRofo] {match.Groups[1].Value} @qtyRofo", new { qtyRofo = match.Groups[2].Value });
+                }
+            }
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.Yield), out var yieldFilter) && decimal.TryParse(yieldFilter, out var yield))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.Yield), out var yieldFilter))
         {
-            sqlBuilder.Where($"a.[Yield] = @yield", new { yield });
+            if (decimal.TryParse(yieldFilter, out var yield))
+            {
+                sqlBuilder.Where($"a.[Yield] = @yield", new { yield });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(yieldFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"a.[Yield] {match.Groups[1].Value} @yield", new { yield = match.Groups[2].Value });
+                }
+            }
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.RmPrice), out var rmPriceFilter) && decimal.TryParse(rmPriceFilter, out var rmPrice))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.RmPrice), out var rmPriceFilter))
         {
-            sqlBuilder.Where($"a.[RmPrice] = @rmPrice", new { rmPrice });
+            if (decimal.TryParse(rmPriceFilter, out var rmPrice))
+            {
+                sqlBuilder.Where($"a.[RmPrice] = @rmPrice", new { rmPrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(rmPriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"a.[RmPrice] {match.Groups[1].Value} @rmPrice", new { rmPrice = match.Groups[2].Value });
+                }
+            }
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.PmPrice), out var pmPriceFilter) && decimal.TryParse(pmPriceFilter, out var pmPrice))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.PmPrice), out var pmPriceFilter))
         {
-            sqlBuilder.Where($"a.[PmPrice] = @pmPrice", new { pmPrice });
+            if (decimal.TryParse(pmPriceFilter, out var pmPrice))
+            {
+                sqlBuilder.Where($"a.[PmPrice] = @pmPrice", new { pmPrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(pmPriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"a.[PmPrice] {match.Groups[1].Value} @pmPrice", new { pmPrice = match.Groups[2].Value });
+                }
+            }
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.StdCostPrice), out var stdCostPriceFilter) && decimal.TryParse(stdCostPriceFilter, out var stdCostPrice))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.StdCostPrice), out var stdCostPriceFilter))
         {
-            sqlBuilder.Where($"a.[StdCostPrice] = @stdCostPrice", new { stdCostPrice });
+            if (decimal.TryParse(stdCostPriceFilter, out var stdCostPrice))
+            {
+                sqlBuilder.Where($"a.[StdCostPrice] = @stdCostPrice", new { stdCostPrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(stdCostPriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"a.[StdCostPrice] {match.Groups[1].Value} @stdCostPrice", new { stdCostPrice = match.Groups[2].Value });
+                }
+            }
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.CostPrice), out var costPriceFilter) && decimal.TryParse(costPriceFilter, out var costPrice))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.CostPrice), out var costPriceFilter))
         {
-            sqlBuilder.Where($"a.[CostPrice] = @costPrice", new { costPrice });
+            if (decimal.TryParse(costPriceFilter, out var costPrice))
+            {
+                sqlBuilder.Where($"a.[CostPrice] = @costPrice", new { costPrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(costPriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"a.[CostPrice] {match.Groups[1].Value} @costPrice", new { costPrice = match.Groups[2].Value });
+                }
+            }
         }
         
         var sort = pagedListRequest.IsSortAscending ? "ASC" : "DESC";
@@ -162,14 +263,14 @@ public class FgCostRepository : IFgCostRepository
         return _sqlConnection.QueryAsync<int>(query, transaction: command.DbTransaction);
     }
 
-    public Task<IEnumerable<FgCostDetailSp>> GetFgCostDetailAsync(GetFgCostDetailCommand command)
+    public Task<IEnumerable<FgCostDetailSp>> GetFgCostDetailsAsync(GetFgCostDetailCommand command)
     {
         const string sql = "EXEC CogsProjection.dbo.FgCostDetail_Select @RoomId";
         return _sqlConnection.QueryAsync<FgCostDetailSp>(sql, new { command.RoomId },
             transaction: command.DbTransaction);
     }
 
-    public async Task<PagedList<FgCostDetailSp>> GetFgCostDetailPagedListAsync(GetFgCostDetailPagedListCommand command)
+    public async Task<PagedList<FgCostDetailSp>> GetFgCostDetailsPagedListAsync(GetFgCostDetailPagedListCommand command)
     {
         const string sql = """
                            select
@@ -235,82 +336,249 @@ public class FgCostRepository : IFgCostRepository
         
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.ProductId), out var productIdFilter))
         {
-            sqlBuilder.Where($"a.ItemId = @productId", new { productId = productIdFilter });
+            if (productIdFilter.Contains('*') || productIdFilter.Contains('%'))
+            {
+                productIdFilter = productIdFilter.Replace('*', '%');
+                sqlBuilder.Where($"a.ItemId LIKE @productId", new { productId = productIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"a.ItemId = @productId", new { productId = productIdFilter });
+            }
         }
         
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.ProductName), out var productNameFilter))
         {
-            sqlBuilder.Where($"i.SEARCHNAME LIKE @productName", new { productName = $"%{productNameFilter}%" });
+            if (productNameFilter.Contains('*') || productNameFilter.Contains('%'))
+            {
+                productNameFilter = productNameFilter.Replace('*', '%');
+                sqlBuilder.Where($"i.SEARCHNAME LIKE @productName", new { productName = productNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"i.SEARCHNAME = @productName", new { productName = productNameFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.RofoDate), out var rofoDateFilter) && DateTime.TryParse(rofoDateFilter, out var rofoDate))
+        {
+            sqlBuilder.Where($"a.RofoDate = @rofoDate", new { rofoDate });
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.QtyRofo), out var qtyRofoFilter))
+        {
+            if (decimal.TryParse(qtyRofoFilter, out var qtyRofo))
+            {
+                sqlBuilder.Where($"a.Qty = @qtyRofo", new { qtyRofo });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(qtyRofoFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"a.Qty {match.Groups[1].Value} @qtyRofo", new { qtyRofo = match.Groups[2].Value });
+                }
+            }
         }
         
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.ItemId), out var itemIdFilter))
         {
-            sqlBuilder.Where($"b.ItemId = @itemId", new { itemId = itemIdFilter });
+            if (itemIdFilter.Contains('*') || itemIdFilter.Contains('%'))
+            {
+                itemIdFilter = itemIdFilter.Replace('*', '%');
+                sqlBuilder.Where($"b.ItemId LIKE @itemId", new { itemId = itemIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"b.ItemId = @itemId", new { itemId = itemIdFilter });
+            }
         }
         
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.ItemName), out var itemNameFilter))
         {
-            sqlBuilder.Where($"ib.SEARCHNAME LIKE @itemName", new { itemName = $"%{itemNameFilter}%" });
+            if (itemNameFilter.Contains('*') || itemNameFilter.Contains('%'))
+            {
+                itemNameFilter = itemNameFilter.Replace('*', '%');
+                sqlBuilder.Where($"ib.SEARCHNAME LIKE @itemName", new { itemName = itemNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"ib.SEARCHNAME = @itemName", new { itemName = itemNameFilter });
+            }
         }
         
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.GroupSubstitusi), out var groupSubstitusiFilter))
         {
-            sqlBuilder.Where($"isnull(s.VtaMpSubstitusiGroupId,'') = @groupSubstitusi", new { groupSubstitusi = groupSubstitusiFilter });
+            if (groupSubstitusiFilter.Contains('*') || groupSubstitusiFilter.Contains('%'))
+            {
+                groupSubstitusiFilter = groupSubstitusiFilter.Replace('*', '%');
+                sqlBuilder.Where($"isnull(s.VtaMpSubstitusiGroupId,'') LIKE @groupSubstitusi", new { groupSubstitusi = groupSubstitusiFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"isnull(s.VtaMpSubstitusiGroupId,'') = @groupSubstitusi", new { groupSubstitusi = groupSubstitusiFilter });
+            }
         }
         
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.ItemAllocatedId), out var itemAllocatedIdFilter))
         {
-            sqlBuilder.Where($"d.ItemId = @itemAllocatedId", new { itemAllocatedId = itemAllocatedIdFilter });
+            if (itemAllocatedIdFilter.Contains('*') || itemAllocatedIdFilter.Contains('%'))
+            {
+                itemAllocatedIdFilter = itemAllocatedIdFilter.Replace('*', '%');
+                sqlBuilder.Where($"d.ItemId LIKE @itemAllocatedId", new { itemAllocatedId = itemAllocatedIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"d.ItemId = @itemAllocatedId", new { itemAllocatedId = itemAllocatedIdFilter });
+            }
         }
         
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.ItemAllocatedName), out var itemAllocatedNameFilter))
         {
-            sqlBuilder.Where($"id.SEARCHNAME LIKE @itemAllocatedName", new { itemAllocatedName = $"%{itemAllocatedNameFilter}%" });
+            if (itemAllocatedNameFilter.Contains('*') || itemAllocatedNameFilter.Contains('%'))
+            {
+                itemAllocatedNameFilter = itemAllocatedNameFilter.Replace('*', '%');
+                sqlBuilder.Where($"id.SEARCHNAME LIKE @itemAllocatedName", new { itemAllocatedName = itemAllocatedNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"id.SEARCHNAME = @itemAllocatedName", new { itemAllocatedName = itemAllocatedNameFilter });
+            }
         }
         
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.InventBatch), out var inventBatchFilter))
         {
-            sqlBuilder.Where($"d.InventBatch = @inventBatch", new { inventBatch = inventBatchFilter });
+            if (inventBatchFilter.Contains('*') || inventBatchFilter.Contains('%'))
+            {
+                inventBatchFilter = inventBatchFilter.Replace('*', '%');
+                sqlBuilder.Where($"d.InventBatch LIKE @inventBatch", new { inventBatch = inventBatchFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"d.InventBatch = @inventBatch", new { inventBatch = inventBatchFilter });
+            }
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.Qty), out var qtyFilter) && decimal.TryParse(qtyFilter, out var qty))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.Qty), out var qtyFilter))
         {
-            sqlBuilder.Where($"d.Qty = @qty", new { qty });
+            if (decimal.TryParse(qtyFilter, out var qty))
+            {
+                sqlBuilder.Where($"d.Qty = @qty", new { qty });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(qtyFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"d.Qty {match.Groups[1].Value} @qty", new { qty = match.Groups[2].Value });
+                }
+            }
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.Price), out var priceFilter) && decimal.TryParse(priceFilter, out var price))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.Price), out var priceFilter))
         {
-            sqlBuilder.Where($"d.Price = @price", new { price });
+            if (decimal.TryParse(priceFilter, out var price))
+            {
+                sqlBuilder.Where($"d.Price = @price", new { price });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(priceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"d.Price {match.Groups[1].Value} @price", new { price = match.Groups[2].Value });
+                }
+            }
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.RmPrice), out var rmPriceFilter) && decimal.TryParse(rmPriceFilter, out var rmPrice))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.RmPrice), out var rmPriceFilter))
         {
-            sqlBuilder.Where($"d.RmPrice = @rmPrice", new { rmPrice });
+            if (decimal.TryParse(rmPriceFilter, out var rmPrice))
+            {
+                sqlBuilder.Where($"d.RmPrice = @rmPrice", new { rmPrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(rmPriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"d.RmPrice {match.Groups[1].Value} @rmPrice", new { rmPrice = match.Groups[2].Value });
+                }
+            }
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.PmPrice), out var pmPriceFilter) && decimal.TryParse(pmPriceFilter, out var pmPrice))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.PmPrice), out var pmPriceFilter))
         {
-            sqlBuilder.Where($"d.PmPrice = @pmPrice", new { pmPrice });
+            if (decimal.TryParse(pmPriceFilter, out var pmPrice))
+            {
+                sqlBuilder.Where($"d.PmPrice = @pmPrice", new { pmPrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(pmPriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"d.PmPrice {match.Groups[1].Value} @pmPrice", new { pmPrice = match.Groups[2].Value });
+                }
+            }
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.StdCostPrice), out var stdCostPriceFilter) && decimal.TryParse(stdCostPriceFilter, out var stdCostPrice))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.StdCostPrice), out var stdCostPriceFilter))
         {
-            sqlBuilder.Where($"d.StdCostPrice = @stdCostPrice", new { stdCostPrice });
+            if (decimal.TryParse(stdCostPriceFilter, out var stdCostPrice))
+            {
+                sqlBuilder.Where($"d.StdCostPrice = @stdCostPrice", new { stdCostPrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(stdCostPriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"d.StdCostPrice {match.Groups[1].Value} @stdCostPrice", new { stdCostPrice = match.Groups[2].Value });
+                }
+            }
         }
         
         if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.Source), out var sourceFilter))
         {
-            sqlBuilder.Where($"d.[Source] = @source", new { source = sourceFilter });
+            if (sourceFilter.Contains('*') || sourceFilter.Contains('%'))
+            {
+                sourceFilter = sourceFilter.Replace('*', '%');
+                sqlBuilder.Where($"d.[Source] LIKE @source", new { source = sourceFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"d.[Source] = @source", new { source = sourceFilter });
+            }
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.RefId), out var refIdFilter) && int.TryParse(refIdFilter, out var refId))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.RefId), out var refIdFilter))
         {
-            sqlBuilder.Where($"d.RefId = @refId", new { refId });
+            if (refIdFilter.Contains('*') || refIdFilter.Contains('%'))
+            {
+                refIdFilter = refIdFilter.Replace('*', '%');
+                sqlBuilder.Where($"d.RefId LIKE @refId", new { refId = refIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"d.RefId = @refId", new { refId = refIdFilter });
+            }
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.LatestPurchasePrice), out var latestPurchasePriceFilter) && decimal.TryParse(latestPurchasePriceFilter, out var latestPurchasePrice))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.LatestPurchasePrice), out var latestPurchasePriceFilter))
         {
-            sqlBuilder.Where($"id.LATESTPRICE = @latestPurchasePrice", new { latestPurchasePrice });
+            if (decimal.TryParse(latestPurchasePriceFilter, out var latestPurchasePrice))
+            {
+                sqlBuilder.Where($"id.LATESTPRICE = @latestPurchasePrice", new { latestPurchasePrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(latestPurchasePriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"id.LATESTPRICE {match.Groups[1].Value} @latestPurchasePrice", new { latestPurchasePrice = match.Groups[2].Value });
+                }
+            }
         }
         
         var sort = pagedListRequest.IsSortAscending ? "ASC" : "DESC";
@@ -325,6 +593,373 @@ public class FgCostRepository : IFgCostRepository
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
         var fgCostDetailList = await _sqlConnection.QueryAsync<FgCostDetailSp>(queryTemplate.RawSql, queryTemplate.Parameters, command.DbTransaction);
         queryTemplate = sqlBuilder.AddTemplate(sqlCount);
+        var fgCostDetailCount = await _sqlConnection.ExecuteScalarAsync<int>(queryTemplate.RawSql, queryTemplate.Parameters, command.DbTransaction);
+        return new PagedList<FgCostDetailSp>(fgCostDetailList, pagedListRequest.PageNumber, pagedListRequest.PageSize, fgCostDetailCount);
+    }
+
+    public async Task<IEnumerable<FgCostDetailSp>> GetFgCostDetailsByRofoIdAsync(GetFgCostDetailsByRofoIdCommand command)
+    {
+        const string query = """
+                             select 
+                                 a.room
+                                ,a.RecId as RofoId
+                             	,a.ItemId as ProductId
+                             	,i.SEARCHNAME as ProductName
+                             	,a.RofoDate
+                             	,a.Qty as QtyRofo
+                             	,b.ItemId
+                             	,ib.SEARCHNAME as ItemName
+                             	,isnull(s.VtaMpSubstitusiGroupId,'') as [GroupSubstitusi]
+                             	,d.ItemId as ItemAllocatedId
+                             	,id.SEARCHNAME as ItemAllocatedName
+                             	,d.InventBatch
+                             	,d.Qty
+                             	,d.Price
+                             	,d.RmPrice
+                             	,d.PmPrice
+                             	,d.StdCostPrice
+                             	,d.[Source]
+                             	,d.RefId
+                             	,id.LATESTPRICE as [LatestPurchasePrice]
+                             from Rofo a 
+                             join Mup b ON b.RofoId = a.RecId
+                             join MupTrans c ON c.MupId = b.RecId
+                             join ItemTrans d ON d.RecId = c.ItemTransId
+                             join AXGMKDW.dbo.DimItem i ON i.ITEMID = a.ItemId
+                             join AXGMKDW.dbo.DimItem ib ON ib.ITEMID = b.ItemId
+                             join AXGMKDW.dbo.DimItem id ON id.ITEMID = d.ItemId
+                             left join AXGMKDW.dbo.[DimItemSubstitute] s ON s.ItemId = b.ItemId
+                             where a.RecId = @RofoId
+                             ORDER BY a.RecId asc, b.ItemId asc
+                             """;
+        
+        return await _sqlConnection.QueryAsync<FgCostDetailSp>(query, new { command.RofoId },
+            transaction: command.DbTransaction);
+    }
+
+    public async Task<PagedList<FgCostDetailSp>> GetFgCostDetailsByRofoIdPagedListAsync(GetFgCostDetailsByRofoIdPagedListCommand command)
+    {
+        const string query = """
+                             select 
+                                 a.room
+                                ,a.RecId as RofoId
+                             	,a.ItemId as ProductId
+                             	,i.SEARCHNAME as ProductName
+                             	,a.RofoDate
+                             	,a.Qty as QtyRofo
+                             	,b.ItemId
+                             	,ib.SEARCHNAME as ItemName
+                             	,isnull(s.VtaMpSubstitusiGroupId,'') as [GroupSubstitusi]
+                             	,d.ItemId as ItemAllocatedId
+                             	,id.SEARCHNAME as ItemAllocatedName
+                             	,d.InventBatch
+                             	,d.Qty
+                             	,d.Price
+                             	,d.RmPrice
+                             	,d.PmPrice
+                             	,d.StdCostPrice
+                             	,d.[Source]
+                             	,d.RefId
+                             	,id.LATESTPRICE as [LatestPurchasePrice]
+                             from Rofo a 
+                             join Mup b ON b.RofoId = a.RecId
+                             join MupTrans c ON c.MupId = b.RecId
+                             join ItemTrans d ON d.RecId = c.ItemTransId
+                             join AXGMKDW.dbo.DimItem i ON i.ITEMID = a.ItemId
+                             join AXGMKDW.dbo.DimItem ib ON ib.ITEMID = b.ItemId
+                             join AXGMKDW.dbo.DimItem id ON id.ITEMID = d.ItemId
+                             left join AXGMKDW.dbo.[DimItemSubstitute] s ON s.ItemId = b.ItemId
+                             /**where**/
+                             /**orderby**/
+                             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY
+                             """;
+        
+        const string countQuery = """
+                                   select count(*)
+                                   from Rofo a 
+                                   join Mup b ON b.RofoId = a.RecId
+                                   join MupTrans c ON c.MupId = b.RecId
+                                   join ItemTrans d ON d.RecId = c.ItemTransId
+                                   join AXGMKDW.dbo.DimItem i ON i.ITEMID = a.ItemId
+                                   join AXGMKDW.dbo.DimItem ib ON ib.ITEMID = b.ItemId
+                                   join AXGMKDW.dbo.DimItem id ON id.ITEMID = d.ItemId
+                                   left join AXGMKDW.dbo.[DimItemSubstitute] s ON s.ItemId = b.ItemId
+                                   where a.RecId = @RofoId
+                                   """;
+        
+        var sqlBuilder = new SqlBuilder();
+        
+        var pagedListRequest = command.PagedListRequest;
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.Room), out var roomFilter) && int.TryParse(roomFilter, out var room))
+        {
+            sqlBuilder.Where($"a.[Room] = @room", new { room });
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.RofoId), out var rofoIdFilter) && int.TryParse(rofoIdFilter, out var rofoId))
+        {
+            sqlBuilder.Where($"a.RecId = @rofoId", new { rofoId });
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.ProductId), out var productIdFilter))
+        {
+            if (productIdFilter.Contains('*') || productIdFilter.Contains('%'))
+            {
+                productIdFilter = productIdFilter.Replace('*', '%');
+                sqlBuilder.Where($"a.ItemId LIKE @productId", new { productId = productIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"a.ItemId = @productId", new { productId = productIdFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.ProductName), out var productNameFilter))
+        {
+            if (productNameFilter.Contains('*') || productNameFilter.Contains('%'))
+            {
+                productNameFilter = productNameFilter.Replace('*', '%');
+                sqlBuilder.Where($"i.SEARCHNAME LIKE @productName", new { productName = productNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"i.SEARCHNAME = @productName", new { productName = productNameFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.RofoDate), out var rofoDateFilter) && DateTime.TryParse(rofoDateFilter, out var rofoDate))
+        {
+            sqlBuilder.Where($"a.RofoDate = @rofoDate", new { rofoDate });
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.QtyRofo), out var qtyRofoFilter))
+        {
+            if (decimal.TryParse(qtyRofoFilter, out var qtyRofo))
+            {
+                sqlBuilder.Where($"a.Qty = @qtyRofo", new { qtyRofo });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(qtyRofoFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"a.Qty {match.Groups[1].Value} @qtyRofo", new { qtyRofo = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.ItemId), out var itemIdFilter))
+        {
+            if (itemIdFilter.Contains('*') || itemIdFilter.Contains('%'))
+            {
+                itemIdFilter = itemIdFilter.Replace('*', '%');
+                sqlBuilder.Where($"b.ItemId LIKE @itemId", new { itemId = itemIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"b.ItemId = @itemId", new { itemId = itemIdFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.ItemName), out var itemNameFilter))
+        {
+            if (itemNameFilter.Contains('*') || itemNameFilter.Contains('%'))
+            {
+                itemNameFilter = itemNameFilter.Replace('*', '%');
+                sqlBuilder.Where($"ib.SEARCHNAME LIKE @itemName", new { itemName = itemNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"ib.SEARCHNAME = @itemName", new { itemName = itemNameFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.GroupSubstitusi), out var groupSubstitusiFilter))
+        {
+            if (groupSubstitusiFilter.Contains('*') || groupSubstitusiFilter.Contains('%'))
+            {
+                groupSubstitusiFilter = groupSubstitusiFilter.Replace('*', '%');
+                sqlBuilder.Where($"isnull(s.VtaMpSubstitusiGroupId,'') LIKE @groupSubstitusi", new { groupSubstitusi = groupSubstitusiFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"isnull(s.VtaMpSubstitusiGroupId,'') = @groupSubstitusi", new { groupSubstitusi = groupSubstitusiFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.ItemAllocatedId), out var itemAllocatedIdFilter))
+        {
+            if (itemAllocatedIdFilter.Contains('*') || itemAllocatedIdFilter.Contains('%'))
+            {
+                itemAllocatedIdFilter = itemAllocatedIdFilter.Replace('*', '%');
+                sqlBuilder.Where($"d.ItemId LIKE @itemAllocatedId", new { itemAllocatedId = itemAllocatedIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"d.ItemId = @itemAllocatedId", new { itemAllocatedId = itemAllocatedIdFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.ItemAllocatedName), out var itemAllocatedNameFilter))
+        {
+            if (itemAllocatedNameFilter.Contains('*') || itemAllocatedNameFilter.Contains('%'))
+            {
+                itemAllocatedNameFilter = itemAllocatedNameFilter.Replace('*', '%');
+                sqlBuilder.Where($"id.SEARCHNAME LIKE @itemAllocatedName", new { itemAllocatedName = itemAllocatedNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"id.SEARCHNAME = @itemAllocatedName", new { itemAllocatedName = itemAllocatedNameFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.InventBatch), out var inventBatchFilter))
+        {
+            if (inventBatchFilter.Contains('*') || inventBatchFilter.Contains('%'))
+            {
+                inventBatchFilter = inventBatchFilter.Replace('*', '%');
+                sqlBuilder.Where($"d.InventBatch LIKE @inventBatch", new { inventBatch = inventBatchFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"d.InventBatch = @inventBatch", new { inventBatch = inventBatchFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.Qty), out var qtyFilter))
+        {
+            if (decimal.TryParse(qtyFilter, out var qty))
+            {
+                sqlBuilder.Where($"d.Qty = @qty", new { qty });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(qtyFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"d.Qty {match.Groups[1].Value} @qty", new { qty = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.Price), out var priceFilter))
+        {
+            if (decimal.TryParse(priceFilter, out var price))
+            {
+                sqlBuilder.Where($"d.Price = @price", new { price });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(priceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"d.Price {match.Groups[1].Value} @price", new { price = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.RmPrice), out var rmPriceFilter))
+        {
+            if (decimal.TryParse(rmPriceFilter, out var rmPrice))
+            {
+                sqlBuilder.Where($"d.RmPrice = @rmPrice", new { rmPrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(rmPriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"d.RmPrice {match.Groups[1].Value} @rmPrice", new { rmPrice = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.PmPrice), out var pmPriceFilter))
+        {
+            if (decimal.TryParse(pmPriceFilter, out var pmPrice))
+            {
+                sqlBuilder.Where($"d.PmPrice = @pmPrice", new { pmPrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(pmPriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"d.PmPrice {match.Groups[1].Value} @pmPrice", new { pmPrice = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.StdCostPrice), out var stdCostPriceFilter))
+        {
+            if (decimal.TryParse(stdCostPriceFilter, out var stdCostPrice))
+            {
+                sqlBuilder.Where($"d.StdCostPrice = @stdCostPrice", new { stdCostPrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(stdCostPriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"d.StdCostPrice {match.Groups[1].Value} @stdCostPrice", new { stdCostPrice = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.Source), out var sourceFilter))
+        {
+            if (sourceFilter.Contains('*') || sourceFilter.Contains('%'))
+            {
+                sourceFilter = sourceFilter.Replace('*', '%');
+                sqlBuilder.Where($"d.[Source] LIKE @source", new { source = sourceFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"d.[Source] = @source", new { source = sourceFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.RefId), out var refIdFilter))
+        {
+            if (refIdFilter.Contains('*') || refIdFilter.Contains('%'))
+            {
+                refIdFilter = refIdFilter.Replace('*', '%');
+                sqlBuilder.Where($"d.RefId LIKE @refId", new { refId = refIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where($"d.RefId = @refId", new { refId = refIdFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.LatestPurchasePrice), out var latestPurchasePriceFilter))
+        {
+
+            if (decimal.TryParse(latestPurchasePriceFilter, out var latestPurchasePrice))
+            {
+                sqlBuilder.Where($"id.LATESTPRICE = @latestPurchasePrice", new { latestPurchasePrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(latestPurchasePriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"id.LATESTPRICE {match.Groups[1].Value} @latestPurchasePrice", new { latestPurchasePrice = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        var sort = pagedListRequest.IsSortAscending ? "ASC" : "DESC";
+        sqlBuilder.OrderBy(string.IsNullOrEmpty(pagedListRequest.SortBy)
+            ? $"a.RecId {sort}"
+            : $"{pagedListRequest.SortBy} {sort}");
+        
+        sqlBuilder.AddParameters(new
+            { Offset = (pagedListRequest.PageNumber - 1) * pagedListRequest.PageSize, pagedListRequest.PageSize });
+        
+        var queryTemplate = sqlBuilder.AddTemplate(query);
+        var fgCostDetailList = await _sqlConnection.QueryAsync<FgCostDetailSp>(queryTemplate.RawSql, queryTemplate.Parameters, command.DbTransaction);
+        queryTemplate = sqlBuilder.AddTemplate(countQuery);
         var fgCostDetailCount = await _sqlConnection.ExecuteScalarAsync<int>(queryTemplate.RawSql, queryTemplate.Parameters, command.DbTransaction);
         return new PagedList<FgCostDetailSp>(fgCostDetailList, pagedListRequest.PageNumber, pagedListRequest.PageSize, fgCostDetailCount);
     }
