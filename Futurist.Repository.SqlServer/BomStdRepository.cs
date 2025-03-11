@@ -101,48 +101,75 @@ public class BomStdRepository : IBomStdRepository
 
         var pagedListRequest = command.PagedListRequest;
 
-        if (!string.IsNullOrEmpty(pagedListRequest.Search))
+        // filters
+        if (pagedListRequest.Filters.TryGetValue("Room", out var roomFilter) && int.TryParse(roomFilter, out var room))
         {
-            sqlBuilder.OrWhere("Room LIKE @RoomSearch", new { RoomSearch = $"%{pagedListRequest.Search}%" });
-            sqlBuilder.OrWhere("ProductId LIKE @ProductIdSearch",
-                new { ProductIdSearch = $"%{pagedListRequest.Search}%" });
-            sqlBuilder.OrWhere("ProductName LIKE @ProductNameSearch",
-                new { ProductNameSearch = $"%{pagedListRequest.Search}%" });
-            sqlBuilder.OrWhere("BomId LIKE @BomIdSearch", new { BomIdSearch = $"%{pagedListRequest.Search}%" });
-            sqlBuilder.OrWhere("ItemId LIKE @ItemIdSearch", new { ItemIdSearch = $"%{pagedListRequest.Search}%" });
-            sqlBuilder.OrWhere("ItemName LIKE @ItemNameSearch",
-                new { ItemNameSearch = $"%{pagedListRequest.Search}%" });
+            sqlBuilder.Where("Room = @Room", new { Room = room });
         }
-
-        if (pagedListRequest.Filter.Room != 0)
+        
+        if (pagedListRequest.Filters.TryGetValue("ProductId", out var productIdFilter))
         {
-            sqlBuilder.Where("Room = @Room", new { pagedListRequest.Filter.Room });
+            if (productIdFilter.Contains('*') || productIdFilter.Contains('%'))
+            {
+                productIdFilter = productIdFilter.Replace("*", "%");
+                sqlBuilder.Where("ProductId LIKE @ProductId", new { ProductId = productIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("ProductId = @ProductId", new { ProductId = productIdFilter });
+            }
         }
-
-        if (!string.IsNullOrEmpty(pagedListRequest.Filter.ProductId))
+        
+        if (pagedListRequest.Filters.TryGetValue("ProductName", out var productNameFilter))
         {
-            sqlBuilder.Where("ProductId LIKE @ProductId", new { ProductId = $"%{pagedListRequest.Filter.ProductId}%" });
+            if (productNameFilter.Contains('*') || productNameFilter.Contains('%'))
+            {
+                productNameFilter = productNameFilter.Replace("*", "%");
+                sqlBuilder.Where("ProductName LIKE @ProductName", new { ProductName = productNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("ProductName = @ProductName", new { ProductName = productNameFilter });
+            }
         }
-
-        if (!string.IsNullOrEmpty(pagedListRequest.Filter.ProductName))
+        
+        if (pagedListRequest.Filters.TryGetValue("BomId", out var bomIdFilter))
         {
-            sqlBuilder.Where("ProductName LIKE @ProductName",
-                new { ProductName = $"%{pagedListRequest.Filter.ProductName}%" });
+            if (bomIdFilter.Contains('*') || bomIdFilter.Contains('%'))
+            {
+                bomIdFilter = bomIdFilter.Replace("*", "%");
+                sqlBuilder.Where("BomId LIKE @BomId", new { BomId = bomIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("BomId = @BomId", new { BomId = bomIdFilter });
+            }
         }
-
-        if (!string.IsNullOrEmpty(pagedListRequest.Filter.BomId))
+        
+        if (pagedListRequest.Filters.TryGetValue("ItemId", out var itemIdFilter))
         {
-            sqlBuilder.Where("BomId LIKE @BomId", new { BomId = $"%{pagedListRequest.Filter.BomId}%" });
+            if (itemIdFilter.Contains('*') || itemIdFilter.Contains('%'))
+            {
+                itemIdFilter = itemIdFilter.Replace("*", "%");
+                sqlBuilder.Where("ItemId LIKE @ItemId", new { ItemId = itemIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("ItemId = @ItemId", new { ItemId = itemIdFilter });
+            }
         }
-
-        if (!string.IsNullOrEmpty(pagedListRequest.Filter.ItemId))
+        
+        if (pagedListRequest.Filters.TryGetValue("ItemName", out var itemNameFilter))
         {
-            sqlBuilder.Where("ItemId LIKE @ItemId", new { ItemId = $"%{pagedListRequest.Filter.ItemId}%" });
-        }
-
-        if (!string.IsNullOrEmpty(pagedListRequest.Filter.ItemName))
-        {
-            sqlBuilder.Where("ItemName LIKE @ItemName", new { ItemName = $"%{pagedListRequest.Filter.ItemName}%" });
+            if (itemNameFilter.Contains('*') || itemNameFilter.Contains('%'))
+            {
+                itemNameFilter = itemNameFilter.Replace("*", "%");
+                sqlBuilder.Where("ItemName LIKE @ItemName", new { ItemName = itemNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("ItemName = @ItemName", new { ItemName = itemNameFilter });
+            }
         }
 
         var sort = pagedListRequest.IsSortAscending ? "ASC" : "DESC";

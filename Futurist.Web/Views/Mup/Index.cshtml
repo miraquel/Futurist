@@ -249,12 +249,12 @@
                         d.columns.forEach((column, _) => {
                             if (column.search && column.search.value) {
                                 // Encode the search value for URL safety.
-                                query[`Filter.${column.data}`] = column.search.value;
+                                query[`Filters.${column.data.charAt(0).toUpperCase() + column.data.slice(1)}`] = column.search.value;
                             }
                         });
 
                         // get room id from dropdown and add to query
-                        query['Filter.Room'] = roomSelect.val();
+                        query['Filters.Room'] = roomSelect.val();
 
                         return query;
                     },
@@ -278,7 +278,7 @@
                 columns: [
                     { data: 'room', defaultContent: '' },
                     { data: 'productId', defaultContent: '' },
-                    { data: 'productName', defaultContent: '' },
+                    { data: 'productName', width: '200px', defaultContent: '' },
                     { 
                         data: 'rofoDate', 
                         defaultContent: '', 
@@ -301,10 +301,10 @@
                         }
                     },
                     { data: 'itemId', defaultContent: '' },
-                    { data: 'itemName', defaultContent: '' },
+                    { data: 'itemName', width: '200px', defaultContent: '' },
                     { data: 'groupSubstitusi', defaultContent: '' },
                     { data: 'itemAllocatedId', defaultContent: '' },
-                    { data: 'itemAllocatedName', defaultContent: '' },
+                    { data: 'itemAllocatedName', width: '200px', defaultContent: '' },
                     { data: 'unitId', defaultContent: '' },
                     { data: 'inventBatch', defaultContent: '' },
                     { 

@@ -224,12 +224,12 @@
                         d.columns.forEach((column, _) => {
                             if (column.search && column.search.value) {
                                 // Encode the search value for URL safety.
-                                query[`Filter.${column.data}`] = column.search.value.replace(/\*/g, '%2A');
+                                query[`Filters.${column.data.charAt(0).toUpperCase() + column.data.slice(1)}`] = column.search.value;
                             }
                         });
 
                         // get room id from dropdown and add to query
-                        query['Filter.Room'] = roomSelect.val();
+                        query['Filters.Room'] = roomSelect.val();
 
                         return query;
                     },

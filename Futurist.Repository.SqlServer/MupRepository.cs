@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Data.SqlTypes;
 using Dapper;
+using Futurist.Common.Helpers;
 using Futurist.Domain;
 using Futurist.Domain.Common;
 using Futurist.Repository.Command.MupCommand;
@@ -94,121 +95,174 @@ public class MupRepository : IMupRepository
         var sqlBuilder = new SqlBuilder();
 
         var pagedListRequest = command.PagedListRequest;
-
-        if (!string.IsNullOrEmpty(pagedListRequest.Search))
+        
+        if (pagedListRequest.Filters.TryGetValue("Room", out var roomFilter) && int.TryParse(roomFilter, out var room))
         {
-	        sqlBuilder.OrWhere("CAST(a.Room AS NVARCHAR) LIKE @RoomSearch", new { RoomSearch = $"{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("CAST(a.RecId AS NVARCHAR) LIKE @RofoIdSearch", new { RofoIdSearch = $"{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("a.ItemId LIKE @ProductIdSearch", new { ProductIdSearch = $"%{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("i.SEARCHNAME LIKE @ProductNameSearch", new { ProductNameSearch = $"%{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("CAST(a.RofoDate AS NVARCHAR) LIKE @RofoDateSearch", new { RofoDateSearch = $"%{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("CAST(a.Qty AS NVARCHAR) LIKE @QtyRofoSearch", new { QtyRofoSearch = $"{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("b.ItemId LIKE @ItemIdSearch", new { ItemIdSearch = $"%{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("ib.SEARCHNAME LIKE @ItemNameSearch", new { ItemNameSearch = $"%{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("isnull(s.VtaMpSubstitusiGroupId,'') LIKE @GroupSubstitusiSearch", new { GroupSubstitusiSearch = $"%{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("d.ItemId LIKE @ItemAllocatedIdSearch", new { ItemAllocatedIdSearch = $"%{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("id.SEARCHNAME LIKE @ItemAllocatedNameSearch", new { ItemAllocatedNameSearch = $"%{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("id.UnitId LIKE @UnitIdSearch", new { UnitIdSearch = $"%{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("d.InventBatch LIKE @InventBatchSearch", new { InventBatchSearch = $"%{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("CAST(d.Qty AS NVARCHAR) LIKE @QtySearch", new { QtySearch = $"{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("CAST(d.Price AS NVARCHAR) LIKE @PriceSearch", new { PriceSearch = $"{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("CAST(d.RmPrice AS NVARCHAR) LIKE @RmPriceSearch", new { RmPriceSearch = $"{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("CAST(d.PmPrice AS NVARCHAR) LIKE @PmPriceSearch", new { PmPriceSearch = $"{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("CAST(d.StdCostPrice AS NVARCHAR) LIKE @StdCostPriceSearch", new { StdCostPriceSearch = $"{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("d.[Source] LIKE @SourceSearch", new { SourceSearch = $"%{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("d.RefId LIKE @RefIdSearch", new { RefIdSearch = $"%{pagedListRequest.Search}%" });
-	        sqlBuilder.OrWhere("CAST(id.LATESTPRICE AS NVARCHAR) LIKE @LatestPurchasePriceSearch", new { LatestPurchasePriceSearch = $"{pagedListRequest.Search}%" });
+            sqlBuilder.Where("a.Room = @Room", new { Room = room });
         }
         
-        if (pagedListRequest.Filter.Room != 0)
-		{
-			sqlBuilder.Where("a.Room = @Room", new { pagedListRequest.Filter.Room });
-		}
-
-		if (pagedListRequest.Filter.RofoDate != SqlDateTime.MinValue.Value)
-		{
-			sqlBuilder.Where("a.RofoDate = @RofoDate", new { pagedListRequest.Filter.RofoDate });
-		}
-		
-		if (!string.IsNullOrEmpty(pagedListRequest.Filter.ProductId))
-		{
-			sqlBuilder.Where("a.ItemId LIKE @ProductId", new { ProductId = $"%{pagedListRequest.Filter.ProductId}%" });
-		}
-
-		if (!string.IsNullOrEmpty(pagedListRequest.Filter.ProductName))
-		{
-			sqlBuilder.Where("i.SEARCHNAME LIKE @ProductName", new { ProductName = $"%{pagedListRequest.Filter.ProductName}%" });
-		}
-		
-		if (pagedListRequest.Filter.QtyRofo != 0)
-		{
-			sqlBuilder.Where("CAST(a.Qty AS NVARCHAR) LIKE @QtyRofo", new { QtyRofo = $"{pagedListRequest.Filter.QtyRofo}%" });
-		}
-		if (pagedListRequest.Filter.QtyRofo != 0)
-		{
-			sqlBuilder.Where("CAST(a.Qty AS NVARCHAR) LIKE @QtyRofo", new { QtyRofo = $"{pagedListRequest.Filter.QtyRofo}%" });
-		}
-		if (!string.IsNullOrEmpty(pagedListRequest.Filter.ItemId))
-		{
-			sqlBuilder.Where("b.ItemId LIKE @ItemId", new { ItemId = $"%{pagedListRequest.Filter.ItemId}%" });
-		}
-		if (!string.IsNullOrEmpty(pagedListRequest.Filter.ItemName))
-		{
-			sqlBuilder.Where("ib.SEARCHNAME LIKE @ItemName", new { ItemName = $"%{pagedListRequest.Filter.ItemName}%" });
-		}
-		if (!string.IsNullOrEmpty(pagedListRequest.Filter.GroupSubstitusi))
-		{
-			sqlBuilder.Where("isnull(s.VtaMpSubstitusiGroupId,'') LIKE @GroupSubstitusi", new { GroupSubstitusi = $"%{pagedListRequest.Filter.GroupSubstitusi}%" });
-		}
-		if (!string.IsNullOrEmpty(pagedListRequest.Filter.ItemAllocatedId))
-		{
-			sqlBuilder.Where("d.ItemId LIKE @ItemAllocatedId", new { ItemAllocatedId = $"%{pagedListRequest.Filter.ItemAllocatedId}%" });
-		}
-		if (!string.IsNullOrEmpty(pagedListRequest.Filter.ItemAllocatedName))
-		{
-			sqlBuilder.Where("id.SEARCHNAME LIKE @ItemAllocatedName", new { ItemAllocatedName = $"%{pagedListRequest.Filter.ItemAllocatedName}%" });
-		}
-		if (!string.IsNullOrEmpty(pagedListRequest.Filter.UnitId))
-		{
-			sqlBuilder.Where("id.UnitId LIKE @UnitId", new { UnitId = $"%{pagedListRequest.Filter.UnitId}%" });
-		}
-		if (!string.IsNullOrEmpty(pagedListRequest.Filter.InventBatch))
-		{
-			sqlBuilder.Where("d.InventBatch LIKE @InventBatch", new { InventBatch = $"%{pagedListRequest.Filter.InventBatch}%" });
-		}
-		if (pagedListRequest.Filter.Qty != 0)
-		{
-			sqlBuilder.Where("CAST(d.Qty AS NVARCHAR) LIKE @Qty", new { Qty = $"{pagedListRequest.Filter.Qty}%" });
-		}
-		if (pagedListRequest.Filter.Price != 0)
-		{
-			sqlBuilder.Where("CAST(d.Price AS NVARCHAR) LIKE @Price", new { Price = $"{pagedListRequest.Filter.Price}%" });
-		}
-		if (pagedListRequest.Filter.RmPrice != 0)
-		{
-			sqlBuilder.Where("CAST(d.RmPrice AS NVARCHAR) LIKE @RmPrice", new { RmPrice = $"{pagedListRequest.Filter.RmPrice}%" });
-		}
-		if (pagedListRequest.Filter.PmPrice != 0)
-		{
-			sqlBuilder.Where("CAST(d.PmPrice AS NVARCHAR) LIKE @PmPrice", new { PmPrice = $"{pagedListRequest.Filter.PmPrice}%" });
-		}
-		if (pagedListRequest.Filter.StdCostPrice != 0)
-		{
-			sqlBuilder.Where("CAST(d.StdCostPrice AS NVARCHAR) LIKE @StdCostPrice", new { StdCostPrice = $"{pagedListRequest.Filter.StdCostPrice}%" });
-		}
-		if (!string.IsNullOrEmpty(pagedListRequest.Filter.Source))
-		{
-			sqlBuilder.Where("d.[Source] LIKE @Source", new { Source = $"%{pagedListRequest.Filter.Source}%" });
-		}
-		if (!string.IsNullOrEmpty(pagedListRequest.Filter.RefId))
-		{
-			sqlBuilder.Where("d.RefId LIKE @RefId", new { RefId = $"%{pagedListRequest.Filter.RefId}%" });
-		}
-		if (pagedListRequest.Filter.LatestPurchasePrice != 0)
-		{
-			sqlBuilder.Where("CAST(id.LATESTPRICE AS NVARCHAR) LIKE @LatestPurchasePrice", new { LatestPurchasePrice = $"{pagedListRequest.Filter.LatestPurchasePrice}%" });
-		}
-		
+        if (pagedListRequest.Filters.TryGetValue("RofoId", out var rofoIdFilter) && int.TryParse(rofoIdFilter, out var rofoId))
+        {
+            sqlBuilder.Where("a.RecId = @RofoId", new { RofoId = rofoId });
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue("ProductId", out var productIdFilter))
+        {
+            if (productIdFilter.Contains('*') || productIdFilter.Contains('%'))
+            {
+                productIdFilter = productIdFilter.Replace("*", "%");
+                sqlBuilder.Where("a.ItemId LIKE @ProductId", new { ProductId = productIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("a.ItemId = @ProductId", new { ProductId = productIdFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue("ProductName", out var productNameFilter))
+        {
+            if (productNameFilter.Contains('*') || productNameFilter.Contains('%'))
+            {
+                productNameFilter = productNameFilter.Replace("*", "%");
+                sqlBuilder.Where("i.SEARCHNAME LIKE @ProductName", new { ProductName = productNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("i.SEARCHNAME = @ProductName", new { ProductName = productNameFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue("RofoDate", out var rofoDateFilter) && DateTime.TryParse(rofoDateFilter, out var rofoDate))
+        {
+            sqlBuilder.Where("a.RofoDate = @RofoDate", new { RofoDate = rofoDate });
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue("QtyRofo", out var qtyRofoFilter))
+        {
+            if (decimal.TryParse(qtyRofoFilter, out var qtyRofo))
+            {
+                sqlBuilder.Where("a.Qty = @QtyRofo", new { QtyRofo = qtyRofo });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(qtyRofoFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"a.Qty {match.Groups[1].Value} @QtyRofo", new { QtyRofo = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue("ItemId", out var itemIdFilter))
+        {
+            if (itemIdFilter.Contains('*') || itemIdFilter.Contains('%'))
+            {
+                itemIdFilter = itemIdFilter.Replace("*", "%");
+                sqlBuilder.Where("b.ItemId LIKE @ItemId", new { ItemId = itemIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("b.ItemId = @ItemId", new { ItemId = itemIdFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue("ItemName", out var itemNameFilter))
+        {
+            if (itemNameFilter.Contains('*') || itemNameFilter.Contains('%'))
+            {
+                itemNameFilter = itemNameFilter.Replace("*", "%");
+                sqlBuilder.Where("ib.SEARCHNAME LIKE @ItemName", new { ItemName = itemNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("ib.SEARCHNAME = @ItemName", new { ItemName = itemNameFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue("GroupSubstitusi", out var groupSubstitusiFilter))
+        {
+            if (groupSubstitusiFilter.Contains('*') || groupSubstitusiFilter.Contains('%'))
+            {
+                groupSubstitusiFilter = groupSubstitusiFilter.Replace("*", "%");
+                sqlBuilder.Where("s.VtaMpSubstitusiGroupId LIKE @GroupSubstitusi", new { GroupSubstitusi = groupSubstitusiFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("s.VtaMpSubstitusiGroupId = @GroupSubstitusi", new { GroupSubstitusi = groupSubstitusiFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue("ItemAllocatedId", out var itemAllocatedIdFilter))
+        {
+            if (itemAllocatedIdFilter.Contains('*') || itemAllocatedIdFilter.Contains('%'))
+            {
+                itemAllocatedIdFilter = itemAllocatedIdFilter.Replace("*", "%");
+                sqlBuilder.Where("d.ItemId LIKE @ItemAllocatedId", new { ItemAllocatedId = itemAllocatedIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("d.ItemId = @ItemAllocatedId", new { ItemAllocatedId = itemAllocatedIdFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue("ItemAllocatedName", out var itemAllocatedNameFilter))
+        {
+            if (itemAllocatedNameFilter.Contains('*') || itemAllocatedNameFilter.Contains('%'))
+            {
+                itemAllocatedNameFilter = itemAllocatedNameFilter.Replace("*", "%");
+                sqlBuilder.Where("id.SEARCHNAME LIKE @ItemAllocatedName", new { ItemAllocatedName = itemAllocatedNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("id.SEARCHNAME = @ItemAllocatedName", new { ItemAllocatedName = itemAllocatedNameFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue("InventBatch", out var inventBatchFilter))
+        {
+            if (inventBatchFilter.Contains('*') || inventBatchFilter.Contains('%'))
+            {
+                inventBatchFilter = inventBatchFilter.Replace("*", "%");
+                sqlBuilder.Where("d.InventBatch LIKE @InventBatch", new { InventBatch = inventBatchFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("d.InventBatch = @InventBatch", new { InventBatch = inventBatchFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue("Price", out var priceFilter))
+        {
+            if (decimal.TryParse(priceFilter, out var price))
+            {
+                sqlBuilder.Where("d.Price = @Price", new { Price = price });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(priceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"d.Price {match.Groups[1].Value} @Price", new { Price = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue("Gap", out var gapFilter))
+        {
+            if (decimal.TryParse(gapFilter, out var gap))
+            {
+                sqlBuilder.Where("isnull(d.Price/nullif(id.LATESTPRICE,0)* 100,0) = @Gap", new { Gap = gap });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(gapFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"isnull(d.Price/nullif(id.LATESTPRICE,0)* 100,0) {match.Groups[1].Value} @Gap", new { Gap = match.Groups[2].Value });
+                }
+            }
+        }
+        
 		var sort = pagedListRequest.IsSortAscending ? "ASC" : "DESC";
 		sqlBuilder.OrderBy(string.IsNullOrEmpty(pagedListRequest.SortBy)
 			? $"b.RecId {sort}"

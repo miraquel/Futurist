@@ -2,6 +2,7 @@
 using System.Data.SqlTypes;
 using System.Transactions;
 using Dapper;
+using Futurist.Common.Helpers;
 using Futurist.Domain;
 using Futurist.Domain.Common;
 using Futurist.Repository.Command.RofoCommand;
@@ -27,49 +28,106 @@ internal class RofoRepository : IRofoRepository
         
         var pagedListRequest = command.PagedListRequest;
         
-        if (!string.IsNullOrEmpty(pagedListRequest.Search))
+        if (pagedListRequest.Filters.TryGetValue(nameof(Rofo.Room), out var roomFilter) && int.TryParse(roomFilter, out var room))
         {
-            sqlBuilder.OrWhere("ItemId LIKE @ItemIdSearch", new { ItemIdSearch = $"%{pagedListRequest.Search}%" });
-            sqlBuilder.OrWhere("ItemName LIKE @ItemNameSearch", new { ItemNameSearch = $"%{pagedListRequest.Search}%" });
-            sqlBuilder.OrWhere("CreatedBy LIKE @CreatedBySearch", new { CreatedBySearch = $"%{pagedListRequest.Search}%" });
-            sqlBuilder.OrWhere("CAST(Room AS NVARCHAR) LIKE @RoomSearch", new { RoomSearch = $"%{pagedListRequest.Search}%" });
-            sqlBuilder.OrWhere("CAST(RofoDate AS NVARCHAR) LIKE @RofoDateSearch", new { RofoDateSearch = $"%{pagedListRequest.Search}%" });
-            sqlBuilder.OrWhere("CAST(Qty AS NVARCHAR) LIKE @QtySearch", new { QtySearch = $"%{pagedListRequest.Search}%" });
-            sqlBuilder.OrWhere("CAST(QtyRem AS NVARCHAR) LIKE @QtyRemSearch", new { QtyRemSearch = $"%{pagedListRequest.Search}%" });
-            sqlBuilder.OrWhere("CAST(CreatedDate AS NVARCHAR) LIKE @CreatedDateSearch", new { CreatedDateSearch = $"%{pagedListRequest.Search}%" });
+            sqlBuilder.Where("Room = @Room", new { Room = room });
         }
         
-        if (pagedListRequest.Filter.Room != 0)
+        if (pagedListRequest.Filters.TryGetValue(nameof(Rofo.RofoDate), out var rofoDateFilter) && DateTime.TryParse(rofoDateFilter, out var rofoDate))
         {
-            sqlBuilder.Where("Room = @Room", new { pagedListRequest.Filter.Room });
+            sqlBuilder.Where("RofoDate = @RofoDate", new { RofoDate = rofoDate });
         }
-        if (pagedListRequest.Filter.RofoDate != SqlDateTime.MinValue.Value)
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(Rofo.ItemId), out var itemIdFilter))
         {
-            sqlBuilder.Where("RofoDate = @RofoDate", new { pagedListRequest.Filter.RofoDate });
+            if (itemIdFilter.Contains('*') || itemIdFilter.Contains('%'))
+            {
+                itemIdFilter = itemIdFilter.Replace("*", "%");
+                sqlBuilder.Where("ItemId LIKE @ItemId", new { ItemId = itemIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("ItemId = @ItemId", new { ItemId = itemIdFilter });
+            }
         }
-        if (!string.IsNullOrEmpty(pagedListRequest.Filter.ItemId))
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(Rofo.ItemName), out var itemNameFilter))
         {
-            sqlBuilder.Where("ItemId LIKE @ItemId", new { ItemId = $"%{pagedListRequest.Filter.ItemId}%" });
+            if (itemNameFilter.Contains('*') || itemNameFilter.Contains('%'))
+            {
+                itemNameFilter = itemNameFilter.Replace("*", "%");
+                sqlBuilder.Where("ItemName LIKE @ItemName", new { ItemName = itemNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("ItemName = @ItemName", new { ItemName = itemNameFilter });
+            }
         }
-        if (!string.IsNullOrEmpty(pagedListRequest.Filter.ItemName))
+
+        if (pagedListRequest.Filters.TryGetValue(nameof(Rofo.Qty), out var qtyFilter))
         {
-            sqlBuilder.Where("ItemName LIKE @ItemName", new { ItemName = $"%{pagedListRequest.Filter.ItemName}%" });
+            if (decimal.TryParse(qtyFilter, out var qty))
+            {
+                sqlBuilder.Where("Qty = @Qty", new { Qty = qty });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(qtyFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"Qty {match.Groups[1].Value} @Qty", new { Qty = match.Groups[2].Value });
+                }
+            }
         }
-        if (pagedListRequest.Filter.Qty != 0)
+
+        if (pagedListRequest.Filters.TryGetValue(nameof(Rofo.QtyRem), out var qtyRemFilter))
         {
-            sqlBuilder.Where("CAST(Qty AS NVARCHAR) LIKE @Qty", new { Qty = $"{pagedListRequest.Filter.Qty}%" });
+            if (decimal.TryParse(qtyRemFilter, out var qtyRem))
+            {
+                sqlBuilder.Where("QtyRem = @QtyRem", new { QtyRem = qtyRem });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(qtyRemFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"QtyRem {match.Groups[1].Value} @QtyRem", new { QtyRem = match.Groups[2].Value });
+                }
+            }
         }
-        if (pagedListRequest.Filter.QtyRem != 0)
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(Rofo.QtyRem), out var qtyRemRemFilter))
         {
-            sqlBuilder.Where("QtyRem = @QtyRem", new { pagedListRequest.Filter.QtyRem });
+            if (decimal.TryParse(qtyRemRemFilter, out var qtyRemRem))
+            {
+                sqlBuilder.Where("QtyRem = @QtyRem", new { QtyRem = qtyRemRem });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(qtyRemRemFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Where($"QtyRem {match.Groups[1].Value} @QtyRem", new { QtyRem = match.Groups[2].Value });
+                }
+            }
         }
-        if (!string.IsNullOrEmpty(pagedListRequest.Filter.CreatedBy))
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(Rofo.CreatedBy), out var createdByFilter))
         {
-            sqlBuilder.Where("CreatedBy LIKE @CreatedBy", new { CreatedBy = $"%{pagedListRequest.Filter.CreatedBy}%" });
+            if (createdByFilter.Contains('*') || createdByFilter.Contains('%'))
+            {
+                createdByFilter = createdByFilter.Replace("*", "%");
+                sqlBuilder.Where("CreatedBy LIKE @CreatedBy", new { CreatedBy = createdByFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("CreatedBy = @CreatedBy", new { CreatedBy = createdByFilter });
+            }
         }
-        if (pagedListRequest.Filter.CreatedDate != SqlDateTime.MinValue.Value)
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(Rofo.CreatedDate), out var createdDateFilter) && DateTime.TryParse(createdDateFilter, out var createdDate))
         {
-            sqlBuilder.Where("CreatedDate = @CreatedDate", new { pagedListRequest.Filter.CreatedDate });
+            sqlBuilder.Where("CreatedDate = @CreatedDate", new { CreatedDate = createdDate });
         }
         
         var sort = pagedListRequest.IsSortAscending ? "ASC" : "DESC";
