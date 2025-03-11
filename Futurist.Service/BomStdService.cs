@@ -29,7 +29,7 @@ public class BomStdService : IBomStdService
             var command = new ProcessBomStdCommand
             {
                 RoomId = roomId,
-                DbTransaction = _unitOfWork.BeginTransaction()
+                //DbTransaction = _unitOfWork.BeginTransaction()
             };
 
             var response = await _unitOfWork.BomStdRepository.ProcessBomStdAsync(command);

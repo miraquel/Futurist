@@ -21,11 +21,11 @@ public class FgCostService : IFgCostService
     {
         try
         {
-            var transaction = _unitOfWork.BeginTransaction();
+            //var transaction = _unitOfWork.BeginTransaction();
             var command = new CalculateFgCostCommand
             {
                 RoomId = roomId,
-                DbTransaction = transaction
+                //DbTransaction = transaction
             };
             var result = await _unitOfWork.FgCostRepository.CalculateFgCostAsync(command);
             await _unitOfWork.CommitAsync();
