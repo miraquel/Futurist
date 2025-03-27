@@ -6,7 +6,7 @@ namespace Futurist.Repository.Interface;
 
 public interface IFgCostRepository
 {
-    public Task<string?> CalculateFgCostAsync(CalculateFgCostCommand command);
+    public Task<SpTask?> CalculateFgCostAsync(CalculateFgCostCommand command);
     public Task<IEnumerable<FgCostSp>> GetSummaryFgCostAsync(GetSummaryFgCostCommand command);
     public Task<PagedList<FgCostSp>> GetSummaryFgCostPagedListAsync(GetSummaryFgCostPagedListCommand command);
     public Task<IEnumerable<int>> GetFgCostRoomIdsAsync(GetFgCostRoomIdsCommand command);
