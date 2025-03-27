@@ -15,4 +15,5 @@ public class FgCostSpDto
     public decimal PmPrice { get; set; }
     public decimal StdCostPrice { get; set; }
     public decimal CostPrice { get; set; }
+    public decimal SalesPriceIndex { get; set; }
 }

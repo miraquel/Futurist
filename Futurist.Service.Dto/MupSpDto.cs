@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Data.SqlTypes;
+using System.Runtime.Serialization;
 
 namespace Futurist.Service.Dto;
 
@@ -41,4 +42,15 @@ public class MupSpDto
     public decimal LatestPurchasePrice { get; set; }
     [DisplayName("Gap")]
     public decimal Gap { get; set; }
+    
+    [DisplayName("Rofo ID"), IgnoreDataMember]
+    public int RofoId { get; set; }
+    [DisplayName("RM Price"), IgnoreDataMember]
+    public decimal RmPrice { get; set; }
+    [DisplayName("PM Price"), IgnoreDataMember]
+    public decimal PmPrice { get; set; }
+    [DisplayName("Std Cost Price"), IgnoreDataMember]
+    public decimal StdCostPrice { get; set; }
+    [DisplayName("MUP Date"), IgnoreDataMember]
+    public DateTime MupDate { get; set; } = SqlDateTime.MinValue.Value;
 }
