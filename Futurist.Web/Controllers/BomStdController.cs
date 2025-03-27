@@ -43,12 +43,24 @@ public class BomStdController : Controller
         
         var stream = ExcelHelper.ExportExcel(response.Data, (row, dto) =>
         {
-            row.Cell(1).Value = dto.Room;
-            row.Cell(2).Value = dto.ProductId;
-            row.Cell(3).Value = dto.ProductName;
-            row.Cell(4).Value = dto.BomId;
-            row.Cell(5).Value = dto.ItemId;
-            row.Cell(6).Value = dto.ItemName;
+            if (row.RowNumber() == 1)
+            {
+                row.Cell(1).Value = "Room";
+                row.Cell(2).Value = "Product Id";
+                row.Cell(3).Value = "Product Name";
+                row.Cell(4).Value = "Bom Id";
+                row.Cell(5).Value = "Item Id";
+                row.Cell(6).Value = "Item Name";
+            }
+            else
+            {
+                row.Cell(1).Value = dto.Room;
+                row.Cell(2).Value = dto.ProductId;
+                row.Cell(3).Value = dto.ProductName;
+                row.Cell(4).Value = dto.BomId;
+                row.Cell(5).Value = dto.ItemId;
+                row.Cell(6).Value = dto.ItemName;
+            }
         });
         
         return File(stream, "text/csv", $"BomErrorCheck_{DateTime.Now:yyyyMMddHHmmss}.csv");
