@@ -45,42 +45,155 @@ public class MupController : Controller
 
         var stream = ExcelHelper.ExportExcel(response.Data, (row, dto) =>
         {
-            row.Cell(1).Value = dto.Room;
-            row.Cell(2).Value = dto.ProductId;
-            row.Cell(3).Value = dto.ProductName;
-            
-            row.Cell(4).Value = dto.RofoDate;
-            row.Cell(4).Style.NumberFormat.Format = "dd MMM yyyy";
-            
-            row.Cell(5).Value = dto.QtyRofo;
-            row.Cell(5).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-            
-            row.Cell(6).Value = dto.ItemId;
-            row.Cell(7).Value = dto.ItemName;
-            row.Cell(8).Value = dto.GroupSubstitusi;
-            row.Cell(9).Value = dto.ItemAllocatedId;
-            row.Cell(10).Value = dto.ItemAllocatedName;
-            row.Cell(11).Value = dto.UnitId;
-            row.Cell(12).Value = dto.InventBatch;
-            
-            row.Cell(13).Value = dto.Qty;
-            row.Cell(13).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2WithSeparatorAndParens;
-            
-            row.Cell(14).Value = dto.Price;
-            row.Cell(14).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-            
-            row.Cell(15).Value = dto.Source;
-            row.Cell(16).Value = dto.RefId;
-            
-            row.Cell(17).Value = dto.LatestPurchasePrice;
-            row.Cell(17).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-            
-            row.Cell(18).Value = dto.Gap;
-            row.Cell(18).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+            if (row.RowNumber() == 1)
+            {
+                row.Cell(1).Value = "Room";
+                row.Cell(2).Value = "Product Id";
+                row.Cell(3).Value = "Product Name";
+                row.Cell(4).Value = "Rofo Date";
+                row.Cell(5).Value = "Qty Rofo";
+                row.Cell(6).Value = "Item Id";
+                row.Cell(7).Value = "Item Name";
+                row.Cell(8).Value = "Group Substitusi";
+                row.Cell(9).Value = "Item Allocated Id";
+                row.Cell(10).Value = "Item Allocated Name";
+                row.Cell(11).Value = "Unit Id";
+                row.Cell(12).Value = "Batch";
+                row.Cell(13).Value = "Qty";
+                row.Cell(14).Value = "Price";
+                row.Cell(15).Value = "Source";
+                row.Cell(16).Value = "Ref Id";
+                row.Cell(17).Value = "Latest Purchase Price";
+                row.Cell(18).Value = "Gap";
+            }
+            else
+            {
+                row.Cell(1).Value = dto.Room;
+                row.Cell(2).Value = dto.ProductId;
+                row.Cell(3).Value = dto.ProductName;
+                row.Cell(4).Value = dto.RofoDate;
+                row.Cell(4).Style.NumberFormat.Format = "dd MMM yyyy";
+                row.Cell(5).Value = dto.QtyRofo;
+                row.Cell(5).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                row.Cell(6).Value = dto.ItemId;
+                row.Cell(7).Value = dto.ItemName;
+                row.Cell(8).Value = dto.GroupSubstitusi;
+                row.Cell(9).Value = dto.ItemAllocatedId;
+                row.Cell(10).Value = dto.ItemAllocatedName;
+                row.Cell(11).Value = dto.UnitId;
+                row.Cell(12).Value = dto.InventBatch;
+                row.Cell(13).Value = dto.Qty;
+                row.Cell(13).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2WithSeparatorAndParens;
+                row.Cell(14).Value = dto.Price;
+                row.Cell(14).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                row.Cell(15).Value = dto.Source;
+                row.Cell(16).Value = dto.RefId;
+                row.Cell(17).Value = dto.LatestPurchasePrice;
+                row.Cell(17).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                row.Cell(18).Value = dto.Gap;
+                row.Cell(18).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+            }
         });
         
         // download as excel file
         return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"MupResult_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+    }
+    
+    public async Task<IActionResult> DownloadMupSummaryByItemId([FromQuery] int room)
+    {
+        var listRequestDto = new ListRequestDto
+        {
+            Filters = new Dictionary<string, string>
+            {
+                { "Room", room.ToString() }
+            }
+        };
+        
+        var response = await _mupService.MupSummaryByItemIdAsync(listRequestDto);
+
+        if (response is not { IsSuccess: true, Data: not null }) return BadRequest(response.Errors);
+        
+        var result = ExcelHelper.ExportExcel(response.Data, (row, dto) =>
+        {
+            if (row.RowNumber() == 1)
+            {
+                row.Cell(1).Value = "Mup Date";
+                row.Cell(2).Value = "Group Substitusi";
+                row.Cell(3).Value = "Item Id";
+                row.Cell(4).Value = "Item Name";
+                row.Cell(5).Value = "Qty";
+                row.Cell(6).Value = "Price";
+            }
+            else
+            {
+                row.Cell(1).Value = dto.MupDate;
+                row.Cell(1).Style.NumberFormat.Format = "dd MMM yyyy";
+                row.Cell(2).Value = dto.GroupSubstitusi;
+                row.Cell(3).Value = dto.ItemId;
+                row.Cell(4).Value = dto.ItemName;
+                row.Cell(5).Value = dto.Qty;
+                row.Cell(5).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2WithSeparatorAndParens;
+                row.Cell(6).Value = dto.Price;
+                row.Cell(6).Style.NumberFormat.Format = "#,##0";
+            }
+        });
+        
+        // download as excel file
+        return File(result, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"MupSummaryByItemId_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+    }
+
+    public async Task<IActionResult> DownloadMupSummaryByBatchNumber([FromQuery] int room)
+    {
+        var listRequestDto = new ListRequestDto
+        {
+            Filters = new Dictionary<string, string>
+            {
+                { "Room", room.ToString() }
+            }
+        };
+        
+        var response = await _mupService.MupSummaryByBatchNumberAsync(listRequestDto);
+        
+        if (response is not { IsSuccess: true, Data: not null }) return BadRequest(response.Errors);
+        
+        var stream = ExcelHelper.ExportExcel(response.Data, (row, dto) =>
+        {
+            if (row.RowNumber() == 1)
+            {
+                row.Cell(1).Value = "MUP Date";
+                row.Cell(2).Value = "Source";
+                row.Cell(3).Value = "Group Substitusi";
+                row.Cell(4).Value = "Item Allocated ID";
+                row.Cell(5).Value = "Item Allocated Name";
+                row.Cell(6).Value = "Unit";
+                row.Cell(7).Value = "Batch";
+                row.Cell(8).Value = "Qty";
+                row.Cell(9).Value = "Price";
+                row.Cell(10).Value = "Latest Purchase Price";
+                row.Cell(11).Value = "Gap";
+            }
+            else
+            {
+                row.Cell(1).Value = dto.MupDate;
+                row.Cell(2).Value = dto.Source;
+                row.Cell(3).Value = dto.GroupSubstitusi;
+                row.Cell(4).Value = dto.ItemAllocatedId;
+                row.Cell(5).Value = dto.ItemAllocatedName;
+                row.Cell(6).Value = dto.UnitId;
+                row.Cell(7).Value = dto.InventBatch;
+                row.Cell(8).Value = dto.Qty;
+                row.Cell(8).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2WithSeparatorAndParens;
+                row.Cell(9).Value = dto.Price;
+                row.Cell(9).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                row.Cell(10).Value = dto.LatestPurchasePrice;
+                row.Cell(10).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                row.Cell(11).Value = dto.Gap;
+                row.Cell(11).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+            }
+        });
+        
+        // download as excel file
+        return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"MupSummaryByBatchNumber_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
     }
 }
 
