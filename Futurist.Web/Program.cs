@@ -1,18 +1,79 @@
+using System.Data;
 using System.Security.Claims;
 using Futurist.Infrastructure.SignalR.Hubs;
 using Futurist.Repository.SqlServer;
 using Futurist.Repository.UnitOfWork;
 using Futurist.Service;
+using Futurist.Web.Hangfire;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using Serilog.Events;
+using Serilog.Filters;
+using Serilog.Sinks.MSSqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Hangfire
+// Add Serilog
+builder.Host.UseSerilog((context, configuration) =>
+{
+    configuration.ReadFrom.Configuration(context.Configuration);
+    configuration.Enrich.FromLogContext();
+    
+    if (context.HostingEnvironment.IsDevelopment())
+    {
+        configuration.WriteTo.Console();
+    }
+    
+    configuration
+        .WriteTo
+        .Logger(lc => lc
+            .Filter.ByExcluding(Matching.FromSource("Futurist.Web.Hangfire.JobLoggerAttribute"))
+            .WriteTo.MSSqlServer(builder.Configuration.GetConnectionString("SerilogConnection"), 
+                sinkOptions: new MSSqlServerSinkOptions
+                {
+                    TableName = "Logs",
+                    AutoCreateSqlTable = true,
+                },
+                columnOptions: new ColumnOptions
+                {
+                    AdditionalColumns =
+                    [
+                        new SqlColumn { DataType = SqlDbType.VarChar, ColumnName = "SourceContext" }
+                    ]
+                }
+            )
+        );
+
+    configuration
+        .WriteTo
+        .Logger(lc => lc
+            .Filter.ByIncludingOnly(Matching.FromSource("Futurist.Web.Hangfire.JobLoggerAttribute"))
+            .WriteTo.MSSqlServer(builder.Configuration.GetConnectionString("SerilogConnection"), 
+                sinkOptions: new MSSqlServerSinkOptions
+                {
+                    TableName = "JobLogs",
+                    AutoCreateSqlTable = true,
+                },
+                columnOptions: new ColumnOptions
+                {
+                    AdditionalColumns =
+                    [
+                        new SqlColumn { DataType = SqlDbType.VarChar, ColumnName = "SourceContext" },
+                        new SqlColumn { DataType = SqlDbType.VarChar, ColumnName = "Status" },
+                        new SqlColumn { DataType = SqlDbType.VarChar, ColumnName = "JobId" }
+                    ]
+                }
+            )
+        );
+});
+
 // Add Hangfire services.
 builder.Services.AddHangfire(configuration => configuration
+    .UseFilter(new JobLoggerAttribute())
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
