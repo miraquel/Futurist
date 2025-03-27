@@ -3,4 +3,5 @@
 public class ProcessBomStdCommand : BaseCommand
 {
     public int RoomId { get; init; }
+    public int Timeout { get; init; }
 }

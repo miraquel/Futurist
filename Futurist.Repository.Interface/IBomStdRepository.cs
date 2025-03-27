@@ -8,7 +8,7 @@ namespace Futurist.Repository.Interface;
 
 public interface IBomStdRepository
 {
-    Task<string?> ProcessBomStdAsync(ProcessBomStdCommand command);
+    Task<SpTask?> ProcessBomStdAsync(ProcessBomStdCommand command);
     Task<IEnumerable<BomStd>> BomErrorCheckAsync(BomErrorCheckCommand command);
     Task<PagedList<BomStd>> BomErrorCheckPagedListAsync(BomErrorCheckPagedListCommand command);
     Task<IEnumerable<int>> GetBomStdRoomIdsAsync(GetBomStdRoomIdsCommand command);

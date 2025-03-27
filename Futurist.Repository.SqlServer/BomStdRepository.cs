@@ -17,12 +17,12 @@ public class BomStdRepository : IBomStdRepository
         _sqlConnection = sqlConnection;
     }
 
-    public async Task<string?> ProcessBomStdAsync(ProcessBomStdCommand command)
+    public async Task<SpTask?> ProcessBomStdAsync(ProcessBomStdCommand command)
     {
         const string query = "EXEC CogsProjection.dbo.BomStd_insert @Room";
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
-        return await _sqlConnection.ExecuteScalarAsync<string>(query, new { Room = command.RoomId },
-            transaction: command.DbTransaction);
+        return await _sqlConnection.QuerySingleOrDefaultAsync<SpTask>(query, new { Room = command.RoomId },
+            transaction: command.DbTransaction, commandTimeout: command.Timeout);
     }
 
     public async Task<IEnumerable<BomStd>> BomErrorCheckAsync(BomErrorCheckCommand command)
