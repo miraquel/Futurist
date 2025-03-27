@@ -20,20 +20,28 @@ public class MupRepository : IMupRepository
         _sqlConnection = sqlConnection;
     }
 
-    public async Task<IEnumerable<MupSp>> ProcessMupAsync(ProcessMupCommand command)
+    public async Task<SpTask?> ProcessMupAsync(ProcessMupCommand command)
     {
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON");
         const string query = "EXEC CogsProjection.dbo.MupCalcRoom @Room";
-        return await _sqlConnection.QueryAsync<MupSp>(
+        return await _sqlConnection.QuerySingleOrDefaultAsync<SpTask>(
             query, 
             new { Room = command.RoomId }, 
             command.DbTransaction,
             commandTimeout: command.Timeout);
+        // var sqlConnection = _sqlConnection as SqlConnection;
+        // var sqlCommand = new SqlCommand("CogsProjection.dbo.MupCalcRoom", sqlConnection);
+        // sqlCommand.CommandType = CommandType.StoredProcedure;
+        // sqlCommand.Parameters.AddWithValue("@Room", command.RoomId);
+        // sqlCommand.CommandTimeout = command.Timeout;
+        // var result = await sqlCommand.ExecuteScalarAsync();
+        // return result?.ToString();
     }
 
     public async Task<IEnumerable<MupSp>> MupResultAsync(MupResultCommand command)
     {
 	    await _sqlConnection.ExecuteAsync("SET ARITHABORT ON");
-        const string query = "EXEC CogsProjection.dbo.MupSelect @Room";
+        const string query = "EXEC CogsProjection.dbo.MupSelect_Det @Room";
         return await _sqlConnection.QueryAsync<MupSp>(
             query,
             new { Room = command.RoomId },
@@ -266,6 +274,638 @@ public class MupRepository : IMupRepository
 		var sort = pagedListRequest.IsSortAscending ? "ASC" : "DESC";
 		sqlBuilder.OrderBy(string.IsNullOrEmpty(pagedListRequest.SortBy)
 			? $"b.RecId {sort}"
+			: $"{pagedListRequest.SortBy} {sort}");
+
+		sqlBuilder.AddParameters(new
+			{ Offset = (pagedListRequest.PageNumber - 1) * pagedListRequest.PageSize, pagedListRequest.PageSize });
+
+		var queryTemplate = sqlBuilder.AddTemplate(query);
+		await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+		var mupList = await _sqlConnection.QueryAsync<MupSp>(queryTemplate.RawSql, queryTemplate.Parameters, command.DbTransaction);
+		queryTemplate = sqlBuilder.AddTemplate(countQuery);
+		var mupCount = await _sqlConnection.ExecuteScalarAsync<int>(queryTemplate.RawSql, queryTemplate.Parameters, command.DbTransaction);
+		return new PagedList<MupSp>(mupList, pagedListRequest.PageNumber, pagedListRequest.PageSize, mupCount);
+    }
+
+    public async Task<IEnumerable<MupSp>> MupSummaryByItemIdAsync(MupSummaryByItemIdCommand command)
+    {
+        const string query = """
+                             SELECT 
+                                 DATEFROMPARTS(YEAR(m.MupDate),MONTH(m.MupDate),1) as [MupDate]
+                                ,isnull(s.VtaMpSubstitusiGroupId,'') as [GroupSubstitusi]
+                                ,a.ItemId, 
+                                i.SEARCHNAME as ItemName
+                                ,sum(a.Qty) as Qty
+                                ,sum(a.Qty * a.Price) / sum(a.Qty) as [Price] 
+                             FROM [ItemTrans] a
+                             JOIN AXGMKDW.dbo.DimItem i ON i.ITEMID = a.ItemId
+                             JOIN [MupTrans] mt ON mt.ItemTransId = a.RecId
+                             JOIN [Mup] m ON m.RecId = mt.MupId
+                             LEFT JOIN AXGMKDW.dbo.[DimItemSubstitute] s ON s.ItemId = m.ItemId
+                             /**where**/
+                             GROUP BY DATEFROMPARTS(YEAR(m.MupDate),MONTH(m.MupDate),1), a.ItemId, i.SEARCHNAME, s.VtaMpSubstitusiGroupId
+                             /**having**/
+                             /**orderby**/
+                             """;
+
+        var sqlBuilder = new SqlBuilder();
+        
+        var listRequest = command.ListRequest;
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.Room), out var roomFilter) && int.TryParse(roomFilter, out var room))
+        {
+            sqlBuilder.Where("a.Room = @Room", new { Room = room });
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.MupDate), out var mupDateFilter) && DateTime.TryParse(mupDateFilter, out var mupDate))
+        {
+            sqlBuilder.Where("DATEFROMPARTS(YEAR(m.MupDate),MONTH(m.MupDate),1) = @MupDate", new { MupDate = mupDate });
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.ItemId), out var itemIdFilter))
+        {
+            if (itemIdFilter.Contains('*') || itemIdFilter.Contains('%'))
+            {
+                itemIdFilter = itemIdFilter.Replace("*", "%");
+                sqlBuilder.Where("a.ItemId LIKE @ItemId", new { ItemId = itemIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("a.ItemId = @ItemId", new { ItemId = itemIdFilter });
+            }
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.ItemName), out var itemNameFilter))
+        {
+            if (itemNameFilter.Contains('*') || itemNameFilter.Contains('%'))
+            {
+                itemNameFilter = itemNameFilter.Replace("*", "%");
+                sqlBuilder.Where("ib.SEARCHNAME LIKE @ItemName", new { ItemName = itemNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("ib.SEARCHNAME = @ItemName", new { ItemName = itemNameFilter });
+            }
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.GroupSubstitusi), out var groupSubstitusiFilter))
+        {
+            if (groupSubstitusiFilter.Contains('*') || groupSubstitusiFilter.Contains('%'))
+            {
+                groupSubstitusiFilter = groupSubstitusiFilter.Replace("*", "%");
+                sqlBuilder.Where("s.VtaMpSubstitusiGroupId LIKE @GroupSubstitusi", new { GroupSubstitusi = groupSubstitusiFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("s.VtaMpSubstitusiGroupId = @GroupSubstitusi", new { GroupSubstitusi = groupSubstitusiFilter });
+            }
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.Price), out var priceFilter))
+        {
+            if (decimal.TryParse(priceFilter, out var price))
+            {
+                sqlBuilder.Having("sum(a.Qty * a.Price) / sum(a.Qty) = @Price", new { Price = price });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(priceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Having($"sum(a.Qty * a.Price) / sum(a.Qty) {match.Groups[1].Value} @Price", new { Price = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.Qty), out var qtyFilter))
+        {
+            if (decimal.TryParse(qtyFilter, out var qty))
+            {
+                sqlBuilder.Having("sum(a.Qty) = @Qty", new { Qty = qty });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(qtyFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Having($"sum(a.Qty) {match.Groups[1].Value} @Qty", new { Gap = match.Groups[2].Value });
+                }
+            }
+        }
+        
+		var sort = listRequest.IsSortAscending ? "ASC" : "DESC";
+		sqlBuilder.OrderBy(string.IsNullOrEmpty(listRequest.SortBy)
+			? "[MupDate] ASC, VtaMpSubstitusiGroupId, a.ItemId"
+			: $"{listRequest.SortBy} {sort}");
+
+		var queryTemplate = sqlBuilder.AddTemplate(query);
+		await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+		return await _sqlConnection.QueryAsync<MupSp>(queryTemplate.RawSql, queryTemplate.Parameters, command.DbTransaction);
+    }
+
+    public async Task<PagedList<MupSp>> MupSummaryByItemIdPagedListAsync(MupSummaryByItemIdPagedListCommand command)
+    {
+        const string query = """
+                             SELECT 
+                                 DATEFROMPARTS(YEAR(m.MupDate),MONTH(m.MupDate),1) as [MupDate]
+                                ,isnull(s.VtaMpSubstitusiGroupId,'') as [GroupSubstitusi]
+                                ,a.ItemId, 
+                                i.SEARCHNAME as ItemName
+                                ,sum(a.Qty) as Qty
+                                ,sum(a.Qty * a.Price) / sum(a.Qty) as [Price] 
+                             FROM [ItemTrans] a
+                             JOIN AXGMKDW.dbo.DimItem i ON i.ITEMID = a.ItemId
+                             JOIN [MupTrans] mt ON mt.ItemTransId = a.RecId
+                             JOIN [Mup] m ON m.RecId = mt.MupId
+                             LEFT JOIN AXGMKDW.dbo.[DimItemSubstitute] s ON s.ItemId = m.ItemId
+                             /**where**/
+                             GROUP BY DATEFROMPARTS(YEAR(m.MupDate),MONTH(m.MupDate),1), a.ItemId, i.SEARCHNAME, s.VtaMpSubstitusiGroupId
+                             /**having**/
+                             /**orderby**/
+                             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY
+                             """;
+
+        const string countQuery = """
+                                  SELECT COUNT(*)
+                                  FROM [ItemTrans] a
+                                  JOIN AXGMKDW.dbo.DimItem i ON i.ITEMID = a.ItemId
+                                  JOIN [MupTrans] mt ON mt.ItemTransId = a.RecId
+                                  JOIN [Mup] m ON m.RecId = mt.MupId
+                                  LEFT JOIN AXGMKDW.dbo.[DimItemSubstitute] s ON s.ItemId = m.ItemId
+                                  /**where**/
+                                  GROUP BY DATEFROMPARTS(YEAR(m.MupDate),MONTH(m.MupDate),1), a.ItemId, i.SEARCHNAME, s.VtaMpSubstitusiGroupId
+                                  /**having**/
+                                  """;
+
+        var sqlBuilder = new SqlBuilder();
+
+        var pagedListRequest = command.PagedListRequest;
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.Room), out var roomFilter) && int.TryParse(roomFilter, out var room))
+        {
+            sqlBuilder.Where("a.Room = @Room", new { Room = room });
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.MupDate), out var mupDateFilter) && DateTime.TryParse(mupDateFilter, out var mupDate))
+        {
+            sqlBuilder.Where("DATEFROMPARTS(YEAR(m.MupDate),MONTH(m.MupDate),1) = @MupDate", new { MupDate = mupDate });
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.ItemId), out var itemIdFilter))
+        {
+            if (itemIdFilter.Contains('*') || itemIdFilter.Contains('%'))
+            {
+                itemIdFilter = itemIdFilter.Replace("*", "%");
+                sqlBuilder.Where("a.ItemId LIKE @ItemId", new { ItemId = itemIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("a.ItemId = @ItemId", new { ItemId = itemIdFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.ItemName), out var itemNameFilter))
+        {
+            if (itemNameFilter.Contains('*') || itemNameFilter.Contains('%'))
+            {
+                itemNameFilter = itemNameFilter.Replace("*", "%");
+                sqlBuilder.Where("ib.SEARCHNAME LIKE @ItemName", new { ItemName = itemNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("ib.SEARCHNAME = @ItemName", new { ItemName = itemNameFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.GroupSubstitusi), out var groupSubstitusiFilter))
+        {
+            if (groupSubstitusiFilter.Contains('*') || groupSubstitusiFilter.Contains('%'))
+            {
+                groupSubstitusiFilter = groupSubstitusiFilter.Replace("*", "%");
+                sqlBuilder.Where("s.VtaMpSubstitusiGroupId LIKE @GroupSubstitusi", new { GroupSubstitusi = groupSubstitusiFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("s.VtaMpSubstitusiGroupId = @GroupSubstitusi", new { GroupSubstitusi = groupSubstitusiFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.Price), out var priceFilter))
+        {
+            if (decimal.TryParse(priceFilter, out var price))
+            {
+                sqlBuilder.Having("sum(a.Qty * a.Price) / sum(a.Qty) = @Price", new { Price = price });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(priceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Having($"sum(a.Qty * a.Price) / sum(a.Qty) {match.Groups[1].Value} @Price", new { Price = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.Qty), out var qtyFilter))
+        {
+            if (decimal.TryParse(qtyFilter, out var qty))
+            {
+                sqlBuilder.Having("sum(a.Qty) = @Qty", new { Qty = qty });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(qtyFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Having($"sum(a.Qty) {match.Groups[1].Value} @Qty", new { Gap = match.Groups[2].Value });
+                }
+            }
+        }
+        
+		var sort = pagedListRequest.IsSortAscending ? "ASC" : "DESC";
+		sqlBuilder.OrderBy(string.IsNullOrEmpty(pagedListRequest.SortBy)
+			? "[MupDate] ASC, VtaMpSubstitusiGroupId, a.ItemId"
+			: $"{pagedListRequest.SortBy} {sort}");
+
+		sqlBuilder.AddParameters(new
+			{ Offset = (pagedListRequest.PageNumber - 1) * pagedListRequest.PageSize, pagedListRequest.PageSize });
+
+		var queryTemplate = sqlBuilder.AddTemplate(query);
+		await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+		var mupList = await _sqlConnection.QueryAsync<MupSp>(queryTemplate.RawSql, queryTemplate.Parameters, command.DbTransaction);
+		queryTemplate = sqlBuilder.AddTemplate(countQuery);
+		var mupCount = await _sqlConnection.ExecuteScalarAsync<int>(queryTemplate.RawSql, queryTemplate.Parameters, command.DbTransaction);
+		return new PagedList<MupSp>(mupList, pagedListRequest.PageNumber, pagedListRequest.PageSize, mupCount);
+    }
+
+    public async Task<IEnumerable<MupSp>> MupSummaryByBatchNumberAsync(MupSummaryByBatchNumberCommand command)
+    {
+        const string query = """
+                             SELECT MIN(b.MupDate) as [MupDate]
+                             	,IIF([Source]='OnHand','1.OnHand',IIF([Source]='PoIntransit','2.PoIntransit',IIF([Source]='Contract','3.Contract',IIF([Source]='Forecast','4.Forecast','5.StdCost')))) as [Source]
+                             	,isnull(s.VtaMpSubstitusiGroupId,'') as [GroupSubstitusi]
+                             	,d.ItemId as ItemAllocatedId
+                             	,id.SEARCHNAME as ItemAllocatedName
+                             	,id.UnitId
+                             	,ISNULL(d.InventBatch,'') as [InventBatch]
+                             	,SUM(d.Qty) as [Qty]
+                             	,MAX(d.Price) as [Price]
+                             	,MAX(id.LATESTPRICE) as [LatestPurchasePrice]
+                             	,isnull(MAX(d.Price)/nullif(MAX(id.LATESTPRICE),0),0) as [Gap]
+                             FROM Rofo a 
+                             join Mup b ON b.RofoId = a.RecId
+                             join MupTrans c ON c.MupId = b.RecId
+                             join ItemTrans d ON d.RecId = c.ItemTransId
+                             join AXGMKDW.dbo.DimItem i ON i.ITEMID = a.ItemId
+                             join AXGMKDW.dbo.DimItem ib ON ib.ITEMID = b.ItemId
+                             join AXGMKDW.dbo.DimItem id ON id.ITEMID = d.ItemId
+                             left join AXGMKDW.dbo.[DimItemSubstitute] s ON s.ItemId = b.ItemId
+                             /**where**/
+                             GROUP BY d.ItemId, id.SEARCHNAME, s.VtaMpSubstitusiGroupId, id.UnitId, d.InventBatch, d.[Source]
+                             /**orderby**/
+                             """;
+
+        var sqlBuilder = new SqlBuilder();
+
+        var listRequest = command.ListRequest;
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.Room), out var roomFilter) && int.TryParse(roomFilter, out var room))
+        {
+            sqlBuilder.Where("a.Room = @Room", new { Room = room });
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.MupDate), out var mupDateFilter) && DateTime.TryParse(mupDateFilter, out var mupDate))
+        {
+            sqlBuilder.Having("MIN(b.MupDate) = @MupDate", new { MupDate = mupDate });
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.Source), out var sourceFilter))
+        {
+            if (sourceFilter.Contains('*') || sourceFilter.Contains('%'))
+            {
+                sourceFilter = sourceFilter.Replace("*", "%");
+                sqlBuilder.Where("IIF([Source]='OnHand','1.OnHand',IIF([Source]='PoIntransit','2.PoIntransit',IIF([Source]='Contract','3.Contract',IIF([Source]='Forecast','4.Forecast','5.StdCost')))) LIKE @Source", new { Source = sourceFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("IIF([Source]='OnHand','1.OnHand',IIF([Source]='PoIntransit','2.PoIntransit',IIF([Source]='Contract','3.Contract',IIF([Source]='Forecast','4.Forecast','5.StdCost')))) = @Source", new { Source = sourceFilter });
+            }
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.GroupSubstitusi), out var groupSubstitusiFilter))
+        {
+            if (groupSubstitusiFilter.Contains('*') || groupSubstitusiFilter.Contains('%'))
+            {
+                groupSubstitusiFilter = groupSubstitusiFilter.Replace("*", "%");
+                sqlBuilder.Where("s.VtaMpSubstitusiGroupId LIKE @GroupSubstitusi", new { GroupSubstitusi = groupSubstitusiFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("s.VtaMpSubstitusiGroupId = @GroupSubstitusi", new { GroupSubstitusi = groupSubstitusiFilter });
+            }
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.ItemAllocatedId), out var itemAllocatedIdFilter))
+        {
+            if (itemAllocatedIdFilter.Contains('*') || itemAllocatedIdFilter.Contains('%'))
+            {
+                itemAllocatedIdFilter = itemAllocatedIdFilter.Replace("*", "%");
+                sqlBuilder.Where("d.ItemId LIKE @ItemAllocatedId", new { ItemAllocatedId = itemAllocatedIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("d.ItemId = @ItemAllocatedId", new { ItemAllocatedId = itemAllocatedIdFilter });
+            }
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.ItemAllocatedName), out var itemAllocatedNameFilter))
+        {
+            if (itemAllocatedNameFilter.Contains('*') || itemAllocatedNameFilter.Contains('%'))
+            {
+                itemAllocatedNameFilter = itemAllocatedNameFilter.Replace("*", "%");
+                sqlBuilder.Where("id.SEARCHNAME LIKE @ItemAllocatedName", new { ItemAllocatedName = itemAllocatedNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("id.SEARCHNAME = @ItemAllocatedName", new { ItemAllocatedName = itemAllocatedNameFilter });
+            }
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.UnitId), out var unitIdFilter))
+        {
+            if (unitIdFilter.Contains('*') || unitIdFilter.Contains('%'))
+            {
+                unitIdFilter = unitIdFilter.Replace("*", "%");
+                sqlBuilder.Where("id.UnitId LIKE @UnitId", new { UnitId = unitIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("id.UnitId = @UnitId", new { UnitId = unitIdFilter });
+            }
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.InventBatch), out var inventBatchFilter))
+        {
+            if (inventBatchFilter.Contains('*') || inventBatchFilter.Contains('%'))
+            {
+                inventBatchFilter = inventBatchFilter.Replace("*", "%");
+                sqlBuilder.Where("d.InventBatch LIKE @InventBatch", new { InventBatch = inventBatchFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("d.InventBatch = @InventBatch", new { InventBatch = inventBatchFilter });
+            }
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.Qty), out var qtyFilter))
+        {
+            if (decimal.TryParse(qtyFilter, out var qty))
+            {
+                sqlBuilder.Having("SUM(d.Qty) = @Qty", new { Qty = qty });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(qtyFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Having($"SUM(d.Qty) {match.Groups[1].Value} @Qty", new { Gap = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.Price), out var priceFilter))
+        {
+            if (decimal.TryParse(priceFilter, out var price))
+            {
+                sqlBuilder.Having("MAX(d.Price) = @Price", new { Price = price });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(priceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Having($"MAX(d.Price) {match.Groups[1].Value} @Price", new { Price = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (listRequest.Filters.TryGetValue(nameof(MupSp.LatestPurchasePrice), out var latestPurchasePriceFilter))
+        {
+            if (decimal.TryParse(latestPurchasePriceFilter, out var latestPurchasePrice))
+            {
+                sqlBuilder.Having("MAX(id.LATESTPRICE) = @LatestPurchasePrice", new { LatestPurchasePrice = latestPurchasePrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(latestPurchasePriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Having($"MAX(id.LATESTPRICE) {match.Groups[1].Value} @LatestPurchasePrice", new { LatestPurchasePrice = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        sqlBuilder.Where("LEFT(d.ItemId,1) = 1 OR LEFT(d.ItemId,1) = 3");
+        
+		var sort = listRequest.IsSortAscending ? "ASC" : "DESC";
+		sqlBuilder.OrderBy(string.IsNullOrEmpty(listRequest.SortBy)
+			? "VtaMpSubstitusiGroupId, [Source], d.ItemId"
+			: $"{listRequest.SortBy} {sort}");
+        
+		var queryTemplate = sqlBuilder.AddTemplate(query);
+		await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+		return await _sqlConnection.QueryAsync<MupSp>(queryTemplate.RawSql, queryTemplate.Parameters, command.DbTransaction);
+    }
+
+    public async Task<PagedList<MupSp>> MupSummaryByBatchNumberPagedListAsync(MupSummaryByBatchNumberPagedListCommand command)
+    {
+        const string query = """
+                             SELECT MIN(b.MupDate) as [MupDate]
+                             	,IIF([Source]='OnHand','1.OnHand',IIF([Source]='PoIntransit','2.PoIntransit',IIF([Source]='Contract','3.Contract',IIF([Source]='Forecast','4.Forecast','5.StdCost')))) as [Source]
+                             	,isnull(s.VtaMpSubstitusiGroupId,'') as [GroupSubstitusi]
+                             	,d.ItemId as ItemAllocatedId
+                             	,id.SEARCHNAME as ItemAllocatedName
+                             	,id.UnitId
+                             	,ISNULL(d.InventBatch,'') as [InventBatch]
+                             	,SUM(d.Qty) as [Qty]
+                             	,MAX(d.Price) as [Price]
+                             	,MAX(id.LATESTPRICE) as [LatestPurchasePrice]
+                             	,isnull(MAX(d.Price)/nullif(MAX(id.LATESTPRICE),0),0) as [Gap]
+                             FROM Rofo a 
+                             join Mup b ON b.RofoId = a.RecId
+                             join MupTrans c ON c.MupId = b.RecId
+                             join ItemTrans d ON d.RecId = c.ItemTransId
+                             join AXGMKDW.dbo.DimItem i ON i.ITEMID = a.ItemId
+                             join AXGMKDW.dbo.DimItem ib ON ib.ITEMID = b.ItemId
+                             join AXGMKDW.dbo.DimItem id ON id.ITEMID = d.ItemId
+                             left join AXGMKDW.dbo.[DimItemSubstitute] s ON s.ItemId = b.ItemId
+                             /**where**/
+                             GROUP BY d.ItemId, id.SEARCHNAME, s.VtaMpSubstitusiGroupId, id.UnitId, d.InventBatch, d.[Source]
+                             /**orderby**/
+                             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY
+                             """;
+
+        const string countQuery = """
+                                  SELECT COUNT(*)
+                                  FROM Rofo a 
+                                  join Mup b ON b.RofoId = a.RecId
+                                  join MupTrans c ON c.MupId = b.RecId
+                                  join ItemTrans d ON d.RecId = c.ItemTransId
+                                  join AXGMKDW.dbo.DimItem i ON i.ITEMID = a.ItemId
+                                  join AXGMKDW.dbo.DimItem ib ON ib.ITEMID = b.ItemId
+                                  join AXGMKDW.dbo.DimItem id ON id.ITEMID = d.ItemId
+                                  left join AXGMKDW.dbo.[DimItemSubstitute] s ON s.ItemId = b.ItemId
+                                  /**where**/
+                                  GROUP BY d.ItemId, id.SEARCHNAME, s.VtaMpSubstitusiGroupId, id.UnitId, d.InventBatch, d.[Source]
+                                  /**having**/
+                                  /**orderby**/
+                                  """;
+
+        var sqlBuilder = new SqlBuilder();
+
+        var pagedListRequest = command.PagedListRequest;
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.Room), out var roomFilter) && int.TryParse(roomFilter, out var room))
+        {
+            sqlBuilder.Where("a.Room = @Room", new { Room = room });
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.MupDate), out var mupDateFilter) && DateTime.TryParse(mupDateFilter, out var mupDate))
+        {
+            sqlBuilder.Having("MIN(b.MupDate) = @MupDate", new { MupDate = mupDate });
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.Source), out var sourceFilter))
+        {
+            if (sourceFilter.Contains('*') || sourceFilter.Contains('%'))
+            {
+                sourceFilter = sourceFilter.Replace("*", "%");
+                sqlBuilder.Where("IIF([Source]='OnHand','1.OnHand',IIF([Source]='PoIntransit','2.PoIntransit',IIF([Source]='Contract','3.Contract',IIF([Source]='Forecast','4.Forecast','5.StdCost')))) LIKE @Source", new { Source = sourceFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("IIF([Source]='OnHand','1.OnHand',IIF([Source]='PoIntransit','2.PoIntransit',IIF([Source]='Contract','3.Contract',IIF([Source]='Forecast','4.Forecast','5.StdCost')))) = @Source", new { Source = sourceFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.GroupSubstitusi), out var groupSubstitusiFilter))
+        {
+            if (groupSubstitusiFilter.Contains('*') || groupSubstitusiFilter.Contains('%'))
+            {
+                groupSubstitusiFilter = groupSubstitusiFilter.Replace("*", "%");
+                sqlBuilder.Where("s.VtaMpSubstitusiGroupId LIKE @GroupSubstitusi", new { GroupSubstitusi = groupSubstitusiFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("s.VtaMpSubstitusiGroupId = @GroupSubstitusi", new { GroupSubstitusi = groupSubstitusiFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.ItemAllocatedId), out var itemAllocatedIdFilter))
+        {
+            if (itemAllocatedIdFilter.Contains('*') || itemAllocatedIdFilter.Contains('%'))
+            {
+                itemAllocatedIdFilter = itemAllocatedIdFilter.Replace("*", "%");
+                sqlBuilder.Where("d.ItemId LIKE @ItemAllocatedId", new { ItemAllocatedId = itemAllocatedIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("d.ItemId = @ItemAllocatedId", new { ItemAllocatedId = itemAllocatedIdFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.ItemAllocatedName), out var itemAllocatedNameFilter))
+        {
+            if (itemAllocatedNameFilter.Contains('*') || itemAllocatedNameFilter.Contains('%'))
+            {
+                itemAllocatedNameFilter = itemAllocatedNameFilter.Replace("*", "%");
+                sqlBuilder.Where("id.SEARCHNAME LIKE @ItemAllocatedName", new { ItemAllocatedName = itemAllocatedNameFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("id.SEARCHNAME = @ItemAllocatedName", new { ItemAllocatedName = itemAllocatedNameFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.UnitId), out var unitIdFilter))
+        {
+            if (unitIdFilter.Contains('*') || unitIdFilter.Contains('%'))
+            {
+                unitIdFilter = unitIdFilter.Replace("*", "%");
+                sqlBuilder.Where("id.UnitId LIKE @UnitId", new { UnitId = unitIdFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("id.UnitId = @UnitId", new { UnitId = unitIdFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.InventBatch), out var inventBatchFilter))
+        {
+            if (inventBatchFilter.Contains('*') || inventBatchFilter.Contains('%'))
+            {
+                inventBatchFilter = inventBatchFilter.Replace("*", "%");
+                sqlBuilder.Where("d.InventBatch LIKE @InventBatch", new { InventBatch = inventBatchFilter });
+            }
+            else
+            {
+                sqlBuilder.Where("d.InventBatch = @InventBatch", new { InventBatch = inventBatchFilter });
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.Qty), out var qtyFilter))
+        {
+            if (decimal.TryParse(qtyFilter, out var qty))
+            {
+                sqlBuilder.Having("SUM(d.Qty) = @Qty", new { Qty = qty });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(qtyFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Having($"SUM(d.Qty) {match.Groups[1].Value} @Qty", new { Gap = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.Price), out var priceFilter))
+        {
+            if (decimal.TryParse(priceFilter, out var price))
+            {
+                sqlBuilder.Having("MAX(d.Price) = @Price", new { Price = price });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(priceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Having($"MAX(d.Price) {match.Groups[1].Value} @Price", new { Price = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        if (pagedListRequest.Filters.TryGetValue(nameof(MupSp.LatestPurchasePrice), out var latestPurchasePriceFilter))
+        {
+            if (decimal.TryParse(latestPurchasePriceFilter, out var latestPurchasePrice))
+            {
+                sqlBuilder.Having("MAX(id.LATESTPRICE) = @LatestPurchasePrice", new { LatestPurchasePrice = latestPurchasePrice });
+            }
+            else
+            {
+                var match = RegexHelper.LogicalOperatorRegex().Match(latestPurchasePriceFilter);
+                if (match.Success)
+                {
+                    sqlBuilder.Having($"MAX(id.LATESTPRICE) {match.Groups[1].Value} @LatestPurchasePrice", new { LatestPurchasePrice = match.Groups[2].Value });
+                }
+            }
+        }
+        
+        sqlBuilder.Where("LEFT(d.ItemId,1) = 1 OR LEFT(d.ItemId,1) = 3");
+        
+		var sort = pagedListRequest.IsSortAscending ? "ASC" : "DESC";
+		sqlBuilder.OrderBy(string.IsNullOrEmpty(pagedListRequest.SortBy)
+			? "VtaMpSubstitusiGroupId, [Source], d.ItemId"
 			: $"{pagedListRequest.SortBy} {sort}");
 
 		sqlBuilder.AddParameters(new
