@@ -17,17 +17,19 @@ public class FgCostRepository : IFgCostRepository
         _sqlConnection = sqlConnection;
     }
 
-    public async Task<string?> CalculateFgCostAsync(CalculateFgCostCommand command)
+    public async Task<SpTask?> CalculateFgCostAsync(CalculateFgCostCommand command)
     {
         const string sql = "EXEC CogsProjection.dbo.ProjectionCalc @RoomId";
-        return await _sqlConnection.ExecuteScalarAsync<string>(sql, new { command.RoomId },
-            transaction: command.DbTransaction);
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+        return await _sqlConnection.QuerySingleOrDefaultAsync<SpTask>(sql, new { command.RoomId },
+            transaction: command.DbTransaction, commandTimeout: command.Timeout);
     }
 
-    public Task<IEnumerable<FgCostSp>> GetSummaryFgCostAsync(GetSummaryFgCostCommand command)
+    public async Task<IEnumerable<FgCostSp>> GetSummaryFgCostAsync(GetSummaryFgCostCommand command)
     {
         const string sql = "EXEC CogsProjection.dbo.FgCost_Select @RoomId";
-        return _sqlConnection.QueryAsync<FgCostSp>(sql, new { command.RoomId },
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+        return await _sqlConnection.QueryAsync<FgCostSp>(sql, new { command.RoomId },
             transaction: command.DbTransaction);
     }
 
@@ -47,8 +49,21 @@ public class FgCostRepository : IFgCostRepository
                            ,a.[PmPrice]
                            ,a.[StdCostPrice]
                            ,a.[CostPrice]
+                           ,ISNULL(s.[SalesPriceIndex],0) as [SalesPriceIndex]
                            FROM [CogsProjection].[dbo].[FgCost] a
                            JOIN AXGMKDW.dbo.DimItem i ON i.ITEMID = a.[ProductId]
+                           LEFT JOIN (
+                           	SELECT x.[ItemId], x.[SalesPriceIndex]
+                           	FROM ( 
+                           		SELECT a.ItemId, a.[SalesPriceIndex]
+                           		FROM [SalesPrice] a
+                           		JOIN (
+                           			SELECT [ItemId], MAX([PeriodDate]) [MaxPeriodDate]
+                           			FROM [SalesPrice]
+                           			GROUP BY [ItemId]
+                           		) b ON b.ItemId = a.ItemId AND b.[MaxPeriodDate] = a.[PeriodDate]
+                           	) x			
+                           ) s ON s.ItemId = a.[ProductId]
                            /**where**/
                            /**orderby**/
                            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY
@@ -58,6 +73,18 @@ public class FgCostRepository : IFgCostRepository
                                 SELECT COUNT(*) 
                                 FROM [CogsProjection].[dbo].[FgCost] a
                                 JOIN AXGMKDW.dbo.DimItem i ON i.ITEMID = a.[ProductId]
+                                LEFT JOIN (
+                                	SELECT x.[ItemId], x.[SalesPriceIndex]
+                                	FROM ( 
+                                		SELECT a.ItemId, a.[SalesPriceIndex]
+                                		FROM [SalesPrice] a
+                                		JOIN (
+                                			SELECT [ItemId], MAX([PeriodDate]) [MaxPeriodDate]
+                                			FROM [SalesPrice]
+                                			GROUP BY [ItemId]
+                                		) b ON b.ItemId = a.ItemId AND b.[MaxPeriodDate] = a.[PeriodDate]
+                                	) x			
+                                ) s ON s.ItemId = a.[ProductId]
                                 /**where**/
                                 """;
         
@@ -233,7 +260,7 @@ public class FgCostRepository : IFgCostRepository
         
         var sort = pagedListRequest.IsSortAscending ? "ASC" : "DESC";
         sqlBuilder.OrderBy(string.IsNullOrEmpty(pagedListRequest.SortBy)
-            ? $"a.RecId {sort}"
+            ? "DATEFROMPARTS(YEAR([RofoDate]),MONTH([RofoDate]),1) asc,  a.[QtyRofo] DESC"
             : $"{pagedListRequest.SortBy} {sort}");
         
         sqlBuilder.AddParameters(new
@@ -247,7 +274,7 @@ public class FgCostRepository : IFgCostRepository
         return new PagedList<FgCostSp>(fgCostList, pagedListRequest.PageNumber, pagedListRequest.PageSize, fgCostCount);
     }
 
-    public Task<IEnumerable<int>> GetFgCostRoomIdsAsync(GetFgCostRoomIdsCommand command)
+    public async Task<IEnumerable<int>> GetFgCostRoomIdsAsync(GetFgCostRoomIdsCommand command)
     {
         const string query = """
                              SELECT DISTINCT Room FROM CogsProjection.dbo.FgCost
@@ -260,13 +287,15 @@ public class FgCostRepository : IFgCostRepository
                              ORDER BY Room;
                              """;
         
-        return _sqlConnection.QueryAsync<int>(query, transaction: command.DbTransaction);
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+        return await _sqlConnection.QueryAsync<int>(query, transaction: command.DbTransaction);
     }
 
-    public Task<IEnumerable<FgCostDetailSp>> GetFgCostDetailsAsync(GetFgCostDetailCommand command)
+    public async Task<IEnumerable<FgCostDetailSp>> GetFgCostDetailsAsync(GetFgCostDetailCommand command)
     {
         const string sql = "EXEC CogsProjection.dbo.FgCostDetail_Select @RoomId";
-        return _sqlConnection.QueryAsync<FgCostDetailSp>(sql, new { command.RoomId },
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+        return await _sqlConnection.QueryAsync<FgCostDetailSp>(sql, new { command.RoomId },
             transaction: command.DbTransaction);
     }
 
@@ -633,6 +662,7 @@ public class FgCostRepository : IFgCostRepository
                              ORDER BY a.RecId asc, b.ItemId asc
                              """;
         
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
         return await _sqlConnection.QueryAsync<FgCostDetailSp>(query, new { command.RofoId },
             transaction: command.DbTransaction);
     }
@@ -960,6 +990,7 @@ public class FgCostRepository : IFgCostRepository
         var queryTemplate = sqlBuilder.AddTemplate(query);
         var fgCostDetailList = await _sqlConnection.QueryAsync<FgCostDetailSp>(queryTemplate.RawSql, queryTemplate.Parameters, command.DbTransaction);
         queryTemplate = sqlBuilder.AddTemplate(countQuery);
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
         var fgCostDetailCount = await _sqlConnection.ExecuteScalarAsync<int>(queryTemplate.RawSql, queryTemplate.Parameters, command.DbTransaction);
         return new PagedList<FgCostDetailSp>(fgCostDetailList, pagedListRequest.PageNumber, pagedListRequest.PageSize, fgCostDetailCount);
     }
