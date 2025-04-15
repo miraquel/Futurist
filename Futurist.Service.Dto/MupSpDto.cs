@@ -14,7 +14,7 @@ public class MupSpDto
     public string ProductName { get; set; } = string.Empty;
     [DisplayName("Rofo Date")]
     public DateTime RofoDate { get; set; } = SqlDateTime.MinValue.Value;
-    [DisplayName("Qty Rofo")]
+    [DisplayName("Rofo Qty")]
     public decimal QtyRofo { get; set; }
     [DisplayName("Item ID")]
     public string ItemId { get; set; } = string.Empty;

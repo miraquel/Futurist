@@ -9,7 +9,7 @@ public class FgCostSp
     public string Unit { get; set; } = string.Empty;
     public decimal UnitInKg { get; set; }
     public DateTime RofoDate { get; set; }
-    public decimal QtyRofo { get; set; }
+    public decimal RofoQty { get; set; }
     public decimal Yield { get; set; }
     public decimal RmPrice { get; set; }
     public decimal PmPrice { get; set; }
