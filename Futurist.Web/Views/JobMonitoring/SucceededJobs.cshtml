@@ -1,0 +1,249 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "Succeeded Jobs";
+    Layout = "_Layout";
+}
+
+@section styles{
+    <link href="/assets/css/datatables.min.css" rel="stylesheet">
+}
+
+@Html.AntiForgeryToken()
+
+<div class="container-fluid">
+    <h2>Succeeded Jobs</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="datatables-succeeded-jobs" class="display table table-bordered datatable-wrapper" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Job Name</th>
+                            <th>Succeeded At</th>
+                            <th>Latency Duration</th>
+                            <th>Performance Duration</th>
+                            <th>Total Duration</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Job Name</th>
+                            <th>Succeeded At</th>
+                            <th>Latency Duration</th>
+                            <th>Performance Duration</th>
+                            <th>Total Duration</th>
+                            <th>Result</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/assets/js/datatables.min.js"></script>
+    
+    <script>
+        // Debounce helper function
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+        
+        function formatDuration(milliseconds) {
+            if (milliseconds < 1000) {
+                return milliseconds + ' ms';
+            } else {
+                return (milliseconds / 1000).toFixed(2) + ' s';
+            }
+        }
+
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        
+        // Initialize DataTable
+        if (document.getElementById("datatables-succeeded-jobs")) {
+            $('#datatables-succeeded-jobs').DataTable({
+                searchDelay: 1000,
+                ajax: {
+                    url: '/api/JobMonitoringApi/GetSucceededJobMonitoringPagedList',
+                    data: function(d) {
+                        const query = {
+                            pageNumber: d.start / d.length,
+                            pageSize: d.length,
+                        };
+                        
+                        if (d.search && d.search.value) {
+                            query.Search = d.search.value;
+                        }
+                        
+                        if (d.order && d.order.length) {
+                            query.SortBy = d.columns[d.order[0].column].data;
+                            query.IsSortAscending = d.order[0].dir === 'asc';
+                        }
+                        
+                        d.columns.forEach((column, _) => {
+                            if (column.search && column.search.value) {
+                                // Capitalize the first letter of the column name
+                                query[`Filters.${column.data.charAt(0).toUpperCase() + column.data.slice(1)}`] = column.search.value;
+                            }
+                        });
+                        
+                        return query;
+                    },
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("RequestVerificationToken", token);
+                    },
+                    dataSrc: function(json) {
+                        // Check if response follows ServiceResponse<PagedListDto<SucceededJobDto>> structure
+                        if (json && Array.isArray(json.items)) {
+                            json.recordsTotal = json.totalCount;
+                            json.recordsFiltered = json.totalCount;
+                            return json.items;
+                        }
+                        // Fallback: if json itself is an array
+                        return json;
+                    },
+                    error: function(err) {
+                        console.error('Error loading succeeded jobs', err);
+                        alert('Failed to load succeeded jobs: ' + (err.responseJSON?.errors || 'Unknown error'));
+                    }
+                },
+                columns: [
+                    { data: 'key', defaultContent: '' },
+                    { 
+                        data: 'job',
+                        defaultContent: 'Unknown',
+                        render: function(data) {
+                            if (data && data.invocationData && data.invocationData.type && data.invocationData.method) {
+                                return `${data.invocationData.type}.${data.invocationData.method}`;
+                            }
+                            return 'Unknown';
+                        }
+                    },
+                    { 
+                        data: 'succeededAt', 
+                        defaultContent: '',
+                        render: function(data) {
+                            return data ? moment(data).format("DD MMM YYYY HH:mm:ss") : 'Unknown';
+                        }
+                    },
+                    { 
+                        data: 'latencyDuration',
+                        defaultContent: '0',
+                        render: function(data, type) {
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? parseFloat(data) : 0;
+                            }
+                            return formatDuration(data || 0);
+                        }
+                    },
+                    { 
+                        data: 'performanceDuration',
+                        defaultContent: '0',
+                        render: function(data, type) {
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? parseFloat(data) : 0;
+                            }
+                            return formatDuration(data || 0);
+                        }
+                    },
+                    { 
+                        data: null,
+                        defaultContent: '0',
+                        render: function(data, type) {
+                            const totalDuration = (data.latencyDuration || 0) + (data.performanceDuration || 0);
+                            if (type === 'sort' || type === 'filter') {
+                                return totalDuration;
+                            }
+                            return formatDuration(totalDuration);
+                        }
+                    },
+                    { 
+                        data: 'result',
+                        defaultContent: 'No result',
+                        render: function(data) {
+                            return data || 'No result';
+                        }
+                    }
+                ],
+                columnDefs: [
+                    {
+                        targets: [0, 1, 2], // Column indices to center
+                        className: 'text-center'
+                    }
+                ],
+                processing: true,
+                serverSide: true,
+                paging: true,
+                searching: true,
+                autoWidth: false,
+                responsive: false,
+                scrollX: true,
+                initComplete: function () {
+                    this.api()
+                        .columns()
+                        .every(function () {
+                            let column = this;
+                            
+                            let header = column.header();
+                            // Change the background
+                            header.style.backgroundColor = '#4F81BD';
+                            header.style.color = 'white';
+                            
+                            let title = column.footer().textContent;
+                            
+                            // Special handling for Succeeded At column
+                            if (title.trim() === "Succeeded At") {
+                                let dateInput = document.createElement('input');
+                                dateInput.placeholder = title;
+                                dateInput.className = "form-control";
+                                dateInput.style.width = '100%';
+                                
+                                column.footer().replaceChildren(dateInput);
+                                
+                                // If flatpickr is available
+                                if (typeof flatpickr !== 'undefined') {
+                                    flatpickr(dateInput, {
+                                        dateFormat: "Y/m/d",
+                                        onChange: function(selectedDates, dateStr) {
+                                            column.search(dateStr).draw();
+                                        },
+                                    });
+                                } else {
+                                    // Fallback to regular input
+                                    dateInput.addEventListener('keyup', debounce(() => {
+                                        if (column.search() !== dateInput.value) {
+                                            column.search(dateInput.value).draw();
+                                        }
+                                    }, 1000));
+                                }
+                            } else {
+                                // Default handling for other columns
+                                let input = document.createElement('input');
+                                input.placeholder = title;
+                                input.className = "form-control";
+                                input.style.width = '100%';
+                                column.footer().replaceChildren(input);
+
+                                // Debounced event listener for user input (1 second delay)
+                                input.addEventListener('keyup', debounce(() => {
+                                    if (column.search() !== input.value) {
+                                        column.search(input.value).draw();
+                                    }
+                                }, 1000));
+                            }
+                        });
+                }
+            });
+        }
+    </script>
+}
