@@ -22,26 +22,19 @@ public class MupRepository : IMupRepository
 
     public async Task<SpTask?> ProcessMupAsync(ProcessMupCommand command)
     {
-        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON");
-        const string query = "EXEC CogsProjection.dbo.MupCalcRoom @Room";
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON;");
+        const string query = "EXEC MupCalcRoom @Room";
         return await _sqlConnection.QuerySingleOrDefaultAsync<SpTask>(
             query, 
             new { Room = command.RoomId }, 
             command.DbTransaction,
             commandTimeout: command.Timeout);
-        // var sqlConnection = _sqlConnection as SqlConnection;
-        // var sqlCommand = new SqlCommand("CogsProjection.dbo.MupCalcRoom", sqlConnection);
-        // sqlCommand.CommandType = CommandType.StoredProcedure;
-        // sqlCommand.Parameters.AddWithValue("@Room", command.RoomId);
-        // sqlCommand.CommandTimeout = command.Timeout;
-        // var result = await sqlCommand.ExecuteScalarAsync();
-        // return result?.ToString();
     }
 
     public async Task<IEnumerable<MupSp>> MupResultAsync(MupResultCommand command)
     {
 	    await _sqlConnection.ExecuteAsync("SET ARITHABORT ON");
-        const string query = "EXEC CogsProjection.dbo.MupSelect_Det @Room";
+        const string query = "EXEC MupSelect_Det @Room";
         return await _sqlConnection.QueryAsync<MupSp>(
             query,
             new { Room = command.RoomId },
@@ -55,14 +48,14 @@ public class MupRepository : IMupRepository
                              	a.Room
                              	,a.RecId as RofoId
                              	,a.ItemId as ProductId
-                             	,i.SEARCHNAME as ProductName
+                             	,REPLACE(REPLACE(REPLACE(i.SEARCHNAME,CHAR(9),''),CHAR(10),''),CHAR(13),'') as ProductName
                              	,a.RofoDate
                              	,a.Qty as QtyRofo
                              	,b.ItemId
-                             	,ib.SEARCHNAME as ItemName
-                             	,isnull(s.VtaMpSubstitusiGroupId,'') as [GroupSubstitusi]
+                             	,REPLACE(REPLACE(REPLACE(ib.SEARCHNAME,CHAR(9),''),CHAR(10),''),CHAR(13),'') as ItemName
+                             	,isnull(s.VtaMpSubstitusiGroupId,'') as [Group Substitusi]
                              	,d.ItemId as ItemAllocatedId
-                             	,id.SEARCHNAME as ItemAllocatedName
+                             	,REPLACE(REPLACE(REPLACE(id.SEARCHNAME,CHAR(9),''),CHAR(10),''),CHAR(13),'') as ItemAllocatedName
                              	,id.UnitId
                              	,d.InventBatch
                              	,d.Qty
@@ -73,15 +66,15 @@ public class MupRepository : IMupRepository
                              	,d.[Source]
                              	,d.RefId
                              	,id.LATESTPRICE as [LatestPurchasePrice]
-                             	,isnull(d.Price/nullif(id.LATESTPRICE,0)* 100,0) as [Gap]
-                             from Rofo a 
-                             join Mup b ON b.RofoId = a.RecId
-                             join MupTrans c ON c.MupId = b.RecId
-                             join ItemTrans d ON d.RecId = c.ItemTransId
-                             join AXGMKDW.dbo.DimItem i ON i.ITEMID = a.ItemId
-                             join AXGMKDW.dbo.DimItem ib ON ib.ITEMID = b.ItemId
-                             join AXGMKDW.dbo.DimItem id ON id.ITEMID = d.ItemId
-                             left join AXGMKDW.dbo.[DimItemSubstitute] s ON s.ItemId = b.ItemId
+                             	,isnull(d.Price/nullif(id.LATESTPRICE,0),0) as [Gap]
+                             FROM Rofo a  WITH (NOLOCK)
+                             JOIN Mup b WITH (NOLOCK) ON b.RofoId = a.RecId
+                             JOIN MupTrans c WITH (NOLOCK) ON c.MupId = b.RecId
+                             JOIN ItemTrans d WITH (NOLOCK) ON d.RecId = c.ItemTransId
+                             JOIN AXGMKDW.dbo.DimItem i WITH (NOLOCK) ON i.ITEMID = a.ItemId
+                             JOIN AXGMKDW.dbo.DimItem ib WITH (NOLOCK) ON ib.ITEMID = b.ItemId
+                             JOIN AXGMKDW.dbo.DimItem id WITH (NOLOCK) ON id.ITEMID = d.ItemId
+                             LEFT JOIN AXGMKDW.dbo.[DimItemSubstitute] s WITH (NOLOCK) ON s.ItemId = b.ItemId
                              /**where**/
                              /**orderby**/
                              OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY
@@ -287,23 +280,36 @@ public class MupRepository : IMupRepository
 		return new PagedList<MupSp>(mupList, pagedListRequest.PageNumber, pagedListRequest.PageSize, mupCount);
     }
 
+    public async Task<IEnumerable<MupSp>> MupSummaryByItemIdFromSpAsync(MupSummaryByItemIdFromSpCommand command)
+    {
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON");
+        const string query = "EXEC MupSelect_SumByItemId @Room";
+        return await _sqlConnection.QueryAsync<MupSp>(
+            query,
+            new { Room = command.RoomId },
+            command.DbTransaction);
+    }
+
     public async Task<IEnumerable<MupSp>> MupSummaryByItemIdAsync(MupSummaryByItemIdCommand command)
     {
         const string query = """
-                             SELECT 
-                                 DATEFROMPARTS(YEAR(m.MupDate),MONTH(m.MupDate),1) as [MupDate]
-                                ,isnull(s.VtaMpSubstitusiGroupId,'') as [GroupSubstitusi]
-                                ,a.ItemId, 
-                                i.SEARCHNAME as ItemName
-                                ,sum(a.Qty) as Qty
-                                ,sum(a.Qty * a.Price) / sum(a.Qty) as [Price] 
-                             FROM [ItemTrans] a
-                             JOIN AXGMKDW.dbo.DimItem i ON i.ITEMID = a.ItemId
-                             JOIN [MupTrans] mt ON mt.ItemTransId = a.RecId
-                             JOIN [Mup] m ON m.RecId = mt.MupId
-                             LEFT JOIN AXGMKDW.dbo.[DimItemSubstitute] s ON s.ItemId = m.ItemId
+                             SELECT c.MupDate as [MupDate]
+                             	,isnull(s.VtaMpSubstitusiGroupId,'') as [Group Substitusi]
+                             	,a.ItemId as [ItemAllocatedId]
+                             	,REPLACE(REPLACE(REPLACE(i.SEARCHNAME,CHAR(9),''),CHAR(10),''),CHAR(13),'') as ItemName
+                             	,i.UnitId as [UnitId]
+                             	,sum(a.Qty) as Qty
+                             	,sum(a.Qty * a.Price) / sum(a.Qty) as [Price] 
+                             	,MAX(i.LATESTPRICE) as [LatestPurchasePrice]
+                             	,( sum(a.Qty * a.Price) / sum(a.Qty)) / NULLIF(MAX(i.LATESTPRICE),0) as [Gap %]			
+                             FROM ItemTrans a WITH (NOLOCK) 
+                             JOIN MupTrans b WITH (NOLOCK) ON b.ItemTransId = a.RecId
+                             JOIN Mup c WITH (NOLOCK) ON c.RecId = b.MupId
+                             JOIN Rofo d WITH (NOLOCK) ON d.RecId = c.RofoId
+                             LEFT JOIN AXGMKDW.dbo.[DimItemSubstitute] s WITH (NOLOCK) ON s.ItemId = c.ItemId
+                             JOIN AXGMKDW.dbo.DimItem i WITH (NOLOCK) ON i.ITEMID = a.ItemId
                              /**where**/
-                             GROUP BY DATEFROMPARTS(YEAR(m.MupDate),MONTH(m.MupDate),1), a.ItemId, i.SEARCHNAME, s.VtaMpSubstitusiGroupId
+                             GROUP BY c.MupDate,s.VtaMpSubstitusiGroupId,a.ItemId,i.SEARCHNAME,i.UnitId
                              /**having**/
                              /**orderby**/
                              """;
@@ -395,7 +401,7 @@ public class MupRepository : IMupRepository
         
 		var sort = listRequest.IsSortAscending ? "ASC" : "DESC";
 		sqlBuilder.OrderBy(string.IsNullOrEmpty(listRequest.SortBy)
-			? "[MupDate] ASC, VtaMpSubstitusiGroupId, a.ItemId"
+			? "s.VtaMpSubstitusiGroupId, a.ItemId"
 			: $"{listRequest.SortBy} {sort}");
 
 		var queryTemplate = sqlBuilder.AddTemplate(query);
@@ -538,30 +544,38 @@ public class MupRepository : IMupRepository
 		return new PagedList<MupSp>(mupList, pagedListRequest.PageNumber, pagedListRequest.PageSize, mupCount);
     }
 
+    public async Task<IEnumerable<MupSp>> MupSummaryByBatchNumberFromSpAsync(MupSummaryByBatchNumberFromSpCommand command)
+    {
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON");
+        const string query = "EXEC MupSelect_SumByBn @Room";
+        return await _sqlConnection.QueryAsync<MupSp>(
+            query,
+            new { Room = command.RoomId },
+            command.DbTransaction);
+    }
+
     public async Task<IEnumerable<MupSp>> MupSummaryByBatchNumberAsync(MupSummaryByBatchNumberCommand command)
     {
         const string query = """
-                             SELECT MIN(b.MupDate) as [MupDate]
-                             	,IIF([Source]='OnHand','1.OnHand',IIF([Source]='PoIntransit','2.PoIntransit',IIF([Source]='Contract','3.Contract',IIF([Source]='Forecast','4.Forecast','5.StdCost')))) as [Source]
-                             	,isnull(s.VtaMpSubstitusiGroupId,'') as [GroupSubstitusi]
-                             	,d.ItemId as ItemAllocatedId
-                             	,id.SEARCHNAME as ItemAllocatedName
-                             	,id.UnitId
-                             	,ISNULL(d.InventBatch,'') as [InventBatch]
-                             	,SUM(d.Qty) as [Qty]
-                             	,MAX(d.Price) as [Price]
-                             	,MAX(id.LATESTPRICE) as [LatestPurchasePrice]
-                             	,isnull(MAX(d.Price)/nullif(MAX(id.LATESTPRICE),0),0) as [Gap]
-                             FROM Rofo a 
-                             join Mup b ON b.RofoId = a.RecId
-                             join MupTrans c ON c.MupId = b.RecId
-                             join ItemTrans d ON d.RecId = c.ItemTransId
-                             join AXGMKDW.dbo.DimItem i ON i.ITEMID = a.ItemId
-                             join AXGMKDW.dbo.DimItem ib ON ib.ITEMID = b.ItemId
-                             join AXGMKDW.dbo.DimItem id ON id.ITEMID = d.ItemId
-                             left join AXGMKDW.dbo.[DimItemSubstitute] s ON s.ItemId = b.ItemId
+                             SELECT c.MupDate
+                             	,IIF(a.[Source]='OnHand','1.OnHand',IIF(a.[Source]='PoIntransit','2.PoIntransit',IIF(a.[Source]='Contract','3.Contract',IIF(a.[Source]='Forecast','4.Forecast','5.StdCost')))) as [Source]
+                             	,isnull(s.VtaMpSubstitusiGroupId,'') as [Group Substitusi]
+                             	,a.ItemId as ItemAllocatedId
+                             	,REPLACE(REPLACE(REPLACE(i.SEARCHNAME,CHAR(9),''),CHAR(10),''),CHAR(13),'') as ItemAllocatedName
+                             	,i.UnitId
+                             	,ISNULL(a.InventBatch,'') as [InventBatch]
+                             	,SUM(a.Qty)	as [Qty]	
+                             	,MAX(a.Price) as [Price]
+                             	,MAX(i.LATESTPRICE) as [LatestPurchasePrice]
+                             	,isnull(MAX(a.Price)/nullif(MAX(i.LATESTPRICE),0),0) as [Gap]				
+                             FROM ItemTrans a WITH (NOLOCK) 
+                             JOIN MupTrans b WITH (NOLOCK) ON b.ItemTransId = a.RecId
+                             JOIN Mup c WITH (NOLOCK) ON c.RecId = b.MupId
+                             JOIN Rofo d WITH (NOLOCK) ON d.RecId = c.RofoId
+                             LEFT JOIN AXGMKDW.dbo.[DimItemSubstitute] s WITH (NOLOCK) ON s.ItemId = c.ItemId
+                             JOIN AXGMKDW.dbo.DimItem i WITH (NOLOCK) ON i.ITEMID = a.ItemId
                              /**where**/
-                             GROUP BY d.ItemId, id.SEARCHNAME, s.VtaMpSubstitusiGroupId, id.UnitId, d.InventBatch, d.[Source]
+                             GROUP BY c.MupDate,a.[Source],s.VtaMpSubstitusiGroupId,a.ItemId,i.SEARCHNAME,i.UnitId,a.InventBatch
                              /**orderby**/
                              """;
 
@@ -705,11 +719,9 @@ public class MupRepository : IMupRepository
             }
         }
         
-        sqlBuilder.Where("LEFT(d.ItemId,1) = 1 OR LEFT(d.ItemId,1) = 3");
-        
 		var sort = listRequest.IsSortAscending ? "ASC" : "DESC";
 		sqlBuilder.OrderBy(string.IsNullOrEmpty(listRequest.SortBy)
-			? "VtaMpSubstitusiGroupId, [Source], d.ItemId"
+			? "s.VtaMpSubstitusiGroupId, a.[Source], a.ItemId"
 			: $"{listRequest.SortBy} {sort}");
         
 		var queryTemplate = sqlBuilder.AddTemplate(query);

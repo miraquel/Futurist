@@ -8,18 +8,7 @@
 @section styles{
     <link href="/assets/css/datatables.min.css" rel="stylesheet">
     <link href="/assets/css/flatpickr.min.css" rel="stylesheet">
-    <style>
-        .processing-badge {
-            display: none;
-            background-color: #dc3545;
-            color: white;
-            border-radius: 50%;
-            padding: 0.25rem 0.5rem;
-            margin-left: 0.5rem;
-            font-size: 0.75rem;
-            vertical-align: middle;
-        }
-        
+    <style>        
         .disabled-button {
             pointer-events: none;
             opacity: 0.6;
@@ -35,34 +24,46 @@
             <div class="card-header">
                 <h1>MUP Calculation</h1>
                 <!-- Dropdown for room ids -->
-                <div class="form-group row mb-3">
-                    <label class="col-sm-1" for="roomSelect">Select Room</label>
-                    <div class="col-sm-11">
-                        <select id="roomSelect" name="roomId" class="form-control">
-                            @foreach (var id in ViewBag.RoomIds)
-                            {
-                                <option value="@id">@id</option>
-                            }
-                        </select>
-                        <span id="processingBadge" class="processing-badge">Processing</span>
-                    </div>
+                <div class="input-group mb-3">
+                    <label class="input-group-text" for="roomSelect">Room</label>
+                    <select id="roomSelect" name="roomId" class="form-control">
+                        @foreach (var id in ViewBag.RoomIds)
+                        {
+                            <option value="@id">@id</option>
+                        }
+                    </select>
+                    <label class="input-group-text text-white bg-warning" id="processingLabel" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Processing
+                    </label>
                 </div>
 
-                <div class="mb-3">
-                    <button class="btn btn-success" id="processMupLink" onclick="processMup()">Process MUP</button>
-                    <button class="btn btn-warning" id="checkMupBtn" onclick="reloadTable()">Check MUP Result</button>
-                    <a asp-controller="Mup" asp-action="DownloadMupResult" asp-route-room="0" onclick="downloadMup()" id="linkDownload" class="btn btn-primary">Download MUP Result</a>
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <button class="btn btn-success" id="processMupLink" onclick="processMup()">
+                            <i class="ri-play-fill"></i>
+                            Process MUP
+                        </button>
+                        <button class="btn btn-primary" id="checkMupBtn" onclick="reloadTable()">
+                            <i class="ri-refresh-line"></i>
+                            Check MUP Result
+                        </button>
+                    </div>
+                    <a asp-controller="Mup" asp-action="DownloadMupResult" asp-route-room="0" onclick="downloadMup()" id="linkDownload" class="btn btn-info">
+                        <i class="ri-file-excel-2-fill"></i>
+                        Export Result
+                    </a>
                 </div>
             </div>
             <div class="card-body">
-                <table id="datatables-mup-result" class="display table table-bordered" style="width:100%">
+                <table id="datatables-mup-result" class="display table table-bordered datatable-wrapper" style="width:100%">
                     <thead>
                     <tr>
                         <th>Room</th>
                         <th>Product ID</th>
                         <th>Product Name</th>
                         <th>Rofo Date</th>
-                        <th>Qty Rofo</th>
+                        <th>Rofo Qty</th>
                         <th>Item ID</th>
                         <th>Item Name</th>
                         <th>Group Substitusi</th>
@@ -84,7 +85,7 @@
                         <th>Product ID</th>
                         <th>Product Name</th>
                         <th>Rofo Date</th>
-                        <th>Qty Rofo</th>
+                        <th>Rofo Qty</th>
                         <th>Item ID</th>
                         <th>Item Name</th>
                         <th>Group Substitusi</th>
@@ -116,7 +117,7 @@
         const roomId = roomSelect.val();
         const token = $('input[name="__RequestVerificationToken"]').val();
         const processMupButton = $("#processMupLink");
-        const processingBadge = $("#processingBadge");
+        const processingLabel = $("#processingLabel");
         
         // SignalR connection
         let connection;
@@ -166,10 +167,10 @@
             // Check if current room ID is in process
             if (inProcessRoomIds.includes(currentRoomId)) {
                 processMupButton.addClass("disabled-button");
-                processingBadge.show();
+                processingLabel.show();
             } else {
                 processMupButton.removeClass("disabled-button");
-                processingBadge.hide();
+                processingLabel.hide();
             }
         }
         

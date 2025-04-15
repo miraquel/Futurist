@@ -1,0 +1,324 @@
+﻿@model Futurist.Service.Dto.MupSpDto
+
+@{
+    ViewBag.Title = "MUP Summary By Item ID";
+    Layout = "_Layout";
+}
+
+@section styles{
+    <link href="/assets/css/datatables.min.css" rel="stylesheet">
+    <link href="/assets/css/flatpickr.min.css" rel="stylesheet">
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>MUP Summary By Item ID</h1>
+                <!-- Dropdown for room ids -->
+                <div class="input-group mb-3">
+                    <label class="input-group-text" for="roomSelect">Room</label>
+                    <select id="roomSelect" name="roomId" class="form-control">
+                        @foreach (var id in ViewBag.RoomIds)
+                        {
+                            <option value="@id">@id</option>
+                        }
+                    </select>
+                    <label class="input-group-text text-white bg-warning" id="processingLabel" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Processing
+                    </label>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-primary" id="checkMupBtn" onclick="reloadTable()">
+                        <i class="ri-refresh-line"></i>
+                        Refresh Table
+                    </button>
+                    <a asp-controller="Mup" asp-action="DownloadMupSummaryByItemId" asp-route-room="0" onclick="downloadMup()" id="linkDownload" class="btn btn-info">
+                        <i class="ri-file-excel-2-fill"></i>
+                        Export Result
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <table id="datatables-mup-result" class="display table table-bordered datatable-wrapper" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>Room</th>
+                        <th>MUP Date</th>
+                        <th>Group Substitusi</th>
+                        <th>Item Allocated ID</th>
+                        <th>Item Name</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>Room</th>
+                        <th>MUP Date</th>
+                        <th>Group Substitusi</th>
+                        <th>Item Allocated ID</th>
+                        <th>Item Name</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/assets/js/datatables.min.js"></script>
+    <script src="/assets/js/flatpickr.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+    
+    <script>
+        const roomSelect = $("#roomSelect");
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        const processingLabel = $("#processingLabel");
+        
+        // SignalR connection
+        let connection;
+        let inProcessRoomIds = [];
+        let pollingInterval;
+        let initialized = false;
+        
+        // Initialize SignalR connection
+        function initializeSignalR() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/futuristHub")
+                .withAutomaticReconnect()
+                .build();
+                
+            // Handle incoming notifications about running jobs
+            connection.on("MupProcessingStateChanged", (roomIds) => {
+                inProcessRoomIds = roomIds || [];
+                updateProcessingUI();
+            });
+            
+            // Start the connection
+            connection.start()
+                .then(() => {
+                    console.log("SignalR Connected");
+                    // Call the correct hub method to get initial state
+                    refreshProcessingState();
+                    
+                    // Set up polling as a backup for notifications
+                    pollingInterval = setInterval(refreshProcessingState, 10000); // Check every 10 seconds
+                })
+                .catch(err => console.error("SignalR Connection Error: ", err));
+        }
+        
+        // Refresh the processing state from the server
+        function refreshProcessingState() {
+            connection.invoke("GetMupInProcessRoomIds")
+                .then(roomIds => {
+                    inProcessRoomIds = roomIds || [];
+                    updateProcessingUI();
+                })
+                .catch(err => console.error("Error getting MUP processing state: ", err));
+        }
+        
+        // Update UI based on processing status
+        function updateProcessingUI() {
+            const currentRoomId = parseInt(roomSelect.val());
+            
+            // Check if current room ID is in process
+            if (inProcessRoomIds.includes(currentRoomId)) {
+                processingLabel.show();
+            } else {
+                processingLabel.hide();
+            }
+        }
+
+        // Debounce helper function
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        function reloadTable() {
+            if (document.getElementById("datatables-mup-result") || document.getElementById("datatables-mup-result")) {
+                if (!initialized) {
+                    initialized = true;
+                    $('#datatables-mup-result').DataTable({
+                        searchDelay: 1000,
+                        ajax: {
+                            url: '/api/MupApi/MupSummaryByItemIdFromSp/',
+                            data: function (d) {
+                                d.roomId = roomSelect.val();
+                            },
+                            beforeSend: function(xhr) {
+                                xhr.setRequestHeader("RequestVerificationToken", token);
+                            },
+                            dataSrc: function(json) {
+                                // Check if response follows ServiceResponse structure:
+                                if (json.data && Array.isArray(json.data.items)) {
+                                    return json.data.items;
+                                }
+                                // If data is already an array
+                                if (Array.isArray(json.data)) {
+                                    return json.data;
+                                }
+                                // Fallback: if json itself is an array
+                                return json;
+                            },
+                            error: function(err){
+                                alert(err.responseJSON.errorMessage);
+                            }
+                        },
+                        columns: [
+                            { data: 'room', defaultContent: '', width: '50px' },
+                            {
+                                data: 'mupDate',
+                                defaultContent: '',
+                                width: '90px',
+                                render: function(data) {
+                                    return data ? moment(data).format("DD MMM YYYY") : '';
+                                }
+                            },
+                            { data: 'groupSubstitusi', width: '120px', defaultContent: '' },
+                            { data: 'itemAllocatedId', width: '70px', defaultContent: '' },
+                            { data: 'itemName', width: '250px', defaultContent: '' },
+                            {
+                                data: 'qty',
+                                defaultContent: '',
+                                width: '70px',
+                                render: function(data, type) {
+                                    // For sorting/filtering use the raw number
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+
+                                    // For display, format with thousands separator
+                                    return data ? parseFloat(data).toLocaleString() : '';
+                                }
+                            },
+                            {
+                                data: 'price',
+                                defaultContent: '',
+                                width: '70px',
+                                render: function(data, type) {
+                                    // For sorting/filtering use the raw number
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+
+                                    // For display, round and format with thousands separator
+                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                }
+                            }
+                        ],
+                        columnDefs: [
+                            {
+                                targets: [0, 2, 3], // MUP Date, Qty, Price
+                                className: 'text-center'
+                            }
+                        ],
+                        processing: true,
+                        paging: true,
+                        searching: true,
+                        autoWidth: false,
+                        responsive: false,
+                        scrollX: true,
+                        order: [],
+                        initComplete: function () {
+                            this.api()
+                                .columns()
+                                .every(function () {
+                                    let column = this;
+
+                                    let header = column.header();
+                                    // change the background
+                                    header.style.backgroundColor = '#4F81BD';
+                                    header.style.color = 'white';
+
+                                    let title = column.footer().textContent;
+
+                                    // Special handling for Rofo Date column
+                                    if (title.trim() === "Rofo Date") {
+                                        // Create flatpickr input for date
+                                        let dateInput = document.createElement('input');
+                                        dateInput.placeholder = title;
+                                        dateInput.className = "form-control";
+                                        dateInput.style.width = '100%';
+
+                                        column.footer().replaceChildren(dateInput);
+
+                                        // Initialize flatpickr
+                                        flatpickr(dateInput, {
+                                            dateFormat: "Y/m/d",
+                                            onChange: function(selectedDates, dateStr) {
+                                                // Only search and draw when both dates are selected in range mode
+                                                //if (selectedDates.length === 2) {
+                                                // Replace "to" with "-" in the date range string
+                                                //    const formattedDateStr = dateStr.replace(" to ", "-");
+                                                //    column.search(formattedDateStr).draw();
+                                                //}
+                                                column.search(dateStr).draw();
+                                            },
+                                            //mode: "range",
+                                        });
+                                    } else {
+                                        // Default handling for other columns
+                                        let input = document.createElement('input');
+                                        input.placeholder = title;
+                                        input.className = "form-control";
+                                        input.style.width = '100%';
+                                        column.footer().replaceChildren(input);
+
+                                        // Debounced event listener for user input (1 second delay)
+                                        input.addEventListener('keyup', debounce(() => {
+                                            if (column.search() !== input.value) {
+                                                column.search(input.value).draw();
+                                            }
+                                        }, 1000));
+                                    }
+                                });
+                        }
+                    });
+                }
+                else {
+                    $('#datatables-mup-result').DataTable().ajax.reload();
+                }
+            }
+        }
+
+        $('#roomSelect').change(function () {
+            updateProcessingUI();
+        });
+        
+        function downloadMup() {
+            // change the room id in the download link
+            const room = roomSelect.val();
+            const linkDownload = $("#linkDownload")[0];
+            // edit the query room
+            linkDownload.href = linkDownload.href.replace(/room=\d+/, `room=${room}`);
+        }
+
+        // Load errors using selected room id from dropdown
+        
+
+        // Initialize SignalR when document is ready
+        $(document).ready(function() {
+            initializeSignalR();
+            
+            // Clean up on page unload
+            $(window).on('beforeunload', function() {
+                if (pollingInterval) {
+                    clearInterval(pollingInterval);
+                }
+            });
+        });
+    
+    </script>
+}
