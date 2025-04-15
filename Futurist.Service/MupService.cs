@@ -1,12 +1,11 @@
-﻿using Futurist.Infrastructure.SignalR.Hubs;
-using Futurist.Repository.Command.MupCommand;
+﻿using Futurist.Repository.Command.MupCommand;
 using Futurist.Repository.UnitOfWork;
 using Futurist.Service.Dto;
 using Futurist.Service.Dto.Common;
 using Futurist.Service.Interface;
 using Hangfire;
 using Hangfire.Storage;
-using Microsoft.AspNetCore.SignalR;
+using Serilog;
 
 namespace Futurist.Service;
 
@@ -14,36 +13,53 @@ public class MupService : IMupService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly MapperlyMapper _mapper;
-    private readonly IHubContext<FuturistHub> _hubContext;
+    private readonly KeycloakTokenService _keycloakTokenService;
+    private readonly ILogger _logger = Log.ForContext<MupService>();
 
-    public MupService(IUnitOfWork unitOfWork, MapperlyMapper mapper, IHubContext<FuturistHub> hubContext)
+    public MupService(IUnitOfWork unitOfWork, MapperlyMapper mapper, KeycloakTokenService keycloakTokenService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _hubContext = hubContext;
+        _keycloakTokenService = keycloakTokenService;
     }
 
-    public async Task<ServiceResponse<IEnumerable<MupSpDto>>> ProcessMupAsync(int roomId)
+    public async Task<ServiceResponse<SpTaskDto>> ProcessMupAsync(int roomId)
     {
         try
         {
             var command = new ProcessMupCommand
             {
-                RoomId = roomId
+                RoomId = roomId,
+                Timeout = 0
             };
             
-            var response = await _unitOfWork.MupRepository.ProcessMupAsync(command);
+            var response = await _unitOfWork.MupRepository.ProcessMupAsync(command) ?? throw new NullReferenceException("Mup processing does not return any result");
+            
+            if (_unitOfWork.CurrentTransaction != null)
+            {
+                await _unitOfWork.CommitAsync();
+            }
+            
+            _logger.Information("ProcessMup {@command}", command);
 
-            return new ServiceResponse<IEnumerable<MupSpDto>>
+            return new ServiceResponse<SpTaskDto>
             {
                 Message = ServiceMessageConstants.MupProcessed,
-                Data = _mapper.MapToIEnumerableDto(response)
+                Data = _mapper.MapToDto(response)
             };
         }
         catch (Exception e)
         {
-            return new ServiceResponse<IEnumerable<MupSpDto>>
+            if (_unitOfWork.CurrentTransaction != null)
             {
+                await _unitOfWork.RollbackAsync();
+            }
+            
+            _logger.Error(e, "ProcessMup failed {@command}", e.Message);
+            
+            return new ServiceResponse<SpTaskDto>
+            {
+                Message = ServiceMessageConstants.MupProcessFailed,
                 Errors = [e.Message]
             };
         }
@@ -81,30 +97,20 @@ public class MupService : IMupService
         }
         catch (Exception e)
         {
+            _logger.Error(e, "MupResult failed {@command}", e.Message);
+            
             return new ServiceResponse<IEnumerable<MupSpDto>>
             {
-                Errors = [e.Message]
+                Errors = [e.Message],
+                Message = ServiceMessageConstants.MupResultNotFound
             };
         }
     }
 
-    public async Task<ServiceResponse<PagedListDto<MupSpDto>>> MupResultPagedListAsync(PagedListRequestDto<MupSpDto> filter)
+    public async Task<ServiceResponse<PagedListDto<MupSpDto>>> MupResultPagedListAsync(PagedListRequestDto filter)
     {
         try
         {
-            var monitoringApi = JobStorage.Current.GetMonitoringApi();
-            var processingJobs = monitoringApi.ProcessingJobs(0, 1000);
-            var processingJobsFiltered = processingJobs.Where(j => j.Value.Job.Method.Name == nameof(ProcessMupAsync));
-        
-            // check if the room id is already in process
-            if (processingJobsFiltered.Any(j => j.Value.Job.Args[0] as int? == filter.Filter.Room))
-            {
-                return new ServiceResponse<PagedListDto<MupSpDto>>
-                {
-                    Errors = [ServiceMessageConstants.MupJobAlreadyInProcess]
-                };
-            }
-            
             var command = new MupResultPagedListCommand
             {
                 PagedListRequest = _mapper.MapToPagedListRequest(filter)
@@ -114,15 +120,18 @@ public class MupService : IMupService
             
             return new ServiceResponse<PagedListDto<MupSpDto>>
             {
-                Message = ServiceMessageConstants.BomStdFound,
+                Message = ServiceMessageConstants.MupResultFound,
                 Data = _mapper.MapToPagedListDto(response)
             };
         }
         catch (Exception e)
         {
+            _logger.Error(e, "MupResultPagedListAsync failed {@command}", e.Message);
+            
             return new ServiceResponse<PagedListDto<MupSpDto>>
             {
-                Errors = [e.Message]
+                Errors = [e.Message],
+                Message = ServiceMessageConstants.MupResultNotFound
             };
         }
     }
@@ -136,14 +145,191 @@ public class MupService : IMupService
 
             return new ServiceResponse<IEnumerable<int>>
             {
-                Message = ServiceMessageConstants.RoomIdsFound,
+                Message = ServiceMessageConstants.RofoRoomIdsFound,
                 Data = response
             };
         }
         catch (Exception e)
         {
+            _logger.Error(e, "GetMupRoomIdsAsync failed {@command}", e.Message);
+            
             return new ServiceResponse<IEnumerable<int>>
             {
+                Errors = [e.Message],
+                Message = ServiceMessageConstants.MupRoomIdsNotFound
+            };
+        }
+    }
+
+    public async Task<ServiceResponse<IEnumerable<MupSpDto>>> MupSummaryByItemIdFromSpAsync(int roomId)
+    {
+        try
+        {
+            var command = new MupSummaryByItemIdFromSpCommand
+            {
+                RoomId = roomId
+            };
+            
+            var response = await _unitOfWork.MupRepository.MupSummaryByItemIdFromSpAsync(command);
+            
+            return new ServiceResponse<IEnumerable<MupSpDto>>
+            {
+                Message = ServiceMessageConstants.MupSummaryByItemIdFound,
+                Data = _mapper.MapToIEnumerableDto(response)
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "MupSummaryByItemIdFromSpAsync failed {@command}", e.Message);
+            
+            return new ServiceResponse<IEnumerable<MupSpDto>>
+            {
+                Message = ServiceMessageConstants.MupSummaryByItemIdNotFound,
+                Errors = [e.Message]
+            };
+        }
+    }
+
+    public async Task<ServiceResponse<IEnumerable<MupSpDto>>> MupSummaryByItemIdAsync(ListRequestDto filter)
+    {
+        try
+        {
+            var command = new MupSummaryByItemIdCommand
+            {
+                ListRequest = _mapper.MapToListRequest(filter)
+            };
+            
+            var response = await _unitOfWork.MupRepository.MupSummaryByItemIdAsync(command);
+            
+            return new ServiceResponse<IEnumerable<MupSpDto>>
+            {
+                Message = ServiceMessageConstants.MupSummaryByItemIdFound,
+                Data = _mapper.MapToIEnumerableDto(response)
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "MupSummaryByItemIdAsync failed {@command}", e.Message);
+            
+            return new ServiceResponse<IEnumerable<MupSpDto>>
+            {
+                Message = ServiceMessageConstants.MupSummaryByItemIdNotFound,
+                Errors = [e.Message]
+            };
+        }
+    }
+
+    public async Task<ServiceResponse<PagedListDto<MupSpDto>>> MupSummaryByItemIdPagedListAsync(PagedListRequestDto filter)
+    {
+        try
+        {
+            var command = new MupSummaryByItemIdPagedListCommand
+            {
+                PagedListRequest = _mapper.MapToPagedListRequest(filter)
+            };
+            
+            var response = await _unitOfWork.MupRepository.MupSummaryByItemIdPagedListAsync(command);
+
+            return new ServiceResponse<PagedListDto<MupSpDto>>
+            {
+                Message = ServiceMessageConstants.MupSummaryByItemIdFound,
+                Data = _mapper.MapToPagedListDto(response)
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "MupSummaryByItemIdPagedListAsync failed {@command}", e.Message);
+            
+            return new ServiceResponse<PagedListDto<MupSpDto>>
+            {
+                Message = ServiceMessageConstants.MupSummaryByItemIdNotFound,
+                Errors = [e.Message]
+            };
+        }
+    }
+
+    public async Task<ServiceResponse<IEnumerable<MupSpDto>>> MupSummaryByBatchNumberFromSpAsync(int roomId)
+    {
+        try
+        {
+            var command = new MupSummaryByBatchNumberFromSpCommand
+            {
+                RoomId = roomId
+            };
+            
+            var response = await _unitOfWork.MupRepository.MupSummaryByBatchNumberFromSpAsync(command);
+            
+            return new ServiceResponse<IEnumerable<MupSpDto>>
+            {
+                Message = ServiceMessageConstants.MupSummaryByBatchNumberFound,
+                Data = _mapper.MapToIEnumerableDto(response)
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "MupSummaryByBatchNumberFromSpAsync failed {@command}", e.Message);
+            
+            return new ServiceResponse<IEnumerable<MupSpDto>>
+            {
+                Message = ServiceMessageConstants.MupSummaryByBatchNumberNotFound,
+                Errors = [e.Message]
+            };
+        }
+    }
+
+    public async Task<ServiceResponse<IEnumerable<MupSpDto>>> MupSummaryByBatchNumberAsync(ListRequestDto filter)
+    {
+        try
+        {
+            var command = new MupSummaryByBatchNumberCommand
+            {
+                ListRequest = _mapper.MapToListRequest(filter)
+            };
+            
+            var response = await _unitOfWork.MupRepository.MupSummaryByBatchNumberAsync(command);
+            
+            return new ServiceResponse<IEnumerable<MupSpDto>>
+            {
+                Message = ServiceMessageConstants.MupSummaryByBatchNumberFound,
+                Data = _mapper.MapToIEnumerableDto(response)
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "MupSummaryByBatchNumberAsync failed {@command}", e.Message);
+            
+            return new ServiceResponse<IEnumerable<MupSpDto>>
+            {
+                Message = ServiceMessageConstants.MupSummaryByBatchNumberNotFound,
+                Errors = [e.Message]
+            };
+        }
+    }
+
+    public async Task<ServiceResponse<PagedListDto<MupSpDto>>> MupSummaryByBatchNumberPagedListAsync(PagedListRequestDto filter)
+    {
+        try
+        {
+            var command = new MupSummaryByBatchNumberPagedListCommand
+            {
+                PagedListRequest = _mapper.MapToPagedListRequest(filter)
+            };
+            
+            var response = await _unitOfWork.MupRepository.MupSummaryByBatchNumberPagedListAsync(command);
+            
+            return new ServiceResponse<PagedListDto<MupSpDto>>
+            {
+                Message = ServiceMessageConstants.MupSummaryByBatchNumberFound,
+                Data = _mapper.MapToPagedListDto(response)
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "MupSummaryByBatchNumberPagedListAsync failed {@command}", e.Message);
+            
+            return new ServiceResponse<PagedListDto<MupSpDto>>
+            {
+                Message = ServiceMessageConstants.MupSummaryByBatchNumberNotFound,
                 Errors = [e.Message]
             };
         }
@@ -165,7 +351,7 @@ public class MupService : IMupService
         BackgroundJob.ContinueJobWith(jobId, () => NotifyClientsMupProcessingStateChanged());
         
         // Notify clients immediately that a new job has been queued
-        _hubContext.Clients.All.SendAsync("MupProcessingStateChanged", MupInProcessRoomIds());
+        _ = NotifyClientsMupProcessingStateChanged();
         
         return ServiceMessageConstants.MupProcessing;
     }
@@ -182,6 +368,10 @@ public class MupService : IMupService
 
     public async Task NotifyClientsMupProcessingStateChanged()
     {
-        await _hubContext.Clients.All.SendAsync("MupProcessingStateChanged", MupInProcessRoomIds());
+        await _keycloakTokenService.Notify(new NotificationDto<IEnumerable<int>>
+        {
+            Method = "FgCostProcessingStateChanged",
+            Data = MupInProcessRoomIds()
+        });
     }
 }

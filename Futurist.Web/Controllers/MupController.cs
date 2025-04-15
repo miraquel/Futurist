@@ -1,11 +1,9 @@
 ﻿using ClosedXML.Excel;
 using Futurist.Common.Helpers;
-using Futurist.Service.Dto;
 using Futurist.Service.Dto.Common;
 using Futurist.Service.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis;
 
 namespace Futurist.Web.Controllers;
 
@@ -23,6 +21,7 @@ public class MupController : Controller
     // GET
     public async Task<IActionResult> Index()
     {
+        
         var response = await _mupService.GetMupRoomIdsAsync();
         
         if (response.IsSuccess)
@@ -34,7 +33,71 @@ public class MupController : Controller
             ViewBag.Error = response.ErrorMessage;
         }
         
-        return View(new MupSpDto());
+        return View();
+    }
+    
+    public async Task<IActionResult> SummaryByItemId()
+    {
+        var response = await _mupService.GetMupRoomIdsAsync();
+        
+        if (response.IsSuccess)
+        {
+            ViewBag.RoomIds = response.Data;
+        }
+        else
+        {
+            ViewBag.Error = response.ErrorMessage;
+        }
+        
+        return View();
+    }
+    
+    public async Task<IActionResult> SummaryByBatchNumber()
+    {
+        var response = await _mupService.GetMupRoomIdsAsync();
+        
+        if (response.IsSuccess)
+        {
+            ViewBag.RoomIds = response.Data;
+        }
+        else
+        {
+            ViewBag.Error = response.ErrorMessage;
+        }
+        
+        return View();
+    }
+    
+    public async Task<IActionResult> Process()
+    {
+        var response = await _mupService.GetMupRoomIdsAsync();
+        
+        if (response.IsSuccess)
+        {
+            ViewBag.RoomIds = response.Data;
+        }
+        else
+        {
+            ViewBag.Error = response.ErrorMessage;
+        }
+        
+        return View();
+    }
+
+    public async Task<IActionResult> Details()
+    {
+        var response = await _mupService.GetMupRoomIdsAsync();
+        
+        if (response.IsSuccess)
+        {
+            ViewBag.RoomIds = response.Data;
+        }
+        else
+        {
+            ViewBag.Error = response.ErrorMessage;
+        }
+        
+        return View();
     }
 
     public async Task<IActionResult> DownloadMupResult([FromQuery] int room)
@@ -51,7 +114,7 @@ public class MupController : Controller
                 row.Cell(2).Value = "Product Id";
                 row.Cell(3).Value = "Product Name";
                 row.Cell(4).Value = "Rofo Date";
-                row.Cell(5).Value = "Qty Rofo";
+                row.Cell(5).Value = "Rofo Qty";
                 row.Cell(6).Value = "Item Id";
                 row.Cell(7).Value = "Item Name";
                 row.Cell(8).Value = "Group Substitusi";
@@ -184,11 +247,11 @@ public class MupController : Controller
                 row.Cell(8).Value = dto.Qty;
                 row.Cell(8).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2WithSeparatorAndParens;
                 row.Cell(9).Value = dto.Price;
-                row.Cell(9).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                row.Cell(9).Style.NumberFormat.Format = "#,##0";
                 row.Cell(10).Value = dto.LatestPurchasePrice;
-                row.Cell(10).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                row.Cell(10).Style.NumberFormat.Format = "#,##0";
                 row.Cell(11).Value = dto.Gap;
-                row.Cell(11).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                row.Cell(11).Style.NumberFormat.Format = "#,##0.0%";
             }
         });
         
@@ -227,14 +290,98 @@ public class MupApiController : ControllerBase
             return Ok(response);
         }
         
+        return BadRequest(response);
+    }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MupResultPagedList([FromQuery] PagedListRequestDto pagedListRequestDto)
+    {
+        var response = await _mupService.MupResultPagedListAsync(pagedListRequestDto);
+        
+        if (response.IsSuccess)
+        {
+            return Ok(response);
+        }
+        
+        return BadRequest(response);
+    }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MupSummaryByItemIdFromSp([FromQuery] int roomId)
+    {
+        var response = await _mupService.MupSummaryByItemIdFromSpAsync(roomId);
+        
+        if (response.IsSuccess)
+        {
+            return Ok(response);
+        }
+        
+        return BadRequest(response);
+    }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MupSummaryByItemId([FromQuery] ListRequestDto listRequestDto)
+    {
+        var response = await _mupService.MupSummaryByItemIdAsync(listRequestDto);
+        
+        if (response.IsSuccess)
+        {
+            return Ok(response);
+        }
+        
         return BadRequest(response.Errors);
     }
     
     [HttpGet]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> MupResultPagedList([FromQuery] PagedListRequestDto<MupSpDto> pagedListRequestDto)
+    public async Task<IActionResult> MupSummaryByItemIdPagedList([FromQuery] PagedListRequestDto pagedListRequestDto)
     {
-        var response = await _mupService.MupResultPagedListAsync(pagedListRequestDto);
+        var response = await _mupService.MupSummaryByItemIdPagedListAsync(pagedListRequestDto);
+        
+        if (response.IsSuccess)
+        {
+            return Ok(response);
+        }
+        
+        return BadRequest(response);
+    }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MupSummaryByBatchNumberFromSp([FromQuery] int roomId)
+    {
+        var response = await _mupService.MupSummaryByBatchNumberFromSpAsync(roomId);
+        
+        if (response.IsSuccess)
+        {
+            return Ok(response);
+        }
+        
+        return BadRequest(response);
+    }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MupSummaryByBatchNumber([FromQuery] ListRequestDto listRequestDto)
+    {
+        var response = await _mupService.MupSummaryByBatchNumberAsync(listRequestDto);
+        
+        if (response.IsSuccess)
+        {
+            return Ok(response);
+        }
+        
+        return BadRequest(response);
+    }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MupSummaryByBatchNumberPagedList([FromQuery] PagedListRequestDto pagedListRequestDto)
+    {
+        var response = await _mupService.MupSummaryByBatchNumberPagedListAsync(pagedListRequestDto);
         
         if (response.IsSuccess)
         {

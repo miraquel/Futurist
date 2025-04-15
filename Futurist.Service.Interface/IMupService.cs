@@ -5,10 +5,17 @@ namespace Futurist.Service.Interface;
 
 public interface IMupService
 {
-    Task<ServiceResponse<IEnumerable<MupSpDto>>> ProcessMupAsync(int roomId);
+    Task<ServiceResponse<SpTaskDto>> ProcessMupAsync(int roomId);
     Task<ServiceResponse<IEnumerable<MupSpDto>>> MupResultAsync(int roomId);
-    Task<ServiceResponse<PagedListDto<MupSpDto>>> MupResultPagedListAsync(PagedListRequestDto<MupSpDto> filter);
+    Task<ServiceResponse<PagedListDto<MupSpDto>>> MupResultPagedListAsync(PagedListRequestDto filter);
     Task<ServiceResponse<IEnumerable<int>>> GetMupRoomIdsAsync();
+    Task<ServiceResponse<IEnumerable<MupSpDto>>> MupSummaryByItemIdFromSpAsync(int roomId);
+    Task<ServiceResponse<IEnumerable<MupSpDto>>> MupSummaryByItemIdAsync(ListRequestDto filter);
+    Task<ServiceResponse<PagedListDto<MupSpDto>>> MupSummaryByItemIdPagedListAsync(PagedListRequestDto filter);
+    Task<ServiceResponse<IEnumerable<MupSpDto>>> MupSummaryByBatchNumberFromSpAsync(int roomId);
+    Task<ServiceResponse<IEnumerable<MupSpDto>>> MupSummaryByBatchNumberAsync(ListRequestDto filter);
+    Task<ServiceResponse<PagedListDto<MupSpDto>>> MupSummaryByBatchNumberPagedListAsync(
+        PagedListRequestDto filter);
     
     // Hangfire Job to execute ProcessMupAsync
     string ProcessMupJob(int roomId);
