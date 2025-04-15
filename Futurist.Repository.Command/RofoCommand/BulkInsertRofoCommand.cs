@@ -1,6 +1,8 @@
+using Futurist.Domain;
+
 namespace Futurist.Repository.Command.RofoCommand;
 
 public class BulkInsertRofoCommand : BaseCommand
 {
-    public IEnumerable<Domain.Rofo> Rofos { get; init; } = new List<Domain.Rofo>();
+    public IEnumerable<Rofo> Rofos { get; init; } = new List<Rofo>();
 }

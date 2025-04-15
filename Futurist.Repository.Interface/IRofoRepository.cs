@@ -9,6 +9,7 @@ public interface IRofoRepository
 {
     // TODO: Implement the IRofoRepository
     Task<PagedList<Rofo>> GetRofoPagedListAsync(GetRofoPagedListCommand command);
+    Task<IEnumerable<Rofo>> GetRofoListAsync(GetRofoListCommand command);
     Task<Rofo?> GetRofoByIdAsync(GetRofoByIdCommand command);
     Task DeleteRofoByRoomAsync(DeleteRofoByRoomCommand command);
     Task BulkInsertRofoAsync(BulkInsertRofoCommand command);
