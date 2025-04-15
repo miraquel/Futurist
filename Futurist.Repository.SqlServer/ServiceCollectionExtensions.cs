@@ -17,6 +17,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICommonRepository, CommonRepository>();
         services.AddScoped<IMupRepository, MupRepository>();
         services.AddScoped<IFgCostRepository, FgCostRepository>();
+        services.AddScoped<IJobMonitoringRepository, JobMonitoringRepository>();
+        services.AddScoped<IExchangeRateRepository, ExchangeRateRepository>();
+        services.AddScoped<IItemAdjustmentRepository, ItemAdjustmentRepository>();
         
         services.AddScoped<IDbConnection>(s =>
         {
