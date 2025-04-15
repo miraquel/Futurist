@@ -19,7 +19,7 @@ public class ItemAdjustmentRepository : IItemAdjustmentRepository
     public async Task<IEnumerable<ItemAdjustment>> GetItemAdjustmentListAsync(GetItemAdjustmentListCommand command)
     {
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON");
-        const string query = "EXEC CogsProjection.dbo.ItemAdj_Select @Room";
+        const string query = "EXEC ItemAdj_Select @Room";
         return await _sqlConnection.QueryAsync<ItemAdjustment>(
             query,
             new { command.Room },
@@ -29,15 +29,15 @@ public class ItemAdjustmentRepository : IItemAdjustmentRepository
     public async Task<IEnumerable<int>> GetItemAdjustmentRoomIdsAsync(GetItemAdjustmentRoomIdsCommand command)
     {
         const string query = """
-                             SELECT DISTINCT Room FROM CogsProjection.dbo.FgCost
+                             SELECT DISTINCT Room FROM FgCost
                              UNION
-                             SELECT DISTINCT Room FROM CogsProjection.dbo.Mup
+                             SELECT DISTINCT Room FROM Mup
                              UNION
-                             SELECT DISTINCT Room FROM CogsProjection.dbo.BomStd
+                             SELECT DISTINCT Room FROM BomStd
                              UNION
-                             SELECT DISTINCT Room FROM CogsProjection.dbo.Rofo
+                             SELECT DISTINCT Room FROM Rofo
                              UNION
-                             SELECT DISTINCT Room FROM CogsProjection.dbo.ItemAdj
+                             SELECT DISTINCT Room FROM ItemAdj
                              ORDER BY Room;
                              """;
         
@@ -47,7 +47,7 @@ public class ItemAdjustmentRepository : IItemAdjustmentRepository
 
     public async Task<string?> DeleteItemAdjustmentAsync(DeleteItemAdjustmentCommand command)
     {
-        const string query = "EXEC CogsProjection.dbo.ItemAdj_Delete @Room";
+        const string query = "EXEC ItemAdj_Delete @Room";
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
         return await _sqlConnection.ExecuteScalarAsync<string>(
             query,
@@ -66,7 +66,8 @@ public class ItemAdjustmentRepository : IItemAdjustmentRepository
         sqlBulkCopy.BatchSize = 1000;
 
         var dataTable = new DataTable();
-        dataTable.Columns.Add("Room", typeof(string));
+        dataTable.Columns.Add("RecId", typeof(int));
+        dataTable.Columns.Add("Room", typeof(int));
         dataTable.Columns.Add("ItemId", typeof(string));
         dataTable.Columns.Add("AdjPrice", typeof(decimal));
         dataTable.Columns.Add("RmPrice", typeof(decimal));
@@ -76,7 +77,11 @@ public class ItemAdjustmentRepository : IItemAdjustmentRepository
         
         foreach (var item in command.ItemAdjustments)
         {
-            dataTable.Rows.Add(item.Room, item.ItemId, item.Price, item.ItemId.StartsWith('1') ? item.Price : 0, item.ItemId.StartsWith('3') ? item.Price : 0, item.CreatedBy, item.CreatedDate);
+            // Determine RmPrice and PmPrice based on ItemId.
+            var rmPrice = item.ItemId.StartsWith('1') ? item.Price : 0;
+            var pmPrice = item.ItemId.StartsWith('3') ? item.Price : 0;
+
+            dataTable.Rows.Add(0, item.Room, item.ItemId, item.Price, rmPrice, pmPrice, item.CreatedBy, item.CreatedDate);
         }
         
         await sqlBulkCopy.WriteToServerAsync(dataTable);

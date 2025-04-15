@@ -1,0 +1,227 @@
+﻿@model Futurist.Service.Dto.Common.ServiceResponse<List<Futurist.Service.Dto.ItemAdjustmentDto>>
+
+@{
+    ViewBag.Title = "Item Price Adjustments";
+    ViewBag.pTitle = "Item Price Adjustments";
+    ViewBag.pageTitle = "Pages";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <link href="/assets/css/datatables.min.css" rel="stylesheet">
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-12">
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger mb-xl-0" role="alert">
+                @ViewBag.Error
+            </div>
+        }
+        @if (ViewBag.Errors != null)
+        {
+            @foreach(var error in ViewBag.Errors)
+            {
+                <div class="alert alert-danger mb-xl-0" role="alert">
+                    @error
+                </div>
+            }
+        }
+        @if (ViewBag.Success != null)
+        {
+            <div class="alert alert-success mb-xl-0" role="alert">
+                @ViewBag.Success
+            </div>
+        }
+    </div>
+</div>
+                
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="mb-3">Item Price Adjustments</h1>
+
+                <div class="input-group mb-3">
+                    <label class="input-group-text" for="roomSelect">Room</label>
+                    <select id="roomSelect" name="roomId" class="form-control">
+                        @if (ViewBag.RoomIds != null)
+                        {
+                            @foreach (var room in ViewBag.RoomIds)
+                            {
+                                <option value="@room">@room</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <form asp-controller="ItemAdjustment" asp-action="Import" method="post" enctype="multipart/form-data">
+                        <div class="input-group">
+                            <input type="file" id="fileInput" name="file" class="form-control" aria-describedby="fileInputAddon" aria-label="Upload" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+                            <button type="submit" class="btn btn-outline-success material-shadow-none" id="fileInputAddon">
+                                <span class="ri-upload-2-fill me-1"></span>
+                                Upload
+                            </button>
+                        </div>
+                    </form>
+                    <div>
+                        <button class="btn btn-primary" id="checkMupBtn" onclick="reloadTable()">
+                            <i class="ri-refresh-line"></i>
+                            Refresh Table
+                        </button>
+                        <a asp-controller="ItemAdjustment" asp-action="ExportItemAdjustment" asp-route-room="0" onclick="downloadItemAdjustment()" id="linkDownload" class="btn btn-info">
+                            <i class="ri-file-excel-2-fill"></i>
+                            Export Result
+                        </a>
+                    </div>
+                </div>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <table id="datatables-item-adjustments" class="display table table-bordered dt-responsive datatable-wrapper" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>Room</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Unit ID</th>
+                        <th>Item Group</th>
+                        <th>Price</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>Room</th>
+                            <th>Item ID</th>
+                            <th>Item Name</th>
+                            <th>Unit ID</th>
+                            <th>Item Group</th>
+                            <th>Price</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
+            
+@section scripts{
+    <script src="/assets/js/datatables.min.js"></script>
+
+    <script>
+        // get AntiForgeryToken using jquery
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        const roomSelect = $("#roomSelect");
+
+        // Debounce helper function
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        function reloadTable() {
+            $('#datatables-item-adjustments').DataTable().ajax.reload();
+        }
+
+        roomSelect.change(function () {
+            reloadTable();
+        });
+
+        function downloadItemAdjustment() {
+            // change the room id in the download link
+            const room = roomSelect.val();
+            const linkDownload = $("#linkDownload")[0];
+            // edit the query room
+            linkDownload.href = linkDownload.href.replace(/room=\d+/, `room=${room}`);
+        }
+
+        $(document).ready(function() {
+            $('#datatables-item-adjustments').DataTable({
+                searchDelay: 1000,
+                ajax: {
+                    url: `/api/ItemAdjustmentApi/GetItemAdjustmentList`,
+                    data: function(d) {
+                        // Get room id from dropdown
+                        return { room: $("#roomSelect").val() };
+                    },
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("RequestVerificationToken", token);
+                    },
+                    dataSrc: function(json) {
+                        if (json.data && Array.isArray(json.data)) {
+                            return json.data;
+                        }
+                        return [];
+                    }
+                },
+                columns: [
+                    { data: 'room', width: '80px' },
+                    { data: 'itemId', width: '120px' },
+                    { data: 'itemName' },
+                    { data: 'unitId', width: '80px' },
+                    { data: 'itemGroup', width: '150px' },
+                    { 
+                        data: 'price', 
+                        width: '100px',
+                        render: function(data, type) {
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? parseFloat(data) : 0;
+                            }
+                            
+                            return data ? Intl.NumberFormat('en-US', { style: 'decimal', maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(parseFloat(data)) : '';
+                        }
+                    }
+                ],
+                columnDefs: [
+                    {
+                        targets: [0, 1, 3, 5], 
+                        className: 'text-center'
+                    }
+                ],
+                processing: true,
+                paging: true,
+                searching: true,
+                ordering: true,
+                autoWidth: false,
+                responsive: true,
+                scrollX: true,
+                initComplete: function () {
+                    this.api()
+                        .columns()
+                        .every(function () {
+                            let column = this;
+                            let title = column.footer().textContent;
+
+                            let header = column.header();
+                            // change the background
+                            header.style.backgroundColor = '#4F81BD';
+                            header.style.color = 'white';
+
+                            // Default handling for columns
+                            let input = document.createElement('input');
+                            input.placeholder = title;
+                            input.className = "form-control";
+                            input.style.width = '100%';
+                            column.footer().replaceChildren(input);
+
+                            // Debounced event listener for user input (1 second delay)
+                            input.addEventListener('keyup', debounce(() => {
+                                if (column.search() !== input.value) {
+                                    column.search(input.value).draw();
+                                }
+                            }, 1000));
+                        });
+                }
+            });
+        });
+    </script>
+}
