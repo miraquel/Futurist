@@ -146,6 +146,13 @@ internal class RofoRepository : IRofoRepository
         return new PagedList<Rofo>(rofoList, pagedListRequest.PageNumber, pagedListRequest.PageSize, rofoCount);
     }
 
+    public async Task<IEnumerable<Rofo>> GetRofoListAsync(GetRofoListCommand command)
+    {
+        const string query = "SELECT * FROM Rofo WHERE Room = @Room";
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+        return await _sqlConnection.QueryAsync<Rofo>(query, new { command.Room }, command.DbTransaction);
+    }
+
     public async Task<Rofo?> GetRofoByIdAsync(GetRofoByIdCommand command)
     {
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
@@ -182,7 +189,7 @@ internal class RofoRepository : IRofoRepository
         foreach (var item in command.Rofos)
         {
             var itemName = item.ItemName.Length > 60 ? item.ItemName[..60] : item.ItemName;
-            dataTable.Rows.Add(item.Room, item.RofoDate, item.ItemId, itemName, item.Qty, item.QtyRem, item.CreatedBy, DateTime.Now);
+            dataTable.Rows.Add(item.Room, item.RofoDate, item.ItemId, itemName, item.Qty, item.QtyRem, item.CreatedBy, item.CreatedDate);
         }
         
         await sqlBulkCopy.WriteToServerAsync(dataTable);

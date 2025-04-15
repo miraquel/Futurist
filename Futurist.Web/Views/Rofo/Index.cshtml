@@ -39,37 +39,43 @@
     <div class="col-lg-12">
         <div class="card">
             <div class="card-header">
-                <h1 class="mb-3">Upload Rofo</h1>
-                <!-- Dropdown for room ids -->
-                <div class="form-group row mb-3">
-                    <label class="col-sm-1" for="roomSelect">Select Room</label>
-                    <div class="col-sm-11">
-                        <select id="roomSelect" name="roomId" class="form-control">
-                            @foreach (var id in ViewBag.RoomIds)
-                            {
-                                <option value="@id">@id</option>
-                            }
-                        </select>
-                    </div>
+                <h1>Upload Rofo</h1>
+                <div class="input-group mb-3">
+                    <label class="input-group-text" for="roomSelect">Room</label>
+                    <select id="roomSelect" name="roomId" class="form-control">
+                        @foreach (var id in ViewBag.RoomIds)
+                        {
+                            <option value="@id">@id</option>
+                        }
+                    </select>
                 </div>
 
-                <div class="mb-3">
+                <div class="d-flex justify-content-between">
                     <form asp-controller="Rofo" asp-action="Import" method="post" enctype="multipart/form-data">
-                        <input type="file" id="fileInput" name="file" style="display: none;" onchange="this.form.submit()">
-                        <label for="fileInput" class="btn btn-primary">
-                            <svg class="me-2" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                                <path fill="currentColor"
-                                      d="M18 15v3H6v-3H4v3c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-3zM7 9l1.41 1.41L11 7.83V16h2V7.83l2.59 2.58L17 9l-5-5z"/>
-                            </svg>
-                            Upload Data
-                        </label>
+                        <div class="input-group">
+                            <input type="file" id="fileInput" name="file" class="form-control" aria-describedby="fileInputAddon" aria-label="Upload" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+                            <button type="submit" class="btn btn-outline-success material-shadow-none" id="fileInputAddon">
+                                <span class="ri-upload-2-fill me-1"></span>
+                                Upload
+                            </button>
+                        </div>
                     </form>
+                    <div >
+                        <a asp-controller="Rofo" asp-action="DownloadTemplate" class="btn btn-info">
+                            <span class="ri-download-2-fill me-1"></span>
+                            Download Template
+                        </a>
+                        <a asp-controller="Rofo" asp-action="ExportRofo" asp-route-room="0" onclick="downloadRofo()" id="linkDownload" class="btn btn-info ms-2">
+                            <i class="ri-file-excel-2-fill"></i>
+                            Export Result
+                        </a>
+                    </div>
                 </div>
                
             </div><!-- end card header -->
 
             <div class="card-body">
-                <table id="datatables-rofo" class="display table table-bordered dt-responsive" style="width:100%">
+                <table id="datatables-rofo" class="display table table-bordered dt-responsive datatable-wrapper" style="width:100%">
                     <thead>
                     <tr>
                         <th>Room</th>
@@ -101,9 +107,10 @@
 
     <script>
         // get AntiForgeryToken using jquery
+        const roomSelect = $("#roomSelect");
         const token = $('input[name="__RequestVerificationToken"]').val();
 
-        $("#roomSelect").change(function () {
+        roomSelect.change(function () {
             $('#datatables-rofo').DataTable().ajax.reload();
         });
 
@@ -114,6 +121,14 @@
                 clearTimeout(timeout);
                 timeout = setTimeout(() => func.apply(this, args), delay);
             };
+        }
+
+        function downloadRofo() {
+            // change the room id in the download link
+            const room = roomSelect.val();
+            const linkDownload = $("#linkDownload")[0];
+            // edit the query room
+            linkDownload.href = linkDownload.href.replace(/room=\d+/, `room=${room}`);
         }
 
         // Replace gridjs initialization with DataTables initialization following RofoDto structure
@@ -173,7 +188,19 @@
                     },
                     { data: 'itemId', width: '100px' },
                     { data: 'itemName' },
-                    { data: 'qty', width: '80px' }
+                    { 
+                        data: 'qty', 
+                        width: '80px',
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw number
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? parseFloat(data) : 0;
+                            }
+
+                            // For display, round and format with thousands separator
+                            return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                        }
+                    }
                 ],
                 columnDefs: [
                     {
