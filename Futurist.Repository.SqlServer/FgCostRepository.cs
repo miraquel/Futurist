@@ -19,7 +19,7 @@ public class FgCostRepository : IFgCostRepository
 
     public async Task<SpTask?> CalculateFgCostAsync(CalculateFgCostCommand command)
     {
-        const string sql = "EXEC CogsProjection.dbo.ProjectionCalc @RoomId";
+        const string sql = "EXEC ProjectionCalc @RoomId";
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
         return await _sqlConnection.QuerySingleOrDefaultAsync<SpTask>(sql, new { command.RoomId },
             transaction: command.DbTransaction, commandTimeout: command.Timeout);
@@ -27,7 +27,7 @@ public class FgCostRepository : IFgCostRepository
 
     public async Task<IEnumerable<FgCostSp>> GetSummaryFgCostAsync(GetSummaryFgCostCommand command)
     {
-        const string sql = "EXEC CogsProjection.dbo.FgCost_Select @RoomId";
+        const string sql = "EXEC FgCost_Select @RoomId";
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
         return await _sqlConnection.QueryAsync<FgCostSp>(sql, new { command.RoomId },
             transaction: command.DbTransaction);
@@ -162,7 +162,7 @@ public class FgCostRepository : IFgCostRepository
             sqlBuilder.Where($"a.[RofoDate] = @rofoDate", new { rofoDate });
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.QtyRofo), out var qtyRofoFilter))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostSp.RofoQty), out var qtyRofoFilter))
         {
             if (decimal.TryParse(qtyRofoFilter, out var qtyRofo))
             {
@@ -277,13 +277,13 @@ public class FgCostRepository : IFgCostRepository
     public async Task<IEnumerable<int>> GetFgCostRoomIdsAsync(GetFgCostRoomIdsCommand command)
     {
         const string query = """
-                             SELECT DISTINCT Room FROM CogsProjection.dbo.FgCost
+                             SELECT DISTINCT Room FROM FgCost
                              UNION
-                             SELECT DISTINCT Room FROM CogsProjection.dbo.Mup
+                             SELECT DISTINCT Room FROM Mup
                              UNION
-                             SELECT DISTINCT Room FROM CogsProjection.dbo.BomStd
+                             SELECT DISTINCT Room FROM BomStd
                              UNION
-                             SELECT DISTINCT Room FROM CogsProjection.dbo.Rofo
+                             SELECT DISTINCT Room FROM Rofo
                              ORDER BY Room;
                              """;
         
@@ -293,7 +293,7 @@ public class FgCostRepository : IFgCostRepository
 
     public async Task<IEnumerable<FgCostDetailSp>> GetFgCostDetailsAsync(GetFgCostDetailCommand command)
     {
-        const string sql = "EXEC CogsProjection.dbo.FgCostDetail_Select @RoomId";
+        const string sql = "EXEC FgCostDetail_Select @RoomId";
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
         return await _sqlConnection.QueryAsync<FgCostDetailSp>(sql, new { command.RoomId },
             transaction: command.DbTransaction);
@@ -394,7 +394,7 @@ public class FgCostRepository : IFgCostRepository
             sqlBuilder.Where($"a.RofoDate = @rofoDate", new { rofoDate });
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.QtyRofo), out var qtyRofoFilter))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.RofoQty), out var qtyRofoFilter))
         {
             if (decimal.TryParse(qtyRofoFilter, out var qtyRofo))
             {
@@ -626,6 +626,14 @@ public class FgCostRepository : IFgCostRepository
         return new PagedList<FgCostDetailSp>(fgCostDetailList, pagedListRequest.PageNumber, pagedListRequest.PageSize, fgCostDetailCount);
     }
 
+    public async Task<IEnumerable<FgCostDetailSp>> GetFgCostDetailsByRofoIdFromSpAsync(GetFgCostDetailsByRofoIdFromSpCommand command)
+    {
+        const string sql = "EXEC FgCostDetail_Select_ByRofoId @RofoId";
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+        return await _sqlConnection.QueryAsync<FgCostDetailSp>(sql, new { command.RofoId },
+            transaction: command.DbTransaction);
+    }
+
     public async Task<IEnumerable<FgCostDetailSp>> GetFgCostDetailsByRofoIdAsync(GetFgCostDetailsByRofoIdCommand command)
     {
         const string query = """
@@ -762,7 +770,7 @@ public class FgCostRepository : IFgCostRepository
             sqlBuilder.Where($"a.RofoDate = @rofoDate", new { rofoDate });
         }
         
-        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.QtyRofo), out var qtyRofoFilter))
+        if (pagedListRequest.Filters.TryGetValue(nameof(FgCostDetailSp.RofoQty), out var qtyRofoFilter))
         {
             if (decimal.TryParse(qtyRofoFilter, out var qtyRofo))
             {
