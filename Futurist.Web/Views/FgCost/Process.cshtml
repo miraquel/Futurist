@@ -5,6 +5,15 @@
     Layout = "_Layout";
 }
 
+@section styles{
+    <style>
+        .disabled-button {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+    </style>
+}
+
 @Html.AntiForgeryToken()
 
 <div class="row">
@@ -13,33 +22,34 @@
             <div class="card-header">
                 <h1>FG Cost Calculation Process</h1>
                 <!-- Dropdown for room ids -->
-                <div class="form-group row mb-3">
-                    <label class="col-sm-1" for="roomSelect">Select Room</label>
-                    <div class="col-sm-11">
-                        <select id="roomSelect" name="roomId" class="form-control">
-                            @foreach (var id in ViewBag.RoomIds)
-                            {
-                                <option value="@id">@id</option>
-                            }
-                        </select>
-                    </div>
+                <div class="input-group mb-3">
+                    <label class="input-group-text" for="roomSelect">Room</label>
+                    <select id="roomSelect" name="roomId" class="form-control">
+                        @foreach (var id in ViewBag.RoomIds)
+                        {
+                            <option value="@id">@id</option>
+                        }
+                    </select>
+                    <label class="input-group-text text-white bg-warning" id="processingLabel" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Processing
+                    </label>
                 </div>
 
-                <div class="mb-3">
-                    <button class="btn btn-success btn-lg" id="processFgBtn" onclick="processFgCalc()">Calculate FG</button>
-                </div>
-            </div>
-            <div class="card-body">
-                <div id="calculationStatus" class="alert alert-info" style="display: none;">
-                    <h4>Calculation Status</h4>
-                    <p id="statusMessage">No calculation has been performed yet.</p>
-                </div>
-                
-                <div class="mt-4">
-                    <h4>After calculation is complete:</h4>
-                    <div class="d-flex gap-2 mt-2">
-                        <a href="@Url.Action("Index", "FgCost")" class="btn btn-primary">View Summary</a>
-                        <a href="@Url.Action("Details", "FgCost")" class="btn btn-info">View Details</a>
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-success" id="processFgBtn" onclick="processFgCalc()">
+                        <i class="ri-play-fill"></i>
+                        Calculate FG
+                    </button>
+                    <div>
+                        <a href="@Url.Action("Index", "FgCost")" class="btn btn-primary">
+                            <i class="ri-book-2-line"></i>
+                            View Summary
+                        </a>
+                        <a href="@Url.Action("Details", "FgCost")" class="btn btn-info">
+                            <i class="bx bx-table"></i>
+                            View Details
+                        </a>
                     </div>
                 </div>
             </div>
@@ -48,22 +58,78 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
     <script>
         const roomSelect = $("#roomSelect");
+        const roomId = roomSelect.val();
         const token = $('input[name="__RequestVerificationToken"]').val();
-        
+        const processFgBtn = $("#processFgBtn");
+        const processingLabel = $("#processingLabel");
+
+        // SignalR connection
+        let connection;
+        let inProcessRoomIds = [];
+        let pollingInterval;
+
+        // Initialize SignalR connection
+        function initializeSignalR() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/futuristHub")
+                .withAutomaticReconnect()
+                .build();
+
+            // Handle incoming notifications about running jobs
+            connection.on("FgCostProcessingStateChanged", (roomIds) => {
+                inProcessRoomIds = roomIds || [];
+                updateProcessingUI();
+            });
+
+            // Start the connection
+            connection.start()
+                .then(() => {
+                    console.log("SignalR Connected");
+                    // Call the correct hub method to get initial state
+                    refreshProcessingState();
+
+                    // Set up polling as a backup for notifications
+                    pollingInterval = setInterval(refreshProcessingState, 10000); // Check every 10 seconds
+                })
+                .catch(err => console.error("SignalR Connection Error: ", err));
+        }
+
+        // Refresh the processing state from the server
+        function refreshProcessingState() {
+            connection.invoke("GetFgCostInProcessRoomIds")
+                .then(roomIds => {
+                    inProcessRoomIds = roomIds || [];
+                    updateProcessingUI();
+                })
+                .catch(err => console.error("Error getting FG Cost processing state: ", err));
+        }
+
+        // Update UI based on processing status
+        function updateProcessingUI() {
+            const currentRoomId = parseInt(roomSelect.val());
+
+            // Check if current room ID is in process
+            if (inProcessRoomIds.includes(currentRoomId)) {
+                processFgBtn.addClass("disabled-button");
+                processingLabel.show();
+            } else {
+                processFgBtn.removeClass("disabled-button");
+                processingLabel.hide();
+            }
+        }
+
         function processFgCalc() {
             const roomId = roomSelect.val();
-            const statusDiv = $('#calculationStatus');
-            const statusMessage = $('#statusMessage');
-            
-            // Show status div with loading message
-            statusMessage.text("Calculating FG Cost... Please wait.");
-            statusDiv.removeClass("alert-success alert-danger").addClass("alert-info").show();
-            
-            // Disable button during calculation
-            $('#processFgBtn').prop('disabled', true);
-            
+
+            // Double-check if room is already processing
+            if (inProcessRoomIds.includes(parseInt(roomId))) {
+                alert("This room is already being processed!");
+                return;
+            }
+
             $.ajax({
                 url: '/api/FgCostApi/CalculateFgCost',
                 type: 'POST',
@@ -72,21 +138,31 @@
                 beforeSend: function(xhr) {
                     xhr.setRequestHeader("RequestVerificationToken", token);
                 },
-                success: function(data) {
-                    // Update status with success message
-                    statusMessage.text(data);
-                    statusDiv.removeClass("alert-info alert-danger").addClass("alert-success");
+                success: function(data){
+                    alert(data);
+                    // Immediately update processing state after queuing job
+                    refreshProcessingState();
                 },
-                error: function(err) {
-                    // Update status with error message
-                    statusMessage.text(err.responseText || "An error occurred during calculation.");
-                    statusDiv.removeClass("alert-info alert-success").addClass("alert-danger");
-                },
-                complete: function() {
-                    // Re-enable button
-                    $('#processFgBtn').prop('disabled', false);
+                error: function(err){
+                    alert(err);
                 }
             });
         }
+
+        $('#roomSelect').change(function () {
+            updateProcessingUI();
+        });
+        
+        // Initialize SignalR when document is ready
+        $(document).ready(function() {
+            initializeSignalR();
+
+            // Clean up on page unload
+            $(window).on('beforeunload', function() {
+                if (pollingInterval) {
+                    clearInterval(pollingInterval);
+                }
+            });
+        });
     </script>
 }

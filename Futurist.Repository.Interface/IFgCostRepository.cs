@@ -10,9 +10,10 @@ public interface IFgCostRepository
     public Task<IEnumerable<FgCostSp>> GetSummaryFgCostAsync(GetSummaryFgCostCommand command);
     public Task<PagedList<FgCostSp>> GetSummaryFgCostPagedListAsync(GetSummaryFgCostPagedListCommand command);
     public Task<IEnumerable<int>> GetFgCostRoomIdsAsync(GetFgCostRoomIdsCommand command);
-    
+
     public Task<IEnumerable<FgCostDetailSp>> GetFgCostDetailsAsync(GetFgCostDetailCommand command);
     public Task<PagedList<FgCostDetailSp>> GetFgCostDetailsPagedListAsync(GetFgCostDetailPagedListCommand command);
+    public Task<IEnumerable<FgCostDetailSp>> GetFgCostDetailsByRofoIdFromSpAsync(GetFgCostDetailsByRofoIdFromSpCommand command);
     public Task<IEnumerable<FgCostDetailSp>> GetFgCostDetailsByRofoIdAsync(GetFgCostDetailsByRofoIdCommand command);
     public Task<PagedList<FgCostDetailSp>> GetFgCostDetailsByRofoIdPagedListAsync(GetFgCostDetailsByRofoIdPagedListCommand command);
 }

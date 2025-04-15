@@ -87,7 +87,7 @@ public class FgCostController : Controller
                 row.Cell(5).Value = "Unit";
                 row.Cell(6).Value = "Unit in Kg";
                 row.Cell(7).Value = "Rofo Date";
-                row.Cell(8).Value = "Qty Rofo";
+                row.Cell(8).Value = "Rofo Qty";
                 row.Cell(9).Value = "Yield";
                 row.Cell(10).Value = "RM Price";
                 row.Cell(11).Value = "PM Price";
@@ -105,8 +105,8 @@ public class FgCostController : Controller
                 row.Cell(6).Value = dto.UnitInKg;
                 row.Cell(7).Value = dto.RofoDate;
                 row.Cell(7).Style.NumberFormat.Format = "dd MMM yyyy";
-                row.Cell(8).Value = dto.QtyRofo;
-                row.Cell(8).Style.NumberFormat.Format = "#,##0.00";
+                row.Cell(8).Value = dto.RofoQty;
+                row.Cell(8).Style.NumberFormat.Format = "#,##0";
                 row.Cell(9).Value = dto.Yield;
                 row.Cell(9).Style.NumberFormat.Format = "#,##0.0%";
                 row.Cell(10).Value = dto.RmPrice;
@@ -142,7 +142,7 @@ public class FgCostController : Controller
                 row.Cell(3).Value = "Product ID";
                 row.Cell(4).Value = "Product Name";
                 row.Cell(5).Value = "Rofo Date";
-                row.Cell(6).Value = "Qty Rofo";
+                row.Cell(6).Value = "Rofo Qty";
                 row.Cell(7).Value = "Item ID";
                 row.Cell(8).Value = "Item Name";
                 row.Cell(9).Value = "Group Substitusi";
@@ -166,7 +166,7 @@ public class FgCostController : Controller
                 row.Cell(4).Value = dto.ProductName;
                 row.Cell(5).Value = dto.RofoDate;
                 row.Cell(5).Style.NumberFormat.Format = "dd MMM yyyy";
-                row.Cell(6).Value = dto.QtyRofo;
+                row.Cell(6).Value = dto.RofoQty;
                 row.Cell(7).Value = dto.ItemId;
                 row.Cell(8).Value = dto.ItemName;
                 row.Cell(9).Value = dto.GroupSubstitusi;
@@ -191,7 +191,7 @@ public class FgCostController : Controller
 
     public async Task<IActionResult> DownloadFgCostDetailsByRofoId([FromQuery] int rofoId)
     {
-        var response = await _fgCostService.GetFgCostDetailsByRofoIdAsync(rofoId);
+        var response = await _fgCostService.GetFgCostDetailsByRofoIdFromSpAsync(rofoId);
 
         if (response is not { IsSuccess: true, Data: not null }) return BadRequest(response.Errors);
 
@@ -204,7 +204,7 @@ public class FgCostController : Controller
                 row.Cell(3).Value = "Product ID";
                 row.Cell(4).Value = "Product Name";
                 row.Cell(5).Value = "Rofo Date";
-                row.Cell(6).Value = "Qty Rofo";
+                row.Cell(6).Value = "Rofo Qty";
                 row.Cell(7).Value = "Item ID";
                 row.Cell(8).Value = "Item Name";
                 row.Cell(9).Value = "Group Substitusi";
@@ -228,7 +228,7 @@ public class FgCostController : Controller
                 row.Cell(4).Value = dto.ProductName;
                 row.Cell(5).Value = dto.RofoDate;
                 row.Cell(5).Style.NumberFormat.Format = "dd MMM yyyy";
-                row.Cell(6).Value = dto.QtyRofo;
+                row.Cell(6).Value = dto.RofoQty;
                 row.Cell(7).Value = dto.ItemId;
                 row.Cell(8).Value = dto.ItemName;
                 row.Cell(9).Value = dto.GroupSubstitusi;
@@ -269,10 +269,24 @@ public class FgCostApiController : ControllerBase
     {
         _fgCostService = fgCostService;
     }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GetSummaryFgCostAsync([FromQuery] int roomId)
+    {
+        var response = await _fgCostService.GetSummaryFgCostAsync(roomId);
+
+        if (response.IsSuccess)
+        {
+            return Ok(response);
+        }
+
+        return BadRequest(response);
+    }
 
     [HttpGet]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> GetSummaryFgCostPagedListAsync([FromQuery] PagedListRequestDto<FgCostSpDto> dto)
+    public async Task<IActionResult> GetSummaryFgCostPagedListAsync([FromQuery] PagedListRequestDto dto)
     {
         var response = await _fgCostService.GetSummaryFgCostPagedListAsync(dto);
 
@@ -286,7 +300,21 @@ public class FgCostApiController : ControllerBase
     
     [HttpGet]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> GetFgCostDetailPagedListAsync([FromQuery] PagedListRequestDto<FgCostDetailSpDto> dto)
+    public async Task<IActionResult> GetFgCostDetailAsync([FromQuery] int roomId)
+    {
+        var response = await _fgCostService.GetFgCostDetailAsync(roomId);
+
+        if (response.IsSuccess)
+        {
+            return Ok(response);
+        }
+
+        return BadRequest(response);
+    }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GetFgCostDetailPagedListAsync([FromQuery] PagedListRequestDto dto)
     {
         var response = await _fgCostService.GetFgCostDetailPagedListAsync(dto);
 
@@ -300,7 +328,21 @@ public class FgCostApiController : ControllerBase
     
     [HttpGet]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> GetFgCostDetailsByRofoIdPagedListAsync([FromQuery] PagedListRequestDto<FgCostDetailSpDto> dto)
+    public async Task<IActionResult> GetFgCostDetailsByRofoIdFromSpAsync([FromQuery] int rofoId)
+    {
+        var response = await _fgCostService.GetFgCostDetailsByRofoIdFromSpAsync(rofoId);
+
+        if (response.IsSuccess)
+        {
+            return Ok(response);
+        }
+
+        return BadRequest(response);
+    }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GetFgCostDetailsByRofoIdPagedListAsync([FromQuery] PagedListRequestDto dto)
     {
         var response = await _fgCostService.GetFgCostDetailsByRofoIdPagedListAsync(dto);
 
@@ -314,15 +356,15 @@ public class FgCostApiController : ControllerBase
     
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CalculateFgCostAsync([FromQuery] int roomId)
+    public IActionResult CalculateFgCost([FromBody] int roomId)
     {
-        var response = await _fgCostService.CalculateFgCostAsync(roomId);
+        return Ok(_fgCostService.CalculateFgCostJob(roomId));
+    }
 
-        if (response.IsSuccess)
-        {
-            return Ok(response.Data);
-        }
-
-        return BadRequest(response.ErrorMessage);
+    [HttpGet]
+    public IActionResult GetInProcessRoomIds()
+    {
+        var inProcessRoomIds = _fgCostService.GetFgCostInProcessRoomIds();
+        return Ok(inProcessRoomIds);
     }
 }
