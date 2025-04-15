@@ -1,4 +1,6 @@
-﻿namespace Futurist.Domain;
+﻿using System.Data.SqlTypes;
+
+namespace Futurist.Domain;
 
 public class ItemAdjustment
 {
@@ -8,6 +10,6 @@ public class ItemAdjustment
     public string UnitId { get; set; } = string.Empty;
     public string ItemGroup { get; set; } = string.Empty;
     public decimal Price { get; set; }
-    public string CreatedBy { get; set; } = string.Empty;
-    public DateTime CreatedDate { get; set; }
+    public string CreatedBy { get; set; } = "Unknown";
+    public DateTime CreatedDate { get; set; } = SqlDateTime.MinValue.Value;
 }
