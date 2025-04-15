@@ -26,14 +26,14 @@ public class JobMonitoringRepository : IJobMonitoringRepository
                                     JobId,
                                     MIN(TimeStamp) AS TimeStart,
                                     MAX(TimeStamp) AS TimeEnd
-                               FROM [CogsProjection].[dbo].[JobLogs]
+                               FROM JobLogs
                                /**groupby**/
                            ),
                            LatestJobLogs AS (
                                SELECT 
                                     jl.*,
                                     ROW_NUMBER() OVER (PARTITION BY jl.JobId ORDER BY jl.TimeStamp DESC) AS rn
-                               FROM [CogsProjection].[dbo].[JobLogs] jl
+                               FROM JobLogs jl
                            )
                            SELECT
                                LJL.[Message],
@@ -59,14 +59,14 @@ public class JobMonitoringRepository : IJobMonitoringRepository
                                          JobId,
                                          MIN(TimeStamp) AS TimeStart,
                                          MAX(TimeStamp) AS TimeEnd
-                                    FROM [CogsProjection].[dbo].[JobLogs]
+                                    FROM JobLogs
                                     GROUP BY JobId
                                 ),
                                 LatestJobLogs AS (
                                     SELECT 
                                          jl.*,
                                          ROW_NUMBER() OVER (PARTITION BY jl.JobId ORDER BY jl.TimeStamp DESC) AS rn
-                                    FROM [CogsProjection].[dbo].[JobLogs] jl
+                                    FROM JobLogs jl
                                 )
                                 SELECT COUNT(*)
                                 FROM LatestJobLogs LJL

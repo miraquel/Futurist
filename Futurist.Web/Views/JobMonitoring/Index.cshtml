@@ -1,0 +1,211 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "Job Monitoring";
+    ViewBag.pageTitle = "Job Monitoring";
+    Layout = "_Layout";
+}
+
+@section styles{
+    <link href="/assets/css/datatables.min.css" rel="stylesheet">
+    <style>
+        .job-success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .job-failed {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .job-processing {
+            color: #17a2b8;
+            font-weight: bold;
+        }
+    </style>
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>Job Monitoring</h1>
+                <div class="mb-3">
+                    <button class="btn btn-info" id="refreshBtn" onclick="reloadTable()">Refresh Job List</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <table id="datatables-job-monitoring" class="display table table-bordered dt-responsive datatable-wrapper" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Status</th>
+                        <th>Time Start</th>
+                        <th>Time End</th>
+                        <th>Duration</th>
+                        <th>Message</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>ID</th>
+                        <th>Status</th>
+                        <th>Time Start</th>
+                        <th>Time End</th>
+                        <th>Duration</th>
+                        <th>Message</th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/assets/js/datatables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    
+    <script>
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        
+        // Debounce helper function
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+        
+        function reloadTable() {
+            $('#datatables-job-monitoring').DataTable().ajax.reload();
+        }
+
+        // Initialize datatables
+        $(document).ready(function() {
+            $('#datatables-job-monitoring').DataTable({
+                searchDelay: 1000,
+                ajax: {
+                    url: '/api/JobMonitoringApi/GetSucceededJobMonitoringPagedList/',
+                    data: function(d) {
+                        const query = {
+                            pageNumber: (d.start / d.length) + 1,
+                            pageSize: d.length,
+                        };
+                        if (d.search && d.search.value) {
+                            query.Search = d.search.value;
+                        }
+                        if (d.order && d.order.length) {
+                            query.SortBy = d.columns[d.order[0].column].data;
+                            query.IsSortAscending = d.order[0].dir === 'asc';
+                        }
+
+                        d.columns.forEach((column, _) => {
+                            if (column.search && column.search.value) {
+                                query[`Filters.${column.data.charAt(0).toUpperCase() + column.data.slice(1)}`] = column.search.value;
+                            }
+                        });
+
+                        return query;
+                    },
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("RequestVerificationToken", token);
+                    },
+                    dataSrc: function(json) {
+                        if (json.data && Array.isArray(json.data.items)) {
+                            json.recordsTotal = json.data.totalCount;
+                            json.recordsFiltered = json.data.totalCount;
+                            return json.data.items;
+                        }
+                        return json;
+                    },
+                    error: function(err){
+                        alert(err.responseJSON?.errorMessage || "An error occurred while fetching data");
+                    }
+                },
+                columns: [
+                    { data: 'jobId', width: '80px' },
+                    {
+                        data: 'status',
+                        width: '100px',
+                        render: function(data) {
+                            if (data === 'Succeeded') {
+                                return '<span class="job-success">Succeeded</span>';
+                            } else if (data === 'Failed') {
+                                return '<span class="job-failed">Failed</span>';
+                            } else if (data === 'Processing') {
+                                return '<span class="job-processing">Processing</span>';
+                            }
+                            return data;
+                        }
+                    },
+                    {
+                        data: 'timeStart',
+                        width: '150px',
+                        render: function(data) {
+                            return data ? moment(data).format("YYYY MMM DD HH:mm:ss") : '';
+                        }
+                    },
+                    {
+                        data: 'timeEnd',
+                        width: '150px',
+                        render: function(data) {
+                            return data ? moment(data).format("YYYY MMM DD HH:mm:ss") : '';
+                        }
+                    },
+                    {
+                        data: 'duration',
+                        width: '100px',
+                    },
+                    { data: 'message', width: '200px' },
+                ],
+                order: [[2, 'desc']], // Order by timeStamp by default, newest first
+                columnDefs: [
+                    {
+                        targets: [0, 3], // ID and Level columns
+                        className: 'text-center'
+                    }
+                ],
+                processing: true,
+                serverSide: true,
+                paging: true,
+                searching: true,
+                ordering: true,
+                autoWidth: false,
+                responsive: true,
+                scrollX: true,
+                initComplete: function () {
+                    this.api()
+                        .columns()
+                        .every(function () {
+                            let column = this;
+                            let title = column.footer().textContent;
+
+                            let header = column.header();
+                            // Apply styling to header
+                            header.style.backgroundColor = '#4F81BD';
+                            header.style.color = 'white';
+
+                            // Create input element for filtering
+                            let input = document.createElement('input');
+                            input.placeholder = title;
+                            input.className = "form-control";
+                            input.style.width = '100%';
+                            column.footer().replaceChildren(input);
+
+                            // Debounced event listener for filtering
+                            input.addEventListener('keyup', debounce(() => {
+                                if (column.search() !== input.value) {
+                                    column.search(input.value).draw();
+                                }
+                            }, 1000));
+                        });
+                }
+            });
+        });
+    </script>
+}
