@@ -10,6 +10,9 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     IBomStdRepository BomStdRepository { get; }
     IMupRepository MupRepository { get; }
     IFgCostRepository FgCostRepository { get; }
+    IJobMonitoringRepository JobMonitoringRepository { get; }
+    IExchangeRateRepository ExchangeRateRepository { get; }
+    IItemAdjustmentRepository ItemAdjustmentRepository { get; }
     IDbTransaction? CurrentTransaction { get; }
     IDbTransaction BeginTransaction();
     Task CommitAsync();
