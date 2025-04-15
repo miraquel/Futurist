@@ -8,23 +8,6 @@
 
 @section styles{
     <link href="/assets/css/datatables.min.css" rel="stylesheet">
-    <style>
-        .processing-badge {
-            display: none;
-            background-color: #dc3545;
-            color: white;
-            border-radius: 50%;
-            padding: 0.25rem 0.5rem;
-            margin-left: 0.5rem;
-            font-size: 0.75rem;
-            vertical-align: middle;
-        }
-        
-        .disabled-button {
-            pointer-events: none;
-            opacity: 0.6;
-        }
-    </style>
 }
 
 @Html.AntiForgeryToken()
@@ -35,27 +18,39 @@
             <div class="card-header">
                 <h1>BOM Standard</h1>
                 <!-- Dropdown for room ids -->
-                <div class="form-group row mb-3">
-                    <label class="col-sm-1" for="roomSelect">Select Room</label>
-                    <div class="col-sm-11">
-                        <select id="roomSelect" name="roomId" class="form-control">
-                            @foreach (var id in ViewBag.RoomIds)
-                            {
-                                <option value="@id">@id</option>
-                            }
-                        </select>
-                        <span id="processingBadge" class="processing-badge">Processing</span>
-                    </div>
+                <div class="input-group mb-3">
+                    <label class="input-group-text" for="roomSelect">Room</label>
+                    <select id="roomSelect" name="roomId" class="form-control">
+                        @foreach (var id in ViewBag.RoomIds)
+                        {
+                            <option value="@id">@id</option>
+                        }
+                    </select>
+                    <label class="input-group-text text-white bg-warning" id="processingLabel" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Processing
+                    </label>
                 </div>
 
-                <div class="mb-3">
-                    <button class="btn btn-success" id="processBomLink" onclick="processBom()">Process BOM</button>
-                    <button class="btn btn-warning" id="checkErrorBtn" onclick="reloadTable()">Check Error Result</button>
-                    <a asp-controller="BomStd" asp-action="DownloadBomErrorCheck" asp-route-room="0" onclick="downloadBomError()" id="linkDownload" class="btn btn-primary">Download Error Result</a>
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <button class="btn btn-success" id="processBomLink" onclick="processBom()">
+                            <i class="ri-play-fill"></i>
+                            Process BOM
+                        </button>
+                        <button class="btn btn-primary" id="checkErrorBtn" onclick="reloadTable()">
+                            <i class="ri-refresh-line"></i>
+                            Check Error Result
+                        </button>
+                    </div>
+                    <a asp-controller="BomStd" asp-action="DownloadBomErrorCheck" asp-route-room="0" onclick="downloadBomError()" id="linkDownload" class="btn btn-info">
+                        <i class="ri-file-excel-2-fill"></i>
+                        Export Result
+                    </a>
                 </div>
             </div>
             <div class="card-body">
-                <table id="datatables-bom-std" class="display table table-bordered dt-responsive" style="width:100%">
+                <table id="datatables-bom-std" class="display table table-bordered dt-responsive datatable-wrapper" style="width:100%">
                     <thead>
                     <tr>
                         <th>Room</th>
@@ -91,7 +86,7 @@
         const roomId = roomSelect.val();
         const token = $('input[name="__RequestVerificationToken"]').val();
         const processBomButton = $("#processBomLink");
-        const processingBadge = $("#processingBadge");
+        const processingLabel = $("#processingLabel");
         
         // SignalR connection
         let connection;
@@ -119,7 +114,7 @@
                     refreshProcessingState();
                     
                     // Set up polling as a backup for notifications
-                    pollingInterval = setInterval(refreshProcessingState, 10000); // Check every 10 seconds
+                    // pollingInterval = setInterval(refreshProcessingState, 10000); // Check every 10 seconds
                 })
                 .catch(err => console.error("SignalR Connection Error: ", err));
         }
@@ -141,10 +136,10 @@
             // Check if current room ID is in process
             if (inProcessRoomIds.includes(currentRoomId)) {
                 processBomButton.addClass("disabled-button");
-                processingBadge.show();
+                processingLabel.show();
             } else {
                 processBomButton.removeClass("disabled-button");
-                processingBadge.hide();
+                processingLabel.hide();
             }
         }
         
@@ -207,43 +202,25 @@
             $('#datatables-bom-std').DataTable({
                 searchDelay: 1000,
                 ajax: {
-                    url: '/api/BomStdApi/BomErrorCheckPagedList/',
-                    data: function(d) {
-                        const query = {
-                            pageNumber: (d.start / d.length) + 1,
-                            pageSize: d.length,
+                    url: '/api/BomStdApi/BomErrorCheck/',
+                    data: function() {
+                        return {
+                            roomId: roomSelect.val()
                         };
-                        if (d.search && d.search.value) {
-                            query.Search = d.search.value;
-                        }
-                        if (d.order && d.order.length) {
-                            query.SortBy = d.columns[d.order[0].column].data;
-                            query.IsSortAscending = d.order[0].dir === 'asc';
-                        }
-
-                        d.columns.forEach((column, _) => {
-                            if (column.search && column.search.value) {
-                                // Encode the search value for URL safety.
-                                query[`Filters.${column.data.charAt(0).toUpperCase() + column.data.slice(1)}`] = column.search.value;
-                            }
-                        });
-
-                        // get room id from dropdown and add to query
-                        query['Filters.Room'] = roomSelect.val();
-
-                        return query;
                     },
                     beforeSend: function(xhr) {
                         xhr.setRequestHeader("RequestVerificationToken", token);
                     },
                     dataSrc: function(json) {
-                        // Check if response follows ServiceResponse<PagedListDto<RofoDto>> structure:
+                        // Check if response follows ServiceResponse structure:
                         if (json.data && Array.isArray(json.data.items)) {
-                            json.recordsTotal = json.data.totalCount;
-                            json.recordsFiltered = json.data.totalCount;
                             return json.data.items;
                         }
-                        // Fallback: if json itself is an array.
+                        // If data is already an array
+                        if (Array.isArray(json.data)) {
+                            return json.data;
+                        }
+                        // Fallback: if json itself is an array
                         return json;
                     },
                     error: function(err){
@@ -265,13 +242,12 @@
                     }
                 ],
                 processing: true,
-                serverSide: true,
                 paging: true,
                 searching: true,
-                ordering: true,
                 autoWidth: false,
                 responsive: false,
                 scrollX: true,
+                order: [],
                 initComplete: function () {
                     this.api()
                         .columns()

@@ -1,6 +1,5 @@
 ﻿using ClosedXML.Excel;
 using Futurist.Common.Helpers;
-using Futurist.Service.Dto;
 using Futurist.Service.Dto.Common;
 using Futurist.Service.Interface;
 using Microsoft.AspNetCore.Authorization;
@@ -94,7 +93,7 @@ public class BomStdApiController : ControllerBase
     }
     
     [HttpGet]
-    public async Task<IActionResult> BomErrorCheckPagedList([FromQuery] PagedListRequestDto<BomStdDto> pagedListRequestDto)
+    public async Task<IActionResult> BomErrorCheckPagedList([FromQuery] PagedListRequestDto pagedListRequestDto)
     {
         var response = await _bomStdService.BomErrorCheckPagedListAsync(pagedListRequestDto);
         

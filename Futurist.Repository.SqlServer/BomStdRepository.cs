@@ -19,7 +19,7 @@ public class BomStdRepository : IBomStdRepository
 
     public async Task<SpTask?> ProcessBomStdAsync(ProcessBomStdCommand command)
     {
-        const string query = "EXEC CogsProjection.dbo.BomStd_insert @Room";
+        const string query = "EXEC BomStd_insert @Room";
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
         return await _sqlConnection.QuerySingleOrDefaultAsync<SpTask>(query, new { Room = command.RoomId },
             transaction: command.DbTransaction, commandTimeout: command.Timeout);
@@ -27,7 +27,7 @@ public class BomStdRepository : IBomStdRepository
 
     public async Task<IEnumerable<BomStd>> BomErrorCheckAsync(BomErrorCheckCommand command)
     {
-        const string query = "EXEC CogsProjection.dbo.BomStd_Check @Room";
+        const string query = "EXEC BomStd_Check @Room";
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
         return await _sqlConnection.QueryAsync<BomStd>(query, new { Room = command.RoomId },
             transaction: command.DbTransaction);
