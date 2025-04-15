@@ -29,16 +29,17 @@ public class ExchangeRateRepository : IExchangeRateRepository
         sqlBulkCopy.BatchSize = 1000;
 
         var dataTable = new DataTable();
+        dataTable.Columns.Add("RecId", typeof(int));
         dataTable.Columns.Add("CurrencyCode", typeof(string));
         dataTable.Columns.Add("ValidFrom", typeof(DateTime));
         dataTable.Columns.Add("ValidTo", typeof(DateTime));
         dataTable.Columns.Add("ExchangeRate", typeof(decimal));
-        dataTable.Columns.Add("CreatedBy", typeof(decimal));
         dataTable.Columns.Add("CreatedDate", typeof(DateTime));
+        dataTable.Columns.Add("CreatedBy", typeof(string));
         
         foreach (var item in command.ExchangeRates)
         {
-            dataTable.Rows.Add(item.CurrencyCode, item.ValidFrom, item.ValidTo, item.ExchangeRate, item.CreatedBy, item.CreatedDate);
+            dataTable.Rows.Add(0, item.CurrencyCode, item.ValidFrom, item.ValidTo, item.ExchangeRate, item.CreatedDate, item.CreatedBy);
         }
         
         await sqlBulkCopy.WriteToServerAsync(dataTable);
