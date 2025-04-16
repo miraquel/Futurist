@@ -1,0 +1,112 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "FG Cost Version Process";
+    Layout = "_Layout";
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-12">
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger mb-xl-0" role="alert">
+                @ViewBag.Error
+            </div>
+        }
+        @if (ViewBag.Message != null)
+        {
+            <div class="alert alert-success mb-xl-0" role="alert">
+                @ViewBag.Message
+            </div>
+        }
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>FG Cost Version Calculation Process</h1>
+                <!-- Dropdown for room ids -->
+                <div class="input-group mb-3">
+                    <label class="input-group-text" for="roomSelect">Room</label>
+                    <select id="roomSelect" name="roomId" class="form-control">
+                        @foreach (var id in ViewBag.RoomIds)
+                        {
+                            <option value="@id">@id</option>
+                        }
+                    </select>
+                    <label class="input-group-text text-white bg-warning" id="processingLabel" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Processing
+                    </label>
+                </div>
+                
+                <label for="notes" class="form-label">Notes</label>
+                <textarea id="notes" name="notes" class="form-control mb-3" rows="3"></textarea>
+
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-success" id="processFgBtn" onclick="processFgCalc()">
+                        <i class="ri-play-fill"></i>
+                        Calculate FG Cost Version
+                    </button>
+                    <div>
+                        <a href="@Url.Action("Index", "FgCostVer")" class="btn btn-primary">
+                            <i class="ri-book-2-line"></i>
+                            View Summary
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const roomSelect = $("#roomSelect");
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        const processingLabel = $('#processingLabel');
+
+        function processFgCalc() {
+            const roomId = roomSelect.val();
+            const notes = $('#notes').val();
+
+            if (!roomId) {
+                alert("Please select a room.");
+                return;
+            }
+
+            // set roomId as the query and notes as the body
+            $.ajax({
+                url: '/api/FgCostVerApi/InsertFgCostVer',
+                type: 'POST',
+                data: JSON.stringify({
+                    RoomId: roomId,
+                    Notes: notes
+                }),
+                contentType: 'application/json',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader("RequestVerificationToken", token);
+                    processingLabel.show();
+                },
+                success: function(data) {
+                    alert("Success: " + data.statusName);
+                    processingLabel.hide();
+                },
+                error: function(xhr) {
+                    let errorMessage = "An error occurred.";
+                    if (xhr.responseJSON && xhr.responseJSON.title) {
+                        errorMessage = xhr.responseJSON.title;
+                    } else if (xhr.responseText) {
+                        errorMessage = xhr.responseText;
+                    }
+                    alert("Error: " + errorMessage);
+                    processingLabel.hide();
+                }
+            });
+        }
+    </script>
+}
