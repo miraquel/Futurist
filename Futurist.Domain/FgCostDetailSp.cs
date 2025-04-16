@@ -13,6 +13,7 @@ public class FgCostDetailSp
     public string GroupSubstitusi { get; set; } = string.Empty;
     public string ItemAllocatedId { get; set; } = string.Empty;
     public string ItemAllocatedName { get; set; } = string.Empty;
+    public string UnitId { get; set; } = string.Empty;
     public string InventBatch { get; set; } = string.Empty;
     public decimal Qty { get; set; }
     public decimal Price { get; set; }
