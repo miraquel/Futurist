@@ -19,13 +19,19 @@ public class JobLoggerAttribute : JobFilterAttribute, IElectStateFilter, IServer
 
         if (context.CandidateState is EnqueuedState)
         {
-            _logger.Information("Job {JobId} with method {MethodName} has been {Status}", context.BackgroundJob.Id, context.BackgroundJob.Job.Method.Name, "Enqueued");
+            _logger.Information("JobId: {JobId}, {MethodName} with Room {RoomId} {Status}, Result: {Result}", context.BackgroundJob.Id, context.BackgroundJob.Job.Method.Name, context.BackgroundJob.Job.Args[0], "Enqueued", "Waiting for processing");
         }
     }
 
     public void OnPerforming(PerformingContext context)
     {
-        // No implementation needed
+        if (context.BackgroundJob.Job.Method.Name.Contains("Notify"))
+            return;
+        
+        var methodName = context.BackgroundJob.Job.Method.Name;
+        var roomId = context.BackgroundJob.Job.Args[0];
+        
+        _logger.Information("JobId: {JobId}, {MethodName} with Room {RoomId} {Status}, Result: {Result}", context.BackgroundJob.Id, methodName, roomId, "Started", "Processing");
     }
 
     public void OnPerformed(PerformedContext context)

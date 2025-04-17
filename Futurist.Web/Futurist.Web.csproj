@@ -12,6 +12,7 @@
       <PackageReference Include="Hangfire.AspNetCore" Version="1.8.18" />
       <PackageReference Include="Hangfire.Core" Version="1.8.18" />
       <PackageReference Include="Hangfire.SqlServer" Version="1.8.18" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.2" />
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.2.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2">
@@ -37,6 +38,14 @@
 
     <ItemGroup>
         <Folder Include="wwwroot\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Properties\PublishProfiles\FuturistDev.pubxml">
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </None>
     </ItemGroup>
 
 </Project>
