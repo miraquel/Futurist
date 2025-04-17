@@ -68,4 +68,10 @@ public static class ServiceMessageConstants
     public const string SummaryFgCostFound = "Summary Fg Cost found";
     public const string SummaryFgCostNotFound = "Summary Fg Cost not found";
     public const string RofoImportFailed = "Rofo import failed";
+    public const string FgCostVerFound = "Fg Cost Ver found";
+    public const string FgCostVerNotFound = "Fg Cost Ver not found";
+    public const string FgCostVerInserted = "Fg Cost Ver inserted";
+    public const string FgCostVerNotInserted = "Fg Cost Ver not inserted";
+    public const string FgCostVerRoomIdsFound = "Fg Cost Ver room IDs found";
+    public const string FgCostVerRoomIdsNotFound = "Fg Cost Ver room IDs not found";
 }
