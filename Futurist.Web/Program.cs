@@ -4,14 +4,14 @@ using Futurist.Infrastructure.SignalR.Hubs;
 using Futurist.Repository.SqlServer;
 using Futurist.Repository.UnitOfWork;
 using Futurist.Service;
+using Futurist.Web;
 using Futurist.Web.Hangfire;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
-using Serilog.Events;
 using Serilog.Filters;
 using Serilog.Sinks.MSSqlServer;
 
@@ -79,8 +79,8 @@ builder.Services.AddHangfire(configuration => configuration
     .UseRecommendedSerializerSettings()
     .UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")));
 
-// Add the processing server as IHostedService
-builder.Services.AddHangfireServer();
+// // Add the processing server as IHostedService
+// builder.Services.AddHangfireServer();
 
 // Add SignalR
 builder.Services.AddSignalR();
@@ -89,9 +89,55 @@ builder.Services.AddSignalR();
 builder.Services.AddControllersWithViews();
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-}).AddCookie().AddOpenIdConnect(options =>
+    options.DefaultScheme = "CookieOrBearer";
+    options.DefaultChallengeScheme = "OpenIdOrBearer";
+}).AddPolicyScheme("CookieOrBearer", "Cookie or OpenId", options =>
+{
+    options.ForwardDefaultSelector = context =>
+    {
+        var auth = context.Request.Headers.Authorization.FirstOrDefault();
+        if (!string.IsNullOrEmpty(auth) && auth.StartsWith("Bearer "))
+            return JwtBearerDefaults.AuthenticationScheme;
+        return CookieAuthenticationDefaults.AuthenticationScheme;
+    };
+}).AddPolicyScheme("OpenIdOrBearer", "OpenId or Bearer", options =>
+{
+    options.ForwardDefaultSelector = context =>
+    {
+        var auth = context.Request.Headers["Authorization"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(auth) && auth.StartsWith("Bearer "))
+            return JwtBearerDefaults.AuthenticationScheme;
+        return OpenIdConnectDefaults.AuthenticationScheme;
+    };
+}).AddJwtBearer(options =>
+{
+    var authConfig = builder.Configuration.GetSection("Auth");
+
+    options.Authority = authConfig["Authority"]; // Ensure this matches the "iss" claim in the token
+    options.RequireHttpsMetadata = true; // Ensure HTTPS is used for metadata retrieval
+    options.Audience = "account"; // Match the "aud" claim in the token
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = "https://auth.gandummas.co.id/realms/gmk", // Match the "iss" claim in the token
+        ValidateAudience = true,
+        ValidAudience = "account", // Match the "aud" claim in the token
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero,
+        NameClaimType = "preferred_username",
+        RoleClaimType = "roles" // Use the "roles" claim for authorization
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            // Log detailed error for debugging
+            Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+            return Task.CompletedTask;
+        }
+    };
+})
+.AddCookie().AddOpenIdConnect(options =>
 {
     var authConfig = builder.Configuration.GetSection("Auth");
 
@@ -113,6 +159,13 @@ builder.Services.AddAuthorization();
 builder.Services.AddRepositorySqlServer();
 builder.Services.AddUnitOfWork();
 builder.Services.AddServices();
+
+builder.Services.AddHostedService<LifetimeEventsHostedService>();
+
+builder.Services.AddHttpContextAccessor();
+
+// Add KeycloakTokenService to fetch tokens programmatically
+builder.Services.AddHttpClient<KeycloakTokenService>();
 
 var app = builder.Build();
 

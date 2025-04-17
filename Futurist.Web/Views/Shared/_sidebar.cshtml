@@ -38,6 +38,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link menu-link" href="@Url.Action("Index", "ExchangeRate")">
+                        <i class="ri-currency-fill"></i> <span>Exchange Rate</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link menu-link" href="@Url.Action("Index", "Rofo")">
                         <i class="ri-upload-line"></i> <span>Upload Rofo</span>
                     </a>
@@ -48,28 +53,66 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="@Url.Action("Index", "Mup")">
+                    <a href="#mupCalculation" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
+                       aria-expanded="false" aria-controls="sidebarProjects" data-key="t-projects">
                         <i class="ri-calculator-line"></i> <span>MUP Calculation</span>
                     </a>
+                    <div class="collapse menu-dropdown" id="mupCalculation">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="@Url.Action("Process", "Mup")" class="nav-link" data-key="t-process"> Process </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("SummaryByItemId", "Mup")" class="nav-link" data-key="t-summary-by-item-id"> Summary By Item ID </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("SummaryByBatchNumber", "Mup")" class="nav-link" data-key="t-summary-by-batch-number"> Summary By Batch Number </a>
+                            </li>
+                            <li>
+                                <a href="@Url.Action("Details", "Mup")" class="nav-link" data-key="t-details"> Details </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
                 <li class="nav-item">
-                    <a href="#sidebarProjects" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
+                    <a href="#fgCostVersion" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
                        aria-expanded="false" aria-controls="sidebarProjects" data-key="t-projects">
-                        <i class="ri-product-hunt-line"></i> <span>FG Calculation</span>
+                        <i class="ri-calculator-line"></i> <span>FG Cost Version</span>
                     </a>
-                    <div class="collapse menu-dropdown" id="sidebarProjects">
+                    <div class="collapse menu-dropdown" id="fgCostVersion">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="@Url.Action("Process", "FgCostVer")" class="nav-link" data-key="t-process"> Process </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("Index", "FgCostVer")" class="nav-link" data-key="t-summary-by-item-id"> Summary </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="#fgCalculation" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
+                       aria-expanded="false" aria-controls="sidebarProjects" data-key="t-projects">
+                        <i class="ri-computer-fill"></i> <span>FG Calculation</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="fgCalculation">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
                                 <a href="@Url.Action("Process", "FgCost")" class="nav-link" data-key="t-process"> Process </a>
                             </li>
                             <li class="nav-item">
-                                <a href="@Url.Action("Index", "FgCost")" class="nav-link" data-key="t-list"> Summary </a>
+                                <a href="@Url.Action("Index", "FgCost")" class="nav-link" data-key="t-summary"> Summary </a>
                             </li>
                             <li class="nav-item">
                                 <a href="@Url.Action("Details", "FgCost")" class="nav-link" data-key="t-details"> Details </a>
                             </li>
                         </ul>
                     </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="@Url.Action("Index", "JobMonitoring")">
+                        <i class="ri-bar-chart-line"></i> <span>Job Monitoring</span>
+                    </a>
                 </li>
             </ul>
         </div>
