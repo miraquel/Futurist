@@ -8,9 +8,9 @@
 
     <ItemGroup>
       <PackageReference Include="Hangfire.Core" Version="1.8.18" />
-      <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.2.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.2" />
       <PackageReference Include="Riok.Mapperly" Version="4.1.1" />
+      <PackageReference Include="Serilog" Version="4.2.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -18,7 +18,14 @@
       <ProjectReference Include="..\Futurist.Domain\Futurist.Domain.csproj" />
       <ProjectReference Include="..\Futurist.Infrastructure.SignalR\Futurist.Infrastructure.SignalR.csproj" />
       <ProjectReference Include="..\Futurist.Repository.UnitOfWork\Futurist.Repository.UnitOfWork.csproj" />
+      <ProjectReference Include="..\Futurist.Service.Command\Futurist.Service.Command.csproj" />
       <ProjectReference Include="..\Futurist.Service.Interface\Futurist.Service.Interface.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.AspNetCore.Http.Abstractions">
+        <HintPath>C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\9.0.2\Microsoft.AspNetCore.Http.Abstractions.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>
