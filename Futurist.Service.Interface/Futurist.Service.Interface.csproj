@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Futurist.Service.Command\Futurist.Service.Command.csproj" />
       <ProjectReference Include="..\Futurist.Service.Dto\Futurist.Service.Dto.csproj" />
     </ItemGroup>
 
