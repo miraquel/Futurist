@@ -67,7 +67,7 @@
                         </a>
                         <a asp-controller="Rofo" asp-action="ExportRofo" asp-route-room="0" onclick="downloadRofo()" id="linkDownload" class="btn btn-info ms-2">
                             <i class="ri-file-excel-2-fill"></i>
-                            Export Result
+                            Download Result
                         </a>
                     </div>
                 </div>
@@ -198,7 +198,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                         }
                     }
                 ],
