@@ -74,21 +74,15 @@
                         </ul>
                     </div>
                 </li>
-                <li class="nav-item">
-                    <a href="#fgCostVersion" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
-                       aria-expanded="false" aria-controls="sidebarProjects" data-key="t-projects">
-                        <i class="ri-calculator-line"></i> <span>FG Cost Version</span>
+                <li>
+                    <a class="nav-link menu-link" href="@Url.Action("Index", "ItemForecast")">
+                        <i class="ri-price-tag-2-fill"></i> <span>Item Forecast Price</span>
                     </a>
-                    <div class="collapse menu-dropdown" id="fgCostVersion">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="@Url.Action("Process", "FgCostVer")" class="nav-link" data-key="t-process"> Process </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("Index", "FgCostVer")" class="nav-link" data-key="t-summary-by-item-id"> Summary </a>
-                            </li>
-                        </ul>
-                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="@Url.Action("Index", "ItemAdjustment")">
+                        <i class="ri-price-tag-2-fill"></i> <span>Item Price Adjustment</span>
+                    </a>
                 </li>
                 <li class="nav-item">
                     <a href="#fgCalculation" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
@@ -105,6 +99,22 @@
                             </li>
                             <li class="nav-item">
                                 <a href="@Url.Action("Details", "FgCost")" class="nav-link" data-key="t-details"> Details </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="#fgCostVersion" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
+                       aria-expanded="false" aria-controls="sidebarProjects" data-key="t-projects">
+                        <i class="ri-calculator-line"></i> <span>FG Cost Version</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="fgCostVersion">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="@Url.Action("Process", "FgCostVer")" class="nav-link" data-key="t-process"> Process </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("Index", "FgCostVer")" class="nav-link" data-key="t-summary-by-item-id"> Summary </a>
                             </li>
                         </ul>
                     </div>
