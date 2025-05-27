@@ -19,5 +19,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IExchangeRateService, ExchangeRateService>();
         services.AddScoped<IItemAdjustmentService, ItemAdjustmentService>();
         services.AddScoped<IFgCostVerService, FgCostVerService>();
+        services.AddScoped<IItemForecastService, ItemForecastService>();
     }
 }

@@ -95,4 +95,12 @@ public partial class MapperlyMapper
     public partial IEnumerable<FgCostVerSpDto> MapToIEnumerableDto(IEnumerable<FgCostVerSp> entities);
     public partial PagedList<FgCostVerSp> MapToPagedList(PagedListDto<FgCostVerSpDto> dto);
     public partial PagedListDto<FgCostVerSpDto> MapToPagedListDto(PagedList<FgCostVerSp> entity);
+    
+    // ItemForecastSp
+    public partial ItemForecastSp MapToEntity(ItemForecastSpDto dto);
+    public partial ItemForecastSpDto MapToDto(ItemForecastSp entity);
+    public partial IEnumerable<ItemForecastSp> MapToIEnumerable(IEnumerable<ItemForecastSpDto> dtos);
+    public partial IEnumerable<ItemForecastSpDto> MapToIEnumerableDto(IEnumerable<ItemForecastSp> entities);
+    public partial PagedList<ItemForecastSp> MapToPagedList(PagedListDto<ItemForecastSpDto> dto);
+    public partial PagedListDto<ItemForecastSpDto> MapToPagedListDto(PagedList<ItemForecastSp> entity);
 }
