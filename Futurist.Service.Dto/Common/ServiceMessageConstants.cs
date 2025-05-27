@@ -74,4 +74,13 @@ public static class ServiceMessageConstants
     public const string FgCostVerNotInserted = "Fg Cost Ver not inserted";
     public const string FgCostVerRoomIdsFound = "Fg Cost Ver room IDs found";
     public const string FgCostVerRoomIdsNotFound = "Fg Cost Ver room IDs not found";
+    public const string ItemForecastNotFound = "Item Forecast not found";
+    public const string ItemForecastItemIdInvalid = "Item Forecast item ID invalid";
+    public const string ItemForecastForecastDateInvalid = "Item Forecast forecast date invalid";
+    public const string ItemForecastForcedPriceInvalid = "Item Forecast forced price invalid";
+    public const string ItemForecastImportValidationFailed = "Item Forecast import validation failed";
+    public const string ItemForecastImportSuccess = "Item Forecast import success";
+    public const string ItemForecastImportFailed = "Item Forecast import failed";
+    public const string ItemForecastRoomIdsFound = "Item Forecast room IDs found";
+    public const string ItemForecastRoomIdsNotFound = "Item Forecast room IDs not found";
 }
