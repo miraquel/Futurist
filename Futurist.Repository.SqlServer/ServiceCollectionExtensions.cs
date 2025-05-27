@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IExchangeRateRepository, ExchangeRateRepository>();
         services.AddScoped<IItemAdjustmentRepository, ItemAdjustmentRepository>();
         services.AddScoped<IFgCostVerRepository, FgCostVerRepository>();
+        services.AddScoped<IItemForecastRepository, ItemForecastRepository>();
         
         services.AddScoped<IDbConnection>(s =>
         {
