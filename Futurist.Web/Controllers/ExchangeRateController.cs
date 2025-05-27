@@ -10,6 +10,7 @@ using Futurist.Service.Dto;
 
 namespace Futurist.Web.Controllers;
 
+[Authorize]
 public class ExchangeRateController : Controller
 {
     private readonly IExchangeRateService _exchangeRateService;
@@ -61,7 +62,7 @@ public class ExchangeRateController : Controller
     [HttpGet]
     public IActionResult DownloadTemplate()
     {
-        var stream = ExcelHelper.CreateExcelTemplate<ExchangeRateSpDto>(list =>
+        var stream = ExcelHelper.CreateExcelTemplate(list =>
         {
             ArgumentNullException.ThrowIfNull(list);
             list.Add(nameof(ExchangeRateSpDto.CurrencyCode));
@@ -71,6 +72,37 @@ public class ExchangeRateController : Controller
         });
         
         return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ExchangeRateTemplate.xlsx");
+    }
+    
+    public async Task<IActionResult> DownloadExchangeRate()
+    {
+        var response = await _exchangeRateService.GetAllExchangeRateAsync();
+
+        if (response is not { IsSuccess: true, Data: not null }) return BadRequest(response.Errors);
+
+        var result = ExcelHelper.ExportExcel(response.Data, (row, dto) =>
+        {
+            if (row.RowNumber() == 1)
+            {
+                row.Cell(1).Value = "Currency";
+                row.Cell(2).Value = "Valid From";
+                row.Cell(3).Value = "Valid To";
+                row.Cell(4).Value = "Exchange Rate";
+            }
+            else
+            {
+                row.Cell(1).Value = dto.CurrencyCode;
+                row.Cell(2).Value = dto.ValidFrom;
+                row.Cell(2).Style.DateFormat.Format = "dd MMM yyyy";
+                row.Cell(3).Value = dto.ValidTo;
+                row.Cell(3).Style.DateFormat.Format = "dd MMM yyyy";
+                row.Cell(4).Value = dto.ExchangeRate;
+                row.Cell(4).Style.NumberFormat.Format = "#,##0";
+            }
+        });
+
+        return File(result, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"FgCostDetail_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
     }
 }
 

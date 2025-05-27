@@ -50,9 +50,9 @@
                             </button>
                         </div>
                     </form>
-                    <a asp-controller="ExchangeRate" asp-action="DownloadTemplate" class="btn btn-info ms-2">
-                        <span class="ri-download-2-fill me-1"></span>
-                        Download Template
+                    <a asp-controller="ExchangeRate" asp-action="DownloadExchangeRate" class="btn btn-info ms-2">
+                        <span class="ri-file-excel-2-fill me-1"></span>
+                        Download Result
                     </a>
                 </div>
             </div><!-- end card header -->
@@ -170,7 +170,7 @@
                             }
 
                             // For display, format with decimal places
-                            return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                         }
                     }
                 ],

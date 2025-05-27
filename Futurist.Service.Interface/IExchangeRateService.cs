@@ -10,4 +10,6 @@ public interface IExchangeRateService
 
     Task<ServiceResponse<PagedListDto<ExchangeRateSpDto>>> GetExchangeRatePagedListAsync(
         PagedListRequestDto pagedListRequestDto);
+    
+    Task<ServiceResponse<IEnumerable<ExchangeRateSpDto>>> GetAllExchangeRateAsync();
 }
