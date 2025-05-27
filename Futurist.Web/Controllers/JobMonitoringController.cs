@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Futurist.Web.Controllers;
 
+[Authorize]
 public class JobMonitoringController : Controller
 {
     // GET
