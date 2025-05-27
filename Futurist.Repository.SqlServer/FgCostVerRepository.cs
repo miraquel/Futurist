@@ -18,7 +18,7 @@ public class FgCostVerRepository : IFgCostVerRepository
 
     public async Task<IEnumerable<FgCostVerSp>> GetAllFgCostVerAsync(GetAllFgCostVerCommand command)
     {
-        const string query = "EXEC FgCostVer_Select @Room";
+        const string query = "EXEC FgCostVer_Select_new @Room";
         
         Dictionary<string, string> columnMappings = new()
         {
@@ -33,8 +33,8 @@ public class FgCostVerRepository : IFgCostVerRepository
             { "PmPrice", nameof(FgCostVerSp.PmPrice) },
             { "StdCostPrice", nameof(FgCostVerSp.StdCostPrice) },
             { "Yield", nameof(FgCostVerSp.Yield) },
-            { "CostRmPm+Y", nameof(FgCostVerSp.CostRmPmY) },
-            { "Cogs", nameof(FgCostVerSp.Cogs) },
+            { "RmPm+Y", nameof(FgCostVerSp.CostRmPmY) },
+            { "CostPrice", nameof(FgCostVerSp.CostPrice) },
             { "Previous Calc", nameof(FgCostVerSp.PreviousCalc) },
             { "SalesPrice Prev", nameof(FgCostVerSp.SalesPricePrev) },
             { "RofoQty Prev", nameof(FgCostVerSp.RofoQtyPrev) },
@@ -42,8 +42,8 @@ public class FgCostVerRepository : IFgCostVerRepository
             { "Pm Prev", nameof(FgCostVerSp.PmPrev) },
             { "StdCost Prev", nameof(FgCostVerSp.StdCostPrev) },
             { "Yield Prev", nameof(FgCostVerSp.YieldPrev) },
-            { "CostRmPm+Y Prev", nameof(FgCostVerSp.CostRmPmYPrev) },
-            { "Cogs Prev", nameof(FgCostVerSp.CogsPrev) },
+            { "RmPm+Y Prev", nameof(FgCostVerSp.CostRmPmYPrev) },
+            { "CostPrice Prev", nameof(FgCostVerSp.CostPricePrev) },
             { "Delta Absolute", nameof(FgCostVerSp.DeltaAbsolute) }
         };
 

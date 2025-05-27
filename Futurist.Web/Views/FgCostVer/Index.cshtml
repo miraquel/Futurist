@@ -33,9 +33,9 @@
                         <i class="ri-refresh-line"></i>
                         Refresh Table
                     </button>
-                    <a asp-controller="FgCost" asp-action="DownloadSummaryFgCost" asp-route-room="0" onclick="downloadSummaryFgCost()" id="linkDownload" class="btn btn-info">
+                    <a asp-controller="FgCostVer" asp-action="DownloadSummaryFgCostVer" asp-route-room="0" onclick="downloadSummaryFgCostVer()" id="linkDownload" class="btn btn-info">
                         <i class="ri-file-excel-2-fill"></i>
-                        Export Result
+                        Download Result
                     </a>
                 </div>
             </div>
@@ -44,18 +44,19 @@
                     <thead>
                     <tr>
                         <th>Room</th>
-                        <th>Rofo Date</th>
                         <th>Item ID</th>
                         <th>Item Name</th>
+                        <th>Unit</th>
                         <th>In Kg</th>
                         <th>Sales Price</th>
                         <th>Rofo Qty</th>
+                        <th>Rofo Date</th>
                         <th>RM Price</th>
                         <th>PM Price</th>
                         <th>Std Cost Price</th>
                         <th>Yield</th>
-                        <th>Cost RM PM Y</th>
-                        <th>COGS</th>
+                        <th>RmPm+Y</th>
+                        <th>Cost Price</th>
                         <th>Previous Calc</th>
                         <th>Sales Price Prev</th>
                         <th>Rofo Qty Prev</th>
@@ -63,26 +64,27 @@
                         <th>PM Prev</th>
                         <th>Std Cost Prev</th>
                         <th>Yield Prev</th>
-                        <th>Cost RM PM Y Prev</th>
-                        <th>COGS Prev</th>
+                        <th>RmPm+Y Prev</th>
+                        <th>Cost Price Prev</th>
                         <th>Delta Absolute</th>
                     </tr>
                     </thead>
                     <tfoot>
                     <tr>
                         <th>Room</th>
-                        <th>Rofo Date</th>
                         <th>Item ID</th>
                         <th>Item Name</th>
+                        <th>Unit</th>
                         <th>In Kg</th>
                         <th>Sales Price</th>
                         <th>Rofo Qty</th>
+                        <th>Rofo Date</th>
                         <th>RM Price</th>
                         <th>PM Price</th>
                         <th>Std Cost Price</th>
                         <th>Yield</th>
-                        <th>Cost RM PM Y</th>
-                        <th>COGS</th>
+                        <th>RmPm+Y</th>
+                        <th>Cost Price</th>
                         <th>Previous Calc</th>
                         <th>Sales Price Prev</th>
                         <th>Rofo Qty Prev</th>
@@ -90,8 +92,8 @@
                         <th>PM Prev</th>
                         <th>Std Cost Prev</th>
                         <th>Yield Prev</th>
-                        <th>Cost RM PM Y Prev</th>
-                        <th>COGS Prev</th>
+                        <th>RmPm+Y Prev</th>
+                        <th>Cost Price Prev</th>
                         <th>Delta Absolute</th>
                     </tr>
                     </tfoot>
@@ -155,16 +157,21 @@
                         },
                         columns: [
                             { data: 'room', defaultContent: '' },
-                            {
-                                data: 'rofoDate',
-                                defaultContent: '',
-                                render: function(data) {
-                                    return moment(data).format("DD MMM YYYY");
-                                }
-                            },
                             { data: 'itemId', defaultContent: '' },
                             { data: 'itemName', defaultContent: '' },
-                            { data: 'inKg', defaultContent: '' },
+                            { data: 'unit', defaultContent: '' },
+                            { 
+                                data: 'inKg', 
+                                defaultContent: '',
+                                render: function(data, type) {
+                                    // For sorting/filtering use the raw number
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+                                    // For display, round and format with thousands separator
+                                    return data ? Intl.NumberFormat('en-US', { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                                }
+                            },
                             { 
                                 data: 'salesPrice', 
                                 defaultContent: '',
@@ -174,7 +181,7 @@
                                         return data ? parseFloat(data) : 0;
                                     }
                                     // For display, round and format with thousands separator
-                                    return data ? numberFormat.format(data) : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             {
@@ -187,7 +194,19 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? numberFormat.format(data) : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                                }
+                            },
+                            { 
+                                data: 'rofoDate', 
+                                defaultContent: '',
+                                render: function(data, type) {
+                                    // For sorting/filtering use the raw number
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+                                    // For display, round and format with thousands separator
+                                    return data ? moment(data).format("DD MMM yyyy") : ''
                                 }
                             },
                             {
@@ -199,7 +218,7 @@
                                         return data ? parseFloat(data) : 0;
                                     }
                                     // For display, round and format with thousands separator
-                                    return data ? numberFormat.format(data) : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             { 
@@ -211,7 +230,7 @@
                                         return data ? parseFloat(data) : 0;
                                     }
                                     // For display, round and format with thousands separator
-                                    return data ? numberFormat.format(data) : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             { 
@@ -223,7 +242,7 @@
                                         return data ? parseFloat(data) : 0;
                                     }
                                     // For display, round and format with thousands separator
-                                    return data ? numberFormat.format(data) : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             {
@@ -247,11 +266,11 @@
                                         return data ? parseFloat(data) : 0;
                                     }
                                     // For display, round and format with thousands separator
-                                    return data ? numberFormat.format(data) : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             {
-                                data: 'cogs',
+                                data: 'costPrice',
                                 defaultContent: '',
                                 render: function(data, type) {
                                     // For sorting/filtering use the raw number
@@ -259,11 +278,22 @@
                                         return data ? parseFloat(data) : 0;
                                     }
                                     // For display, round and format with thousands separator
-                                    return data ? numberFormat.format(data) : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             { data: 'previousCalc', defaultContent: '' },
-                            { data: 'salesPricePrev', defaultContent: '' },
+                            { 
+                                data: 'salesPricePrev', 
+                                defaultContent: '',
+                                render: function(data, type) {
+                                    // For sorting/filtering use the raw number
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+                                    // For display, round and format with thousands separator
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                                }
+                            },
                             {
                                 data: 'rofoQtyPrev',
                                 defaultContent: '',
@@ -273,7 +303,7 @@
                                         return data ? parseFloat(data) : 0;
                                     }
                                     // For display, round and format with thousands separator
-                                    return data ? numberFormat.format(data) : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             { 
@@ -285,7 +315,7 @@
                                         return data ? parseFloat(data) : 0;
                                     }
                                     // For display, round and format with thousands separator
-                                    return data ? numberFormat.format(data) : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             { 
@@ -297,7 +327,7 @@
                                         return data ? parseFloat(data) : 0;
                                     }
                                     // For display, round and format with thousands separator
-                                    return data ? numberFormat.format(data) : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             { 
@@ -309,7 +339,7 @@
                                         return data ? parseFloat(data) : 0;
                                     }
                                     // For display, round and format with thousands separator
-                                    return data ? numberFormat.format(data) : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             {
@@ -324,9 +354,20 @@
                                     return data ? percentFormat.format(data) : '';
                                 }
                             },
-                            { data: 'costRmPmYPrev', defaultContent: '' },
+                            { 
+                                data: 'costRmPmYPrev', 
+                                defaultContent: '', 
+                                render: function(data, type) {
+                                    // For sorting/filtering use the raw number
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+                                    // For display, round and format with thousands separator
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                                }
+                            },
                             {
-                                data: 'cogsPrev',
+                                data: 'costPricePrev',
                                 defaultContent: '',
                                 render: function(data, type) {
                                     // For sorting/filtering use the raw number
@@ -334,7 +375,7 @@
                                         return data ? parseFloat(data) : 0;
                                     }
                                     // For display, round and format with thousands separator
-                                    return data ? numberFormat.format(data) : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             { 
@@ -346,7 +387,7 @@
                                         return data ? parseFloat(data) : 0;
                                     }
                                     // For display, round and format with thousands separator
-                                    return data ? numberFormat.format(data) : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                         ],
@@ -429,7 +470,7 @@
         //    reloadTable();
         //});
 
-        function downloadSummaryFgCost() {
+        function downloadSummaryFgCostVer() {
             // change the room id in the download link
             const room = roomSelect.val();
             const linkDownload = $("#linkDownload")[0];
