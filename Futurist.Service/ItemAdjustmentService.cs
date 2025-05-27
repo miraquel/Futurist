@@ -90,7 +90,8 @@ public class ItemAdjustmentService : IItemAdjustmentService
                 ItemName = row.Cell(3).Value.ToString(),
                 UnitId = row.Cell(4).Value.ToString(),
                 ItemGroup = row.Cell(5).Value.ToString(),
-                Price = row.Cell(6).TryGetValue(out decimal price) ? price : 0,
+                GroupProcurement = row.Cell(6).Value.ToString(),
+                Price = row.Cell(7).TryGetValue(out decimal price) ? price : 0,
                 CreatedBy = string.IsNullOrEmpty(serviceCommand.User) ? "Unknown" : serviceCommand.User,
                 CreatedDate = createdDate
             }).ToArray();

@@ -75,7 +75,7 @@
                         </button>
                         <a asp-controller="ItemAdjustment" asp-action="ExportItemAdjustment" asp-route-room="0" onclick="downloadItemAdjustment()" id="linkDownload" class="btn btn-info">
                             <i class="ri-file-excel-2-fill"></i>
-                            Export Result
+                            Download Result
                         </a>
                     </div>
                 </div>
@@ -88,8 +88,9 @@
                         <th>Room</th>
                         <th>Item ID</th>
                         <th>Item Name</th>
-                        <th>Unit ID</th>
+                        <th>Unit</th>
                         <th>Item Group</th>
+                        <th>Group Procurement</th>
                         <th>Price</th>
                     </tr>
                     </thead>
@@ -98,8 +99,9 @@
                             <th>Room</th>
                             <th>Item ID</th>
                             <th>Item Name</th>
-                            <th>Unit ID</th>
+                            <th>Unit</th>
                             <th>Item Group</th>
+                            <th>Group Procurement</th>
                             <th>Price</th>
                         </tr>
                     </tfoot>
@@ -169,6 +171,7 @@
                     { data: 'itemName' },
                     { data: 'unitId', width: '80px' },
                     { data: 'itemGroup', width: '150px' },
+                    { data: 'groupProcurement', width: '150px' },
                     { 
                         data: 'price', 
                         width: '100px',
