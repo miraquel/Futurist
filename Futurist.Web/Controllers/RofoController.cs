@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Futurist.Web.Controllers;
 
+[Authorize]
 public class RofoController : Controller
 {
     private readonly IRofoService _rofoService;
@@ -71,7 +72,7 @@ public class RofoController : Controller
     [HttpGet]
     public IActionResult DownloadTemplate()
     {
-        var stream = ExcelHelper.CreateExcelTemplate<RofoDto>(list =>
+        var stream = ExcelHelper.CreateExcelTemplate(list =>
         {
             list.Add(nameof(RofoDto.Room));
             list.Add(nameof(RofoDto.RofoDate));
@@ -113,7 +114,7 @@ public class RofoController : Controller
                 row.Cell(3).Value = dto.ItemId;
                 row.Cell(4).Value = dto.ItemName;
                 row.Cell(5).Value = dto.Qty;
-                row.Cell(5).Style.NumberFormat.Format = "#,##0.00";
+                row.Cell(5).Style.NumberFormat.Format = "#,##0";
             }
         });
 
