@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Futurist.Web.Controllers;
 
+[Authorize]
 public class ItemAdjustmentController : Controller
 {
     private readonly IItemAdjustmentService _itemAdjustmentService;
@@ -54,9 +55,10 @@ public class ItemAdjustmentController : Controller
                 row.Cell(1).Value = "Room";
                 row.Cell(2).Value = "Item Id";
                 row.Cell(3).Value = "Item Name";
-                row.Cell(4).Value = "Unit ID";
+                row.Cell(4).Value = "Unit";
                 row.Cell(5).Value = "Item Group";
-                row.Cell(6).Value = "Price";
+                row.Cell(6).Value = "Group Procurement";
+                row.Cell(7).Value = "Price";
             }
             else
             {
@@ -65,8 +67,9 @@ public class ItemAdjustmentController : Controller
                 row.Cell(3).Value = dto.ItemName;
                 row.Cell(4).Value = dto.UnitId;
                 row.Cell(5).Value = dto.ItemGroup;
-                row.Cell(6).Value = dto.Price;
-                row.Cell(6).Style.NumberFormat.Format = "#,##0.00";
+                row.Cell(6).Value = dto.GroupProcurement;
+                row.Cell(7).Value = dto.Price;
+                row.Cell(7).Style.NumberFormat.Format = "#,##0";
             }
         });
         
