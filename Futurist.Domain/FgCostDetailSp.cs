@@ -11,6 +11,7 @@ public class FgCostDetailSp
     public string ItemId { get; set; } = string.Empty;
     public string ItemName { get; set; } = string.Empty;
     public string GroupSubstitusi { get; set; } = string.Empty;
+    public string GroupProcurement { get; set; } = string.Empty;
     public string ItemAllocatedId { get; set; } = string.Empty;
     public string ItemAllocatedName { get; set; } = string.Empty;
     public string UnitId { get; set; } = string.Empty;

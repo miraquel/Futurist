@@ -1,5 +1,5 @@
 ﻿using Futurist.Repository.Command.FgCostVerCommand;
-using Futurist.Repository.Interface;
+using Futurist.Repository.UnitOfWork;
 using Futurist.Service.Dto;
 using Futurist.Service.Dto.Common;
 using Futurist.Service.Interface;
@@ -8,13 +8,13 @@ namespace Futurist.Service;
 
 public class FgCostVerService : IFgCostVerService
 {   
-    private readonly IFgCostVerRepository _fgCostVerRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly MapperlyMapper _mapper;
 
-    public FgCostVerService(IFgCostVerRepository fgCostVerRepository, MapperlyMapper mapper)
+    public FgCostVerService(MapperlyMapper mapper, IUnitOfWork unitOfWork)
     {
-        _fgCostVerRepository = fgCostVerRepository;
         _mapper = mapper;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ServiceResponse<IEnumerable<FgCostVerSpDto>>> GetAllFgCostVerAsync(int room)
@@ -25,7 +25,7 @@ public class FgCostVerService : IFgCostVerService
             {
                 Room = room
             };
-            var fgCostVerList = await _fgCostVerRepository.GetAllFgCostVerAsync(command);
+            var fgCostVerList = await _unitOfWork.FgCostVerRepository.GetAllFgCostVerAsync(command);
 
             return new ServiceResponse<IEnumerable<FgCostVerSpDto>>
             {
@@ -52,7 +52,9 @@ public class FgCostVerService : IFgCostVerService
                 Room = room,
                 Notes = notes
             };
-            var spTask = await _fgCostVerRepository.InsertFgCostVerAsync(command) ?? throw new NullReferenceException("InsertFgCostVer processing does not return any result");
+            var spTask = await _unitOfWork.FgCostVerRepository.InsertFgCostVerAsync(command) ?? throw new NullReferenceException("InsertFgCostVer processing does not return any result");
+
+            _unitOfWork.CurrentTransaction?.Commit();
 
             return new ServiceResponse<SpTaskDto>
             {
@@ -62,6 +64,8 @@ public class FgCostVerService : IFgCostVerService
         }
         catch (Exception e)
         {
+            _unitOfWork.CurrentTransaction?.Rollback();
+            
             return new ServiceResponse<SpTaskDto>
             {
                 Errors = [e.Message],
@@ -75,7 +79,7 @@ public class FgCostVerService : IFgCostVerService
         try
         {
             var command = new GetFgCostVerRoomIdsCommand();
-            var roomIds = await _fgCostVerRepository.GetFgCostVerRoomIdsAsync(command);
+            var roomIds = await _unitOfWork.FgCostVerRepository.GetFgCostVerRoomIdsAsync(command);
 
             return new ServiceResponse<IEnumerable<int>>
             {

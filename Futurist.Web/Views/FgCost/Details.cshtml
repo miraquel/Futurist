@@ -35,7 +35,7 @@
                     </button>
                     <a asp-controller="FgCost" asp-action="DownloadFgCostDetail" asp-route-room="0" onclick="downloadFgCostDetail()" id="linkDownload" class="btn btn-info">
                         <i class="ri-file-excel-2-fill"></i>
-                        Export Result
+                        Download Result
                     </a>
                 </div>
             </div>
@@ -52,8 +52,10 @@
                         <th>Item ID</th>
                         <th>Item Name</th>
                         <th>Group Substitusi</th>
+                        <th>Group Procurement</th>
                         <th>Item Allocated ID</th>
                         <th>Item Allocated Name</th>
+                        <th>Unit</th>
                         <th>Batch</th>
                         <th>Qty</th>
                         <th>Price</th>
@@ -76,8 +78,10 @@
                         <th>Item ID</th>
                         <th>Item Name</th>
                         <th>Group Substitusi</th>
+                        <th>Group Procurement</th>
                         <th>Item Allocated ID</th>
                         <th>Item Allocated Name</th>
+                        <th>Unit</th>
                         <th>Batch</th>
                         <th>Qty</th>
                         <th>Price</th>
@@ -116,7 +120,7 @@
         }
 
         function reloadTable() {
-            if (document.getElementById("datatables-fgcost-result") || document.getElementById("datatables-fgcost-result")) {
+            if (document.getElementById("datatables-fgcost-result")) {
                 if (!initialized) {
                     initialized = true;
                     $('#datatables-fgcost-result').DataTable({
@@ -174,14 +178,16 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             { data: 'itemId', defaultContent: '' },
                             { data: 'itemName', width: '200px', defaultContent: '' },
                             { data: 'groupSubstitusi', defaultContent: '' },
+                            { data: 'groupProcurement', defaultContent: '' },
                             { data: 'itemAllocatedId', defaultContent: '' },
                             { data: 'itemAllocatedName', width: '200px', defaultContent: '' },
+                            { data: 'unitId', defaultContent: '' },
                             { data: 'inventBatch', defaultContent: '' },
                             {
                                 data: 'qty',
@@ -193,7 +199,7 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             {
@@ -206,7 +212,7 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             {
@@ -219,7 +225,7 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             {
@@ -232,7 +238,7 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             {
@@ -245,7 +251,7 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             { data: 'source', defaultContent: '' },
@@ -260,13 +266,13 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                         ],
                         columnDefs: [
                             {
-                                targets: [0, 1, 2, 4, 6, 8, 9, 11, 15, 16], // Column indices to center
+                                targets: [0, 1, 2, 4, 6, 8, 9, 10, 12, 16, 17], // Column indices to center
                                 className: 'text-center'
                             }
                         ],

@@ -13,6 +13,7 @@ public class FgCostSp
     public decimal Yield { get; set; }
     public decimal RmPrice { get; set; }
     public decimal PmPrice { get; set; }
+    public decimal RmPmYield { get; set; }
     public decimal StdCostPrice { get; set; }
     public decimal CostPrice { get; set; }
     public decimal SalesPriceIndex { get; set; }
