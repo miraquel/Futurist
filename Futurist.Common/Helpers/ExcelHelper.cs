@@ -67,7 +67,7 @@ public static class ExcelHelper
         return stream;
     }
 
-    public static Stream CreateExcelTemplate<T>(Action<List<string>> mapHeader)
+    public static Stream CreateExcelTemplate(Action<List<string>> mapHeader)
     {
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Sheet1");
