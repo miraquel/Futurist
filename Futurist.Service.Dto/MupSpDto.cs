@@ -22,6 +22,8 @@ public class MupSpDto
     public string ItemName { get; set; } = string.Empty;
     [DisplayName("Group Substitusi")]
     public string GroupSubstitusi { get; set; } = string.Empty;
+    [DisplayName("Group Procurement")]
+    public string GroupProcurement { get; set; } = string.Empty;
     [DisplayName("Item Allocated ID")]
     public string ItemAllocatedId { get; set; } = string.Empty;
     [DisplayName("Item Allocated Name")]
@@ -36,6 +38,8 @@ public class MupSpDto
     public decimal Price { get; set; }
     [DisplayName("Source")]
     public string Source { get; set; } = string.Empty;
+    [DisplayName("Original Currency")]
+    public string OriginalCurrency { get; set; } = string.Empty;
     [DisplayName("Ref ID")]
     public string RefId { get; set; } = string.Empty;
     [DisplayName("Latest Purchase Price")]

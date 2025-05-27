@@ -13,6 +13,7 @@ public class MupSp
     public string ItemId { get; set; } = string.Empty;
     public string ItemName { get; set; } = string.Empty;
     public string GroupSubstitusi { get; set; } = string.Empty;
+    public string GroupProcurement { get; set; } = string.Empty;
     public string ItemAllocatedId { get; set; } = string.Empty;
     public string ItemAllocatedName { get; set; } = string.Empty;
     public string UnitId { get; set; } = string.Empty;
@@ -23,6 +24,7 @@ public class MupSp
     public decimal PmPrice { get; set; }
     public decimal StdCostPrice { get; set; }
     public string Source { get; set; } = string.Empty;
+    public string OriginalCurrency { get; set; } = string.Empty;
     public string RefId { get; set; } = string.Empty;
     public decimal LatestPurchasePrice { get; set; }
     public decimal Gap { get; set; }
