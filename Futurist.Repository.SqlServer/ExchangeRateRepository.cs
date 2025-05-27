@@ -138,6 +138,13 @@ public class ExchangeRateRepository : IExchangeRateRepository
         return await _sqlConnection.QueryFirstOrDefaultAsync<ExchangeRateSp>(query, new { command.CurrencyCode, command.ValidFrom, command.ValidTo }, command.DbTransaction);
     }
 
+    public async Task<IEnumerable<ExchangeRateSp>> GetAllExchangeRateAsync(GetAllExchangeRateCommand command)
+    {
+        const string query = "ExchangeRate_Select";
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+        return await _sqlConnection.QueryAsync<ExchangeRateSp>(query, command.DbTransaction, commandType: CommandType.StoredProcedure);
+    }
+
     public async Task DeleteExchangeRateAsync(DeleteExchangeRateCommand command)
     {
         const string query = "DELETE FROM [ExchangeRate] WHERE [CurrencyCode] = @CurrencyCode AND [ValidFrom] = @ValidFrom";

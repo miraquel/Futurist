@@ -10,5 +10,6 @@ public interface IExchangeRateRepository
     
     Task<PagedList<ExchangeRateSp>> GetExchangeRatePagedListAsync(GetExchangeRatePagedListCommand command);
     Task<ExchangeRateSp?> GetExchangeRateAsync(GetExchangeRateCommand command);
+    Task<IEnumerable<ExchangeRateSp>> GetAllExchangeRateAsync(GetAllExchangeRateCommand command);
     Task DeleteExchangeRateAsync(DeleteExchangeRateCommand command);
 }

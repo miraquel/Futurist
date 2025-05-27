@@ -168,4 +168,30 @@ public class ExchangeRateService : IExchangeRateService
             };
         }
     }
+
+    public async Task<ServiceResponse<IEnumerable<ExchangeRateSpDto>>> GetAllExchangeRateAsync()
+    {
+        try
+        {
+            var command = new GetAllExchangeRateCommand();
+            
+            var exchangeRate = await _unitOfWork.ExchangeRateRepository.GetAllExchangeRateAsync(command);
+
+            return new ServiceResponse<IEnumerable<ExchangeRateSpDto>>
+            {
+                Data = _mapper.MapToIEnumerableDto(exchangeRate),
+                Message = ServiceMessageConstants.ExchangeRateFound
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "Exchange rate search failed: {@command}", e.Message);
+            
+            return new ServiceResponse<IEnumerable<ExchangeRateSpDto>>
+            {
+                Errors = [e.Message],
+                Message = ServiceMessageConstants.ExchangeRateNotFound
+            };
+        }
+    }
 }
