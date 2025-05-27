@@ -28,7 +28,7 @@
                     </a>
                     <a asp-controller="FgCost" asp-action="DownloadFgCostDetailsByRofoId" asp-route-rofoId="0" onclick="downloadFgCostDetailByRofoId()" id="linkDownload" class="btn btn-info">
                         <i class="ri-file-excel-2-fill"></i>
-                        Export Result
+                        Download Result
                     </a>
                 </div>
             </div>
@@ -47,7 +47,7 @@
                         <th>Group Substitusi</th>
                         <th>Item Allocated ID</th>
                         <th>Item Allocated Name</th>
-                        <th>Unit ID</th>
+                        <th>Unit</th>
                         <th>Batch</th>
                         <th>Qty</th>
                         <th>Price</th>
@@ -72,7 +72,7 @@
                         <th>Group Substitusi</th>
                         <th>Item Allocated ID</th>
                         <th>Item Allocated Name</th>
-                        <th>Unit ID</th>
+                        <th>Unit</th>
                         <th>Batch</th>
                         <th>Qty</th>
                         <th>Price</th>
@@ -168,7 +168,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                         }
                     },
                     { data: 'itemId', defaultContent: '' },
@@ -188,7 +188,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                         }
                     },
                     { 
@@ -201,7 +201,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                         }
                     },
                     { 
@@ -214,7 +214,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                         }
                     },
                     { 
@@ -227,7 +227,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                         }
                     },
                     { 
@@ -240,7 +240,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                         }
                     },
                     { data: 'source', defaultContent: '' },
@@ -255,7 +255,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                         }
                     },
                 ],

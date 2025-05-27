@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Reflection;
 using Dapper;
 using Futurist.Common.Helpers;
 using Futurist.Domain;
@@ -28,6 +29,19 @@ public class FgCostRepository : IFgCostRepository
     public async Task<IEnumerable<FgCostSp>> GetSummaryFgCostAsync(GetSummaryFgCostCommand command)
     {
         const string sql = "EXEC FgCost_Select @RoomId";
+        
+        Dictionary<string, string> columnMappings = new()
+        {
+            { "RmPm+Y", nameof(FgCostSp.RmPmYield) }
+        };
+
+        var mapper = new Func<Type, string, PropertyInfo?>((type, columnName) =>
+            type.GetProperty(columnMappings.GetValueOrDefault(columnName, columnName)));
+
+        SqlMapper.SetTypeMap(typeof(FgCostSp), new CustomPropertyTypeMap(
+            typeof(FgCostSp),
+            (type, columnName) => mapper(type, columnName)!));
+        
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
         return await _sqlConnection.QueryAsync<FgCostSp>(sql, new { command.RoomId },
             transaction: command.DbTransaction);

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Futurist.Web.Controllers;
 
+[Authorize]
 public class FgCostController : Controller
 {
     private readonly IFgCostService _fgCostService;
@@ -91,9 +92,10 @@ public class FgCostController : Controller
                 row.Cell(9).Value = "Yield";
                 row.Cell(10).Value = "RM Price";
                 row.Cell(11).Value = "PM Price";
-                row.Cell(12).Value = "Std Cost Price";
-                row.Cell(13).Value = "Cost Price";
-                row.Cell(14).Value = "Sales Price Index";
+                row.Cell(12).Value = "RMPM+Y";
+                row.Cell(13).Value = "Std Cost Price";
+                row.Cell(14).Value = "Cost Price";
+                row.Cell(15).Value = "Sales Price Index";
             }
             else
             {
@@ -113,13 +115,14 @@ public class FgCostController : Controller
                 row.Cell(10).Style.NumberFormat.Format = "#,##0";
                 row.Cell(11).Value = dto.PmPrice;
                 row.Cell(11).Style.NumberFormat.Format = "#,##0";
-                row.Cell(12).Value = dto.StdCostPrice;
+                row.Cell(12).Value = dto.RmPmYield;
                 row.Cell(12).Style.NumberFormat.Format = "#,##0";
-                row.Cell(13).Value = dto.CostPrice;
+                row.Cell(13).Value = dto.StdCostPrice;
                 row.Cell(13).Style.NumberFormat.Format = "#,##0";
-                row.Cell(14).Value = dto.SalesPriceIndex;
+                row.Cell(14).Value = dto.CostPrice;
                 row.Cell(14).Style.NumberFormat.Format = "#,##0";
-                row.Cell(14).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                row.Cell(15).Value = dto.SalesPriceIndex;
+                row.Cell(15).Style.NumberFormat.Format = "#,##0";
             }
         });
         
@@ -137,6 +140,7 @@ public class FgCostController : Controller
         {
             if (row.RowNumber() == 1)
             {
+                // New header with UnitId added after Product Name
                 row.Cell(1).Value = "Room";
                 row.Cell(2).Value = "Rofo ID";
                 row.Cell(3).Value = "Product ID";
@@ -146,17 +150,19 @@ public class FgCostController : Controller
                 row.Cell(7).Value = "Item ID";
                 row.Cell(8).Value = "Item Name";
                 row.Cell(9).Value = "Group Substitusi";
-                row.Cell(10).Value = "Item Allocated ID";
-                row.Cell(11).Value = "Item Allocated Name";
-                row.Cell(12).Value = "Batch";
-                row.Cell(13).Value = "Qty";
-                row.Cell(14).Value = "Price";
-                row.Cell(15).Value = "RM Price";
-                row.Cell(16).Value = "PM Price";
-                row.Cell(17).Value = "Std Cost Price";
-                row.Cell(18).Value = "Source";
-                row.Cell(19).Value = "Ref ID";
-                row.Cell(20).Value = "Latest Purchase Price";
+                row.Cell(10).Value = "Group Procurement";
+                row.Cell(11).Value = "Item Allocated ID";
+                row.Cell(12).Value = "Item Allocated Name";
+                row.Cell(13).Value = "Unit";
+                row.Cell(14).Value = "Batch";
+                row.Cell(15).Value = "Qty";
+                row.Cell(16).Value = "Price";
+                row.Cell(17).Value = "RM Price";
+                row.Cell(18).Value = "PM Price";
+                row.Cell(19).Value = "Std Cost Price";
+                row.Cell(20).Value = "Source";
+                row.Cell(21).Value = "Ref ID";
+                row.Cell(22).Value = "Latest Purchase Price";
             }
             else
             {
@@ -167,24 +173,32 @@ public class FgCostController : Controller
                 row.Cell(5).Value = dto.RofoDate;
                 row.Cell(5).Style.NumberFormat.Format = "dd MMM yyyy";
                 row.Cell(6).Value = dto.RofoQty;
+                row.Cell(6).Style.NumberFormat.Format = "#,##0";
                 row.Cell(7).Value = dto.ItemId;
                 row.Cell(8).Value = dto.ItemName;
                 row.Cell(9).Value = dto.GroupSubstitusi;
-                row.Cell(10).Value = dto.ItemAllocatedId;
-                row.Cell(11).Value = dto.ItemAllocatedName;
-                row.Cell(12).Value = dto.InventBatch;
-                row.Cell(13).Value = dto.Qty;
-                row.Cell(14).Value = dto.Price;
-                row.Cell(15).Value = dto.RmPrice;
-                row.Cell(16).Value = dto.PmPrice;
-                row.Cell(17).Value = dto.StdCostPrice;
-                row.Cell(18).Value = dto.Source;
-                row.Cell(19).Value = dto.RefId;
-                row.Cell(20).Value = dto.LatestPurchasePrice;
+                row.Cell(10).Value = dto.GroupProcurement;
+                row.Cell(11).Value = dto.ItemAllocatedId;
+                row.Cell(12).Value = dto.ItemAllocatedName;
+                row.Cell(13).Value = dto.UnitId;
+                row.Cell(14).Value = dto.InventBatch;
+                row.Cell(15).Value = dto.Qty;
+                row.Cell(15).Style.NumberFormat.Format = "#,##0.00";
+                row.Cell(16).Value = dto.Price;
+                row.Cell(16).Style.NumberFormat.Format = "#,##0";
+                row.Cell(17).Value = dto.RmPrice;
+                row.Cell(17).Style.NumberFormat.Format = "#,##0";
+                row.Cell(18).Value = dto.PmPrice;
+                row.Cell(18).Style.NumberFormat.Format = "#,##0";
+                row.Cell(19).Value = dto.StdCostPrice;
+                row.Cell(19).Style.NumberFormat.Format = "#,##0";
+                row.Cell(20).Value = dto.Source;
+                row.Cell(21).Value = dto.RefId;
+                row.Cell(22).Value = dto.LatestPurchasePrice;
+                row.Cell(22).Style.NumberFormat.Format = "#,##0";
             }
         });
 
-        // download as excel file
         return File(result, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"FgCostDetail_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
     }
@@ -199,26 +213,29 @@ public class FgCostController : Controller
         {
             if (row.RowNumber() == 1)
             {
+                // New header with UnitId added
                 row.Cell(1).Value = "Room";
                 row.Cell(2).Value = "Rofo ID";
                 row.Cell(3).Value = "Product ID";
                 row.Cell(4).Value = "Product Name";
-                row.Cell(5).Value = "Rofo Date";
-                row.Cell(6).Value = "Rofo Qty";
-                row.Cell(7).Value = "Item ID";
-                row.Cell(8).Value = "Item Name";
-                row.Cell(9).Value = "Group Substitusi";
-                row.Cell(10).Value = "Item Allocated ID";
-                row.Cell(11).Value = "Item Allocated Name";
-                row.Cell(12).Value = "Batch";
-                row.Cell(13).Value = "Qty";
-                row.Cell(14).Value = "Price";
-                row.Cell(15).Value = "RM Price";
-                row.Cell(16).Value = "PM Price";
-                row.Cell(17).Value = "Std Cost Price";
-                row.Cell(18).Value = "Source";
-                row.Cell(19).Value = "Ref ID";
-                row.Cell(20).Value = "Latest Purchase Price";
+                row.Cell(5).Value = "UnitId";   // new header
+                row.Cell(6).Value = "Rofo Date";
+                row.Cell(7).Value = "Rofo Qty";
+                row.Cell(8).Value = "Item ID";
+                row.Cell(9).Value = "Item Name";
+                row.Cell(10).Value = "Group Substitusi";
+                row.Cell(11).Value = "Group Procurement";
+                row.Cell(12).Value = "Item Allocated ID";
+                row.Cell(13).Value = "Item Allocated Name";
+                row.Cell(14).Value = "Batch";
+                row.Cell(15).Value = "Qty";
+                row.Cell(16).Value = "Price";
+                row.Cell(17).Value = "RM Price";
+                row.Cell(18).Value = "PM Price";
+                row.Cell(19).Value = "Std Cost Price";
+                row.Cell(20).Value = "Source";
+                row.Cell(21).Value = "Ref ID";
+                row.Cell(22).Value = "Latest Purchase Price";
             }
             else
             {
@@ -226,29 +243,32 @@ public class FgCostController : Controller
                 row.Cell(2).Value = dto.RofoId;
                 row.Cell(3).Value = dto.ProductId;
                 row.Cell(4).Value = dto.ProductName;
-                row.Cell(5).Value = dto.RofoDate;
-                row.Cell(5).Style.NumberFormat.Format = "dd MMM yyyy";
-                row.Cell(6).Value = dto.RofoQty;
-                row.Cell(7).Value = dto.ItemId;
-                row.Cell(8).Value = dto.ItemName;
-                row.Cell(9).Value = dto.GroupSubstitusi;
-                row.Cell(10).Value = dto.ItemAllocatedId;
-                row.Cell(11).Value = dto.ItemAllocatedName;
-                row.Cell(12).Value = dto.InventBatch;
-                row.Cell(13).Value = dto.Qty;
-                row.Cell(13).Style.NumberFormat.Format = "#,##0.00";
-                row.Cell(14).Value = dto.Price;
-                row.Cell(14).Style.NumberFormat.Format = "#,##0";
-                row.Cell(15).Value = dto.RmPrice;
-                row.Cell(15).Style.NumberFormat.Format = "#,##0";
-                row.Cell(16).Value = dto.PmPrice;
+                row.Cell(5).Value = dto.UnitId;  // new value
+                row.Cell(6).Value = dto.RofoDate;
+                row.Cell(6).Style.NumberFormat.Format = "dd MMM yyyy";
+                row.Cell(7).Value = dto.RofoQty;
+                row.Cell(7).Style.NumberFormat.Format = "#,##0";
+                row.Cell(8).Value = dto.ItemId;
+                row.Cell(9).Value = dto.ItemName;
+                row.Cell(10).Value = dto.GroupSubstitusi;
+                row.Cell(11).Value = dto.GroupProcurement;
+                row.Cell(12).Value = dto.ItemAllocatedId;
+                row.Cell(13).Value = dto.ItemAllocatedName;
+                row.Cell(14).Value = dto.InventBatch;
+                row.Cell(15).Value = dto.Qty;
+                row.Cell(15).Style.NumberFormat.Format = "#,##0.00";
+                row.Cell(16).Value = dto.Price;
                 row.Cell(16).Style.NumberFormat.Format = "#,##0";
-                row.Cell(17).Value = dto.StdCostPrice;
+                row.Cell(17).Value = dto.RmPrice;
                 row.Cell(17).Style.NumberFormat.Format = "#,##0";
-                row.Cell(18).Value = dto.Source;
-                row.Cell(19).Value = dto.RefId;
-                row.Cell(20).Value = dto.LatestPurchasePrice;
-                row.Cell(20).Style.NumberFormat.Format = "#,##0";
+                row.Cell(18).Value = dto.PmPrice;
+                row.Cell(18).Style.NumberFormat.Format = "#,##0";
+                row.Cell(19).Value = dto.StdCostPrice;
+                row.Cell(19).Style.NumberFormat.Format = "#,##0";
+                row.Cell(20).Value = dto.Source;
+                row.Cell(21).Value = dto.RefId;
+                row.Cell(22).Value = dto.LatestPurchasePrice;
+                row.Cell(22).Style.NumberFormat.Format = "#,##0";
             }
         });
         
