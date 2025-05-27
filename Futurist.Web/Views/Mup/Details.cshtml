@@ -39,7 +39,7 @@
                     </button>
                     <a asp-controller="Mup" asp-action="DownloadMupResult" asp-route-room="0" onclick="downloadMup()" id="linkDownload" class="btn btn-info">
                         <i class="ri-file-excel-2-fill"></i>
-                        Export Result
+                        Download Result
                     </a>
                 </div>
             </div>
@@ -55,6 +55,7 @@
                         <th>Item ID</th>
                         <th>Item Name</th>
                         <th>Group Substitusi</th>
+                        <th>Group Procurement</th>
                         <th>Item Allocated ID</th>
                         <th>Item Allocated Name</th>
                         <th>Unit</th>
@@ -62,6 +63,7 @@
                         <th>Qty</th>
                         <th>Price</th>
                         <th>Source</th>
+                        <th>Original Currency</th>
                         <th>Ref ID</th>
                         <th>Latest Purchase Price</th>
                         <th>Gap</th>
@@ -77,6 +79,7 @@
                         <th>Item ID</th>
                         <th>Item Name</th>
                         <th>Group Substitusi</th>
+                        <th>Group Procurement</th>
                         <th>Item Allocated ID</th>
                         <th>Item Allocated Name</th>
                         <th>Unit</th>
@@ -84,6 +87,7 @@
                         <th>Qty</th>
                         <th>Price</th>
                         <th>Source</th>
+                        <th>Original Currency</th>
                         <th>Ref ID</th>
                         <th>Latest Purchase Price</th>
                         <th>Gap</th>
@@ -208,12 +212,13 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             {data: 'itemId', defaultContent: ''},
                             {data: 'itemName', width: '200px', defaultContent: ''},
                             {data: 'groupSubstitusi', defaultContent: ''},
+                            {data: 'groupProcurement', defaultContent: ''},
                             {data: 'itemAllocatedId', defaultContent: ''},
                             {data: 'itemAllocatedName', width: '200px', defaultContent: ''},
                             {data: 'unitId', defaultContent: ''},
@@ -241,10 +246,11 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             {data: 'source', defaultContent: ''},
+                            {data: 'originalCurrency', defaultContent: ''},
                             {data: 'refId', defaultContent: ''},
                             {
                                 data: 'latestPurchasePrice',
@@ -256,7 +262,7 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             {

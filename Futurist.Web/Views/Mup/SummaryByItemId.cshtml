@@ -39,7 +39,7 @@
                     </button>
                     <a asp-controller="Mup" asp-action="DownloadMupSummaryByItemId" asp-route-room="0" onclick="downloadMup()" id="linkDownload" class="btn btn-info">
                         <i class="ri-file-excel-2-fill"></i>
-                        Export Result
+                        Download Result
                     </a>
                 </div>
             </div>
@@ -50,6 +50,7 @@
                         <th>Room</th>
                         <th>MUP Date</th>
                         <th>Group Substitusi</th>
+                        <th>Group Procurement</th>
                         <th>Item Allocated ID</th>
                         <th>Item Name</th>
                         <th>Qty</th>
@@ -61,6 +62,7 @@
                         <th>Room</th>
                         <th>MUP Date</th>
                         <th>Group Substitusi</th>
+                        <th>Group Procurement</th>
                         <th>Item Allocated ID</th>
                         <th>Item Name</th>
                         <th>Qty</th>
@@ -187,6 +189,7 @@
                                 }
                             },
                             { data: 'groupSubstitusi', width: '120px', defaultContent: '' },
+                            { data: 'groupProcurement', width: '120px', defaultContent: '' }, // added column
                             { data: 'itemAllocatedId', width: '70px', defaultContent: '' },
                             { data: 'itemName', width: '250px', defaultContent: '' },
                             {
@@ -214,13 +217,13 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             }
                         ],
                         columnDefs: [
                             {
-                                targets: [0, 2, 3], // MUP Date, Qty, Price
+                                targets: [0, 2, 3], // ensure room, groupSubstitusi & groupProcurement are centered
                                 className: 'text-center'
                             }
                         ],

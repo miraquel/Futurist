@@ -39,7 +39,7 @@
                     </button>
                     <a asp-controller="Mup" asp-action="DownloadMupSummaryByBatchNumber" asp-route-room="0" onclick="downloadMup()" id="linkDownload" class="btn btn-info">
                         <i class="ri-file-excel-2-fill"></i>
-                        Export Result
+                        Download Result
                     </a>
                 </div>
             </div>
@@ -51,6 +51,7 @@
                         <th>MUP Date</th>
                         <th>Source</th>
                         <th>Group Substitusi</th>
+                        <th>Group Procurement</th> <!-- added header -->
                         <th>Item Allocated ID</th>
                         <th>Item Allocated Name</th>
                         <th>Unit</th>
@@ -67,6 +68,7 @@
                         <th>MUP Date</th>
                         <th>Source</th>
                         <th>Group Substitusi</th>
+                        <th>Group Procurement</th> <!-- added footer -->
                         <th>Item Allocated ID</th>
                         <th>Item Allocated Name</th>
                         <th>Unit</th>
@@ -210,6 +212,7 @@
                             },
                             { data: 'source', defaultContent: '' },
                             { data: 'groupSubstitusi', defaultContent: '' },
+                            { data: 'groupProcurement', defaultContent: '' }, // added column
                             { data: 'itemAllocatedId', defaultContent: '' },
                             { data: 'itemAllocatedName', width: '200px', defaultContent: '' },
                             { data: 'unitId', defaultContent: '' },
@@ -237,7 +240,7 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             {
@@ -250,7 +253,7 @@
                                     }
 
                                     // For display, round and format with thousands separator
-                                    return data ? Math.round(parseFloat(data)).toLocaleString() : '';
+                                    return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
                                 }
                             },
                             {
