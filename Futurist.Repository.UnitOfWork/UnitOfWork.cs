@@ -19,7 +19,7 @@ public class UnitOfWork : IUnitOfWork
         IJobMonitoringRepository jobMonitoringRepository,
         IExchangeRateRepository exchangeRateRepository,
         IItemAdjustmentRepository itemAdjustmentRepository,
-        IFgCostVerRepository fgCostVerRepository,
+        IReportVersionRepository reportVersionRepository,
         IItemForecastRepository itemForecastRepository,
         IScmReportRepository scmReportRepository,
         Func<IDbTransaction> transactionFactory)
@@ -30,7 +30,7 @@ public class UnitOfWork : IUnitOfWork
         BomStdRepository = bomStdRepository;
         MupRepository = mupRepository;
         _transactionFactory = transactionFactory;
-        FgCostVerRepository = fgCostVerRepository;
+        ReportVersionRepository = reportVersionRepository;
         ItemAdjustmentRepository = itemAdjustmentRepository;
         ExchangeRateRepository = exchangeRateRepository;
         JobMonitoringRepository = jobMonitoringRepository;
@@ -55,7 +55,7 @@ public class UnitOfWork : IUnitOfWork
     public IJobMonitoringRepository JobMonitoringRepository { get; }
     public IExchangeRateRepository ExchangeRateRepository { get; }
     public IItemAdjustmentRepository ItemAdjustmentRepository { get; }
-    public IFgCostVerRepository FgCostVerRepository { get; }
+    public IReportVersionRepository ReportVersionRepository { get; }
     public IItemForecastRepository ItemForecastRepository { get; }
     public IScmReportRepository ScmReportRepository { get; }
 

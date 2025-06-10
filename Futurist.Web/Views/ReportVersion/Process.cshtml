@@ -1,7 +1,7 @@
 ﻿@model dynamic
 
 @{
-    ViewBag.Title = "FG Cost Version Process";
+    ViewBag.Title = "Report Version Calculation Process";
     Layout = "_Layout";
 }
 
@@ -28,7 +28,7 @@
     <div class="col-lg-12">
         <div class="card">
             <div class="card-header">
-                <h1>FG Cost Version Calculation Process</h1>
+                <h1>Report Version Calculation Process</h1>
                 <!-- Dropdown for room ids -->
                 <div class="input-group mb-3">
                     <label class="input-group-text" for="roomSelect">Room</label>
@@ -50,12 +50,16 @@
                 <div class="d-flex justify-content-between">
                     <button class="btn btn-success" id="processFgBtn" onclick="processFgCalc()">
                         <i class="ri-play-fill"></i>
-                        Calculate FG Cost Version
+                        Calculate Version
                     </button>
                     <div>
-                        <a href="@Url.Action("Index", "FgCostVer")" class="btn btn-primary">
+                        <a href="@Url.Action("GetAllFgCostVer", "ReportVersion")" class="btn btn-primary">
                             <i class="ri-book-2-line"></i>
-                            View Summary
+                            View FG Cost Version Summary
+                        </a>
+                        <a href="@Url.Action("GetAllMupVer", "ReportVersion")" class="btn btn-primary">
+                            <i class="ri-book-2-line"></i>
+                            View MUP Version Details
                         </a>
                     </div>
                 </div>
@@ -81,7 +85,7 @@
 
             // set roomId as the query and notes as the body
             $.ajax({
-                url: '/api/FgCostVerApi/InsertFgCostVer',
+                url: '/api/ReportVersionApi/InsertVersion',
                 type: 'POST',
                 data: JSON.stringify({
                     RoomId: roomId,

@@ -1,5 +1,5 @@
 ﻿namespace Futurist.Domain;
-public class Version
+public class Versions
 {
     public int VerId { get; set; }
     public DateTime VerDate { get; set; }

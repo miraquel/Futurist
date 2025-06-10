@@ -1,0 +1,366 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "FG Cost Version Details By Rofo ID";
+    Layout = "_Layout";
+}
+
+@section styles{
+    <link href="/assets/css/datatables.min.css" rel="stylesheet">
+    <link href="/assets/css/flatpickr.min.css" rel="stylesheet">
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>FG Cost Version Details By Rofo ID</h1>
+                <!-- Dropdown for room ids -->
+                <div class="mb-3">
+                    @* back button *@
+                    <a href="javascript:history.back();" class="btn btn-danger">
+                        <i class="ri-arrow-left-fill"></i>
+                        Back
+                    </a>
+                    @* refresh button *@
+                    <button class="btn btn-primary" id="refreshButton" onclick="reloadTable()">
+                        <i class="ri-refresh-line"></i>
+                        Refresh Table
+                    </button>
+
+                </div>
+            </div>
+            <div class="card-body">
+                <table id="datatables-fgcost-result" class="display table table-bordered datatable-wrapper" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>Ver ID</th>
+                        <th>Rofo ID</th>
+                        <th>Room</th>
+                        <th>Product ID</th>
+                        <th>Product Name</th>
+                        <th>Rofo Date</th>
+                        <th>Rofo Qty</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Group Substitusi</th>
+                        <th>Group Procurement</th>
+                        <th>Item Allocated ID</th>
+                        <th>Item Allocated Name</th>
+                        <th>Unit ID</th>
+                        <th>Batch</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>RM Price</th>
+                        <th>PM Price</th>
+                        <th>Std Cost Price</th>
+                        <th>Source</th>
+                        <th>Ref ID</th>
+                        <th>Latest Price</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>Ver ID</th>
+                        <th>Rofo ID</th>
+                        <th>Room</th>
+                        <th>Product ID</th>
+                        <th>Product Name</th>
+                        <th>Rofo Date</th>
+                        <th>Rofo Qty</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Group Substitusi</th>
+                        <th>Group Procurement</th>
+                        <th>Item Allocated ID</th>
+                        <th>Item Allocated Name</th>
+                        <th>Unit ID</th>
+                        <th>Batch</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>RM Price</th>
+                        <th>PM Price</th>
+                        <th>Std Cost Price</th>
+                        <th>Source</th>
+                        <th>Ref ID</th>
+                        <th>Latest Price</th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/assets/js/datatables.min.js"></script>
+    <script src="/assets/js/flatpickr.js"></script>
+    <script src="/assets/js/helper.js"></script>
+
+    <script>
+        const refreshButton = $("#refreshButton");
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
+        let table;
+
+        function reloadTable() {
+            if (!table) {
+                table = $('#datatables-fgcost-result').DataTable({
+                    searchDelay: 1000,
+                    ajax: {
+                        url: '/api/ReportVersionApi/GetAllFgCostVerDetailsByRofoId',
+                        type: 'GET',
+                        data: function(d) {
+                            d.rofoId = @ViewBag.RofoId; // Pass the RofoId from the ViewBag
+                            d.verId = @ViewBag.VerId; // Pass the VerId from the ViewBag
+                        },
+                        beforeSend: function(xhr) {
+                            xhr.setRequestHeader("RequestVerificationToken", token);
+                        },
+                        dataSrc: function(json) {
+                            // Check if response follows ServiceResponse structure:
+                            if (json.data && Array.isArray(json.data.items)) {
+                                return json.data.items;
+                            }
+                            // If data is already an array
+                            if (Array.isArray(json.data)) {
+                                return json.data;
+                            }
+                            // Fallback: if json itself is an array
+                            return json;
+                        },
+                        error: function(err){
+                            alert(err.responseJSON.errorMessage);
+                        }
+                    },
+                    columns: [
+                        { data: 'verId', defaultContent: '' },
+                        { data: 'rofoId', defaultContent: '' },
+                        { data: 'room', defaultContent: '' },
+                        { data: 'productId', defaultContent: '' },
+                        { 
+                            data: 'productName',
+                            defaultContent: '',
+                            width: '200px',
+                        },
+                        {
+                            data: 'rofoDate',
+                            defaultContent: '',
+                            render: function(data,type) {
+                                // For sorting/filtering use the raw date
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? data : '';
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? moment(data).format("DD MMM YYYY") : ''
+                            }
+                        },
+                        {
+                            data: 'rofoQty',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        { data: 'itemId', defaultContent: '' },
+                        {
+                            data: 'itemName',
+                            defaultContent: '',
+                            width: '200px',
+                        },
+                        { data: 'groupSubstitusi', defaultContent: '' },
+                        { data: 'groupProcurement', defaultContent: '' },
+                        { data: 'itemAllocatedId', defaultContent: '' },
+                        {
+                            data: 'itemAllocatedName',
+                            defaultContent: '',
+                            width: '200px',
+                        },
+                        { data: 'unitId', defaultContent: '' },
+                        { data: 'inventBatch', defaultContent: '' },
+                        {
+                            data: 'qty',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'price',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'rmPrice',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'pmPrice',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'stdCostPrice',
+                            defaultContent: '',
+                            render: function (data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        { data: 'source', defaultContent: '' },
+                        { data: 'refId', defaultContent: '' },
+                        {
+                            data: 'latestPrice',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        }
+                    ],
+                    columnDefs: [
+                        {
+                            targets: [0, 1, 2, 4], // Column indices to center
+                            className: 'text-center'
+                        }
+                    ],
+                    processing: true,
+                    paging: true,
+                    searching: true,
+                    autoWidth: false,
+                    responsive: false,
+                    scrollX: true,
+                    order: [],
+                    initComplete: function () {
+                        this.api()
+                            .columns()
+                            .every(function () {
+                                let column = this;
+
+                                let header = column.header();
+                                // change the background
+                                header.style.backgroundColor = '#4F81BD';
+                                header.style.color = 'white';
+
+                                let title = column.footer().textContent;
+
+                                // Special handling for Rofo Date column
+                                if (title.trim() === "Rofo Date") {
+                                    // Create flatpickr input for date
+                                    let dateInput = document.createElement('input');
+                                    dateInput.placeholder = title;
+                                    dateInput.className = "form-control";
+                                    dateInput.style.width = '100%';
+
+                                    column.footer().replaceChildren(dateInput);
+
+                                    // Initialize flatpickr
+                                    flatpickr(dateInput, {
+                                        dateFormat: "Y/m/d",
+                                        onChange: function(selectedDates, dateStr) {
+                                            // Only search and draw when both dates are selected in range mode
+                                            //if (selectedDates.length === 2) {
+                                            // Replace "to" with "-" in the date range string
+                                            //    const formattedDateStr = dateStr.replace(" to ", "-");
+                                            //    column.search(formattedDateStr).draw();
+                                            //}
+                                            column.search(dateStr).draw();
+                                        },
+                                        //mode: "range",
+                                    });
+                                } else {
+                                    // Default handling for other columns
+                                    let input = document.createElement('input');
+                                    input.placeholder = title;
+                                    input.className = "form-control";
+                                    input.style.width = '100%';
+                                    column.footer().replaceChildren(input);
+
+                                    // Debounced event listener for user input (1 second delay)
+                                    input.addEventListener('keyup', debounce(() => {
+                                        if (column.search() !== input.value) {
+                                            column.search(input.value).draw();
+                                        }
+                                    }, 1000));
+                                }
+                            });
+                    }
+                });
+
+                new DataTable.Buttons(table, {
+                    buttons: [
+                        {
+                            extend: 'copyHtml5',
+                            text: '<i class="ri-file-copy-line"></i> Copy',
+                            className: 'btn btn-secondary'
+                        },
+                        {
+                            extend: 'excelHtml5',
+                            text: '<i class="ri-file-excel-2-line"></i> Excel',
+                            className: 'btn btn-success'
+                        },
+                        {
+                            extend: 'csvHtml5',
+                            text: '<i class="ri-file-text-line"></i> CSV',
+                            className: 'btn btn-info'
+                        }
+                    ]
+                });
+
+                table
+                    .buttons(0, null)
+                    .container()
+                    .insertBefore(".dt-search");
+            }
+            else {
+                table.ajax.reload();
+            }
+        }
+        
+        reloadTable();
+    </script>
+}
