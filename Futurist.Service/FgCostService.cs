@@ -1,5 +1,4 @@
-﻿using Futurist.Domain;
-using Futurist.Repository.Command.FgCostCommand;
+﻿using Futurist.Repository.Command.FgCostCommand;
 using Futurist.Repository.UnitOfWork;
 using Futurist.Service.Dto;
 using Futurist.Service.Dto.Common;

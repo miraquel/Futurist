@@ -2,7 +2,6 @@
 using Dapper;
 using Futurist.Domain;
 using Futurist.Domain.Common;
-using Futurist.Repository.Command;
 using Futurist.Repository.Command.BomStdCommand;
 using Futurist.Repository.Interface;
 

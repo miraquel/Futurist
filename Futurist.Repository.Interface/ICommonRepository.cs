@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Futurist.Repository.Command.CommonCommand;
+﻿using Futurist.Repository.Command.CommonCommand;
 
 namespace Futurist.Repository.Interface;
 

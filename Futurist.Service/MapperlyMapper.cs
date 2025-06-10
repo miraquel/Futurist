@@ -2,7 +2,6 @@
 using Futurist.Domain.Common;
 using Futurist.Service.Dto;
 using Futurist.Service.Dto.Common;
-using Hangfire.Storage.Monitoring;
 using Riok.Mapperly.Abstractions;
 
 namespace Futurist.Service;

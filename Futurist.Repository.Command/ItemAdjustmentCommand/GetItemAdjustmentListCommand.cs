@@ -1,6 +1,4 @@
-﻿using Futurist.Domain.Common;
-
-namespace Futurist.Repository.Command.ItemAdjustmentCommand;
+﻿namespace Futurist.Repository.Command.ItemAdjustmentCommand;
 
 public class GetItemAdjustmentListCommand : BaseCommand
 {

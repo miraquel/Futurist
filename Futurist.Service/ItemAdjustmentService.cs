@@ -1,7 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Futurist.Common.Helpers;
 using Futurist.Repository.Command.ItemAdjustmentCommand;
-using Futurist.Repository.Interface;
 using Futurist.Repository.UnitOfWork;
 using Futurist.Service.Command.ItemAdjustmentCommand;
 using Futurist.Service.Dto;

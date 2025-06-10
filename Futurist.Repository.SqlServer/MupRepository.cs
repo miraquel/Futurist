@@ -1,13 +1,10 @@
 ﻿using System.Data;
-using System.Data.SqlTypes;
 using Dapper;
 using Futurist.Common.Helpers;
 using Futurist.Domain;
 using Futurist.Domain.Common;
 using Futurist.Repository.Command.MupCommand;
 using Futurist.Repository.Interface;
-using Futurist.Repository.UnitOfWork;
-using Microsoft.Data.SqlClient;
 
 namespace Futurist.Repository.SqlServer;
 

@@ -4,7 +4,6 @@ using Futurist.Service.Dto;
 using Futurist.Service.Dto.Common;
 using Futurist.Service.Interface;
 using Hangfire;
-using Hangfire.Storage;
 using Serilog;
 
 namespace Futurist.Service;

@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Futurist.Service.Interface;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Futurist.Infrastructure.SignalR.Hubs;
 

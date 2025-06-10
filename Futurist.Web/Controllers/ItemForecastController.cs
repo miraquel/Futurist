@@ -1,5 +1,4 @@
 ﻿using Futurist.Common.Helpers;
-using Futurist.Repository.Command.ItemForecast;
 using Futurist.Service.Command.ItemForecastCommand;
 using Futurist.Service.Dto;
 using Futurist.Service.Interface;
