@@ -1,0 +1,385 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "MUP Version Details";
+    Layout = "_Layout";
+}
+
+@section styles{
+    <link href="/assets/css/datatables.min.css" rel="stylesheet">
+    <link href="/assets/css/flatpickr.min.css" rel="stylesheet">
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>MUP Version Details</h1>
+                <!-- Dropdown for room ids -->
+                <div class="row mb-3 justify-content-between">
+                    <div class="col-5">
+                        <div class="input-group">
+                            <label class="input-group-text" for="roomSelect">Room</label>
+                            <select id="roomSelect" name="roomId" class="form-control">
+                                <option value="">Select Room</option>
+                                @foreach (var id in ViewBag.RoomIds)
+                                {
+                                    <option value="@id">@id</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                
+                    <div class="col-7">
+                        <div class="input-group">
+                            <label class="input-group-text" for="versionSelect">Version</label>
+                            <select id="versionSelect" name="version" class="form-control" disabled>
+                                <option value="">Select Version</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="refreshButton" onclick="reloadTable()" disabled>
+                    <i class="ri-refresh-line"></i>
+                    Refresh Table
+                </button>
+            </div>
+            <div class="card-body">
+                <table id="datatables-mupver-result" class="display table table-bordered datatable-wrapper" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>Room</th>
+                        <th>Ver ID</th>
+                        <th>Rofo ID</th>
+                        <th>Product ID</th>
+                        <th>Product Name</th>
+                        <th>Rofo Date</th>
+                        <th>Rofo Qty</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Group Substitusi</th>
+                        <th>Group Procurement</th>
+                        <th>Item Allocated ID</th>
+                        <th>Item Allocated Name</th>
+                        <th>Unit ID</th>
+                        <th>Invent Batch</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Source</th>
+                        <th>Original Currency</th>
+                        <th>Ref ID</th>
+                        <th>Latest Purchase Price</th>
+                        <th>Gap</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>Room</th>
+                        <th>Ver ID</th>
+                        <th>Rofo ID</th>
+                        <th>Product ID</th>
+                        <th>Product Name</th>
+                        <th>Rofo Date</th>
+                        <th>Rofo Qty</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Group Substitusi</th>
+                        <th>Group Procurement</th>
+                        <th>Item Allocated ID</th>
+                        <th>Item Allocated Name</th>
+                        <th>Unit ID</th>
+                        <th>Invent Batch</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Source</th>
+                        <th>Original Currency</th>
+                        <th>Ref ID</th>
+                        <th>Latest Purchase Price</th>
+                        <th>Gap</th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/assets/js/datatables.min.js"></script>
+    <script src="/assets/js/flatpickr.js"></script>
+    <script src="/assets/js/helper.js"></script>
+
+    <script>
+        const roomSelect = $("#roomSelect");
+        const versionSelect = $("#versionSelect");
+        const refreshButton = $("#refreshButton");
+        const roomId = roomSelect.val();
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
+        let table;
+
+        roomSelect.on("change", function () {
+            const selectedRoom = $(this).val();
+            versionSelect.empty().append('<option value="">Select Version</option>');
+            if (selectedRoom) {
+                $.ajax({
+                    url: '/api/ReportVersionApi/GetVersions',
+                    type: 'GET',
+                    data: { room: selectedRoom },
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("RequestVerificationToken", token);
+                    },
+                    success: function (data) {
+                        const versions = data.data.items || data.data;
+                        versions.forEach(function (version) {
+                            versionSelect.append(`<option value="${version.verId}">Version: ${version.verId} | ${moment(version.verDate).format("DD MMM YYYY")} | ${version.notes} </option>`);
+                        });
+                        versionSelect.prop('disabled', false);
+                    },
+                    error: function () {
+                        alert('Failed to load versions.');
+                    }
+                });
+            } else {
+                versionSelect.prop('disabled', true);
+            }
+
+            if (roomSelect && versionSelect.val()) {
+                refreshButton.prop('disabled', false);
+            } else {
+                refreshButton.prop('disabled', true);
+            }
+        });
+        
+        versionSelect.on("change", function () {
+            if (roomSelect && versionSelect.val()) {
+                refreshButton.prop('disabled', false);
+            } else {
+                refreshButton.prop('disabled', true);
+            }
+        });
+
+        function reloadTable() {
+            if (!table) {
+                table = $('#datatables-mupver-result').DataTable({
+                    searchDelay: 1000,
+                    ajax: {
+                        url: '/api/ReportVersionApi/GetAllMupVer',
+                        type: 'GET',
+                        data: function(d) {
+                            d.room = roomSelect.val();
+                            d.verId = versionSelect.val();
+                        },
+                        beforeSend: function(xhr) {
+                            xhr.setRequestHeader("RequestVerificationToken", token);
+                        },
+                        dataSrc: function(json) {
+                            // Check if response follows ServiceResponse structure:
+                            if (json.data && Array.isArray(json.data.items)) {
+                                return json.data.items;
+                            }
+                            // If data is already an array
+                            if (Array.isArray(json.data)) {
+                                return json.data;
+                            }
+                            // Fallback: if json itself is an array
+                            return json;
+                        },
+                        error: function(err){
+                            alert(err.responseJSON.errorMessage);
+                        }
+                    },
+                    columns: [
+                        { data: 'room' },
+                        { data: 'verId' },
+                        { data: 'rofoId' },
+                        { data: 'productId' },
+                        { data: 'productName', width: '200px' },
+                        {
+                            data: 'rofoDate',
+                            width: '120px',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw date
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? data : '';
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? moment(data).format("DD MMM YYYY") : ''
+                            }
+                        },
+                        {
+                            data: 'qtyRofo',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        { data: 'itemId' },
+                        { data: 'itemName', width: '200px' },
+                        { data: 'groupSubstitusi' },
+                        { data: 'groupProcurement' },
+                        { data: 'itemAllocatedId' },
+                        { data: 'itemAllocatedName', width: '200px' },
+                        { data: 'unitId' },
+                        { data: 'inventBatch' },
+                        {
+                            data: 'qty',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'price',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        { data: 'source' },
+                        { data: 'originalCurrency' },
+                        { data: 'refId' },
+                        {
+                            data: 'latestPurchasePrice',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'gap',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+
+                                // For display, round and format with thousands separator
+                                return data ? percentFormat.format(data) : '';
+                            }
+                        }
+                    ],
+                    columnDefs: [
+                        {
+                            targets: [0, 1, 3, 5, 7, 9, 10, 11, 13, 14, 20, 21], // Column indices to center
+                            className: 'text-center'
+                        }
+                    ],
+                    processing: true,
+                    paging: true,
+                    searching: true,
+                    autoWidth: false,
+                    responsive: false,
+                    scrollX: true,
+                    colReorder: true,
+                    order: [],
+                    initComplete: function () {
+                        this.api()
+                            .columns()
+                            .every(function () {
+                                let column = this;
+
+                                let header = column.header();
+                                // change the background
+                                header.style.backgroundColor = '#4F81BD';
+                                header.style.color = 'white';
+
+                                let title = column.footer().textContent;
+
+                                // Special handling for Rofo Date column
+                                if (title.trim() === "Rofo Date") {
+                                    // Create flatpickr input for date
+                                    let dateInput = document.createElement('input');
+                                    dateInput.placeholder = title;
+                                    dateInput.className = "form-control";
+                                    dateInput.style.width = '100%';
+
+                                    column.footer().replaceChildren(dateInput);
+
+                                    // Initialize flatpickr
+                                    flatpickr(dateInput, {
+                                        dateFormat: "Y/m/d",
+                                        onChange: function(selectedDates, dateStr) {
+                                            // Only search and draw when both dates are selected in range mode
+                                            //if (selectedDates.length === 2) {
+                                            // Replace "to" with "-" in the date range string
+                                            //    const formattedDateStr = dateStr.replace(" to ", "-");
+                                            //    column.search(formattedDateStr).draw();
+                                            //}
+                                            column.search(dateStr).draw();
+                                        },
+                                        //mode: "range",
+                                    });
+                                } else {
+                                    // Default handling for other columns
+                                    let input = document.createElement('input');
+                                    input.placeholder = title;
+                                    input.className = "form-control";
+                                    input.style.width = '100%';
+                                    column.footer().replaceChildren(input);
+
+                                    // Debounced event listener for user input (1 second delay)
+                                    input.addEventListener('keyup', debounce(() => {
+                                        if (column.search() !== input.value) {
+                                            column.search(input.value).draw();
+                                        }
+                                    }, 1000));
+                                }
+                            });
+                    }
+                });
+
+                new DataTable.Buttons(table, {
+                    buttons: [
+                        {
+                            extend: 'copyHtml5',
+                            text: '<i class="ri-file-copy-line"></i> Copy',
+                            className: 'btn btn-secondary'
+                        },
+                        {
+                            extend: 'excelHtml5',
+                            text: '<i class="ri-file-excel-2-line"></i> Excel',
+                            className: 'btn btn-success'
+                        },
+                        {
+                            extend: 'csvHtml5',
+                            text: '<i class="ri-file-text-line"></i> CSV',
+                            className: 'btn btn-info'
+                        }
+                    ]
+                });
+
+                table
+                    .buttons(0, null)
+                    .container()
+                    .insertBefore(".dt-search");
+            }
+            else {
+                table.ajax.reload();
+            }
+        }
+    </script>
+}

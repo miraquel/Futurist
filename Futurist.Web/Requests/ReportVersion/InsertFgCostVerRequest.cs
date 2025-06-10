@@ -1,6 +1,6 @@
-﻿namespace Futurist.Web.Requests.FgCostVer;
+﻿namespace Futurist.Web.Requests.ReportVersion;
 
-public class InsertFgCostVerRequest
+public class InsertVersionRequest
 {
     public int RoomId { get; set; }
     public string Notes { get; set; } = string.Empty;

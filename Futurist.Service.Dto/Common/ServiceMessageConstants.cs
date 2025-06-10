@@ -99,4 +99,12 @@ public static class ServiceMessageConstants
     public const string ErrorRetrievingExportByCustomerReport = "Error retrieving Export By Customer Report";
     public const string ExportRawDataRetrieved = "Export Raw Data retrieved";
     public const string ErrorRetrievingExportRawData = "Error retrieving Export Raw Data";
+    public const string ErrorRetrievingYears = "Error retrieving years";
+    public const string ErrorRetrievingMonths = "Error retrieving months";
+    public const string VersionsFound = "Versions found";
+    public const string VersionsNotFound = "Versions not found";
+    public const string MupVerFound = "Mup Ver found";
+    public const string MupVerNotFound = "Mup Ver not found";
+    public const string FgCostVerDetailsFound = "Fg Cost Ver details found";
+    public const string FgCostVerDetailsNotFound = "Fg Cost Ver details not found";
 }

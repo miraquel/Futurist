@@ -1,6 +1,4 @@
-﻿using Futurist.Repository.Interface;
-using Futurist.Service.Dto;
-using Futurist.Service.Interface;
+﻿using Futurist.Service.Interface;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Futurist.Service;
@@ -18,7 +16,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IJobMonitoringService, JobMonitoringService>();
         services.AddScoped<IExchangeRateService, ExchangeRateService>();
         services.AddScoped<IItemAdjustmentService, ItemAdjustmentService>();
-        services.AddScoped<IFgCostVerService, FgCostVerService>();
+        services.AddScoped<IReportVersionService, ReportVersionService>();
         services.AddScoped<IItemForecastService, ItemForecastService>();
+        services.AddScoped<IScmReportService, ScmReportService>();
     }
 }

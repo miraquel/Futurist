@@ -1,0 +1,580 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "FG Cost Version Summary";
+    Layout = "_Layout";
+}
+
+@section styles{
+    <link href="/assets/css/datatables.min.css" rel="stylesheet">
+    <link href="/assets/css/flatpickr.min.css" rel="stylesheet">
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>FG Cost Version Summary</h1>
+                <!-- Dropdown for room ids -->
+                <div class="row mb-3 justify-content-between">
+                    <div class="col-5">
+                        <div class="input-group">
+                            <label class="input-group-text" for="roomSelect">Room</label>
+                            <select id="roomSelect" name="roomId" class="form-control">
+                                <option value="">Select Room</option>
+                                @foreach (var id in ViewBag.RoomIds)
+                                {
+                                    <option value="@id">@id</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                
+                    <div class="col-7">
+                        <div class="input-group">
+                            <label class="input-group-text" for="versionSelect">Version</label>
+                            <select id="versionSelect" name="version" class="form-control" disabled>
+                                <option value="">Select Version</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="refreshButton" onclick="reloadTable()" disabled>
+                    <i class="ri-refresh-line"></i>
+                    Refresh Table
+                </button>
+            </div>
+            <div class="card-body">
+                <table id="datatables-fgcost-result" class="display table table-bordered datatable-wrapper" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>Room</th>
+                        <th>Ver ID</th>
+                        <th>Rofo ID</th>
+                        <th>Product ID</th>
+                        <th>Product Name</th>
+                        <th>Unit ID</th>
+                        <th>Unit In Kg</th>
+                        <th>Sales Price</th>
+                        <th>Rofo Date</th>
+                        <th>Rofo Qty</th>
+                        <th>RM Price</th>
+                        <th>PM Price</th>
+                        <th>Std Cost Price</th>
+                        <th>Yield</th>
+                        <th>RmPm+Y</th>
+                        <th>Cost Price</th>
+                        <th>Previous Calc</th>
+                        <th>Rofo Qty Prev</th>
+                        <th>RM Prev</th>
+                        <th>PM Prev</th>
+                        <th>Std Cost Prev</th>
+                        <th>Yield Prev</th>
+                        <th>RmPm+Y Prev</th>
+                        <th>Cost Price Prev</th>
+                        <th>Delta Absolute</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>Room</th>
+                        <th>Ver ID</th>
+                        <th>Rofo ID</th>
+                        <th>Product ID</th>
+                        <th>Product Name</th>
+                        <th>Unit ID</th>
+                        <th>Unit In Kg</th>
+                        <th>Sales Price</th>
+                        <th>Rofo Date</th>
+                        <th>Rofo Qty</th>
+                        <th>RM Price</th>
+                        <th>PM Price</th>
+                        <th>Std Cost Price</th>
+                        <th>Yield</th>
+                        <th>RmPm+Y</th>
+                        <th>Cost Price</th>
+                        <th>Previous Calc</th>
+                        <th>Rofo Qty Prev</th>
+                        <th>RM Prev</th>
+                        <th>PM Prev</th>
+                        <th>Std Cost Prev</th>
+                        <th>Yield Prev</th>
+                        <th>RmPm+Y Prev</th>
+                        <th>Cost Price Prev</th>
+                        <th>Delta Absolute</th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/assets/js/datatables.min.js"></script>
+    <script src="/assets/js/flatpickr.js"></script>
+    <script src="/assets/js/helper.js"></script>
+
+    <script>
+        const roomSelect = $("#roomSelect");
+        const versionSelect = $("#versionSelect");
+        const refreshButton = $("#refreshButton");
+        const roomId = roomSelect.val();
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
+        let table;
+
+        roomSelect.on("change", async function () {
+            await roomSelectChange($(this).val());
+        });
+        
+        async function roomSelectChange(room) {
+            const selectedRoom = room;
+            versionSelect.empty().append('<option value="">Select Version</option>');
+            if (selectedRoom) {
+                await getVersions(selectedRoom);
+            } else {
+                versionSelect.prop('disabled', true);
+            }
+
+            if (roomSelect && versionSelect.val()) {
+                refreshButton.prop('disabled', false);
+            } else {
+                refreshButton.prop('disabled', true);
+            }
+        }
+        
+        async function getVersions(selectedRoom) {
+            return $.ajax({
+                url: '/api/ReportVersionApi/GetVersions',
+                type: 'GET',
+                data: { room: selectedRoom },
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader("RequestVerificationToken", token);
+                },
+                success: function (data) {
+                    const versions = data.data.items || data.data;
+                    versions.forEach(function (version) {
+                        versionSelect.append(`<option value="${version.verId}">Version: ${version.verId} | ${moment(version.verDate).format("DD MMM YYYY")} | ${version.notes} </option>`);
+                    });
+                    versionSelect.prop('disabled', false);
+                },
+                error: function () {
+                    alert('Failed to load versions.');
+                }
+            });
+        }
+
+        versionSelect.on("change", function () {
+            const selectedVersion = $(this).val();
+            if (roomSelect && selectedVersion) {
+                refreshButton.prop('disabled', false);
+            } else {
+                refreshButton.prop('disabled', true);
+            }
+        });
+
+        function reloadTable() {
+            // change the window url to include the selected room and version
+            const url = new URL(window.location.href);
+            
+            if (roomSelect.val()) {
+                url.searchParams.set('roomId', roomSelect.val());
+            } else {
+                url.searchParams.delete('roomId');
+            }
+            
+            if (versionSelect.val()) {
+                url.searchParams.set('verId', versionSelect.val());
+            } else {
+                url.searchParams.delete('verId');
+            }
+            
+            window.history.pushState({}, '', url);
+            if (!table) {
+                table = $('#datatables-fgcost-result').DataTable({
+                    searchDelay: 1000,
+                    ajax: {
+                        url: '/api/ReportVersionApi/GetAllFgCostVer',
+                        type: 'GET',
+                        data: function(d) {
+                            d.room = roomSelect.val();
+                            d.verId = versionSelect.val();
+                        },
+                        beforeSend: function(xhr) {
+                            xhr.setRequestHeader("RequestVerificationToken", token);
+                        },
+                        dataSrc: function(json) {
+                            // Check if response follows ServiceResponse structure:
+                            if (json.data && Array.isArray(json.data.items)) {
+                                return json.data.items;
+                            }
+                            // If data is already an array
+                            if (Array.isArray(json.data)) {
+                                return json.data;
+                            }
+                            // Fallback: if json itself is an array
+                            return json;
+                        },
+                        error: function(err){
+                            alert(err.responseJSON.errorMessage);
+                        }
+                    },
+                    columns: [
+                        { data: 'room', defaultContent: '' },
+                        { data: 'verId', defaultContent: '' },
+                        {
+                            data: 'rofoId',
+                            defaultContent: '',
+                            render: function(data) {
+                                return '<a href="/ReportVersion/GetAllFgCostVerDetailsByRofoId?rofoId=' + data + '&verId=' + versionSelect.val() + '">' + data + '</a>';
+                            }
+                        },
+                        { data: 'productId', defaultContent: '' },
+                        { 
+                            data: 'productName',
+                            defaultContent: '',
+                            width: '200px',
+                        },
+                        { data: 'unit', defaultContent: '' },
+                        {
+                            data: 'unitInKg',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'salesPrice',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'rofoDate',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw date
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? data : '';
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? moment(data).format("DD MMM YYYY") : ''
+                            }
+                        },
+                        {
+                            data: 'rofoQty',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'rmPrice',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'pmPrice',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'stdCostPrice',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'yield',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? percentFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'costRmPmY',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'costPrice',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        { data: 'previousCalc', defaultContent: '' },
+                        {
+                            data: 'rofoQtyPrev',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'rmPrev',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'pmPrev',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'stdCostPrev',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'yieldPrev',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? percentFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'costRmPmYPrev',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'costPricePrev',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'deltaAbsolute',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                    ],
+                    columnDefs: [
+                        {
+                            targets: [0, 1, 2, 4], // Column indices to center
+                            className: 'text-center'
+                        }
+                    ],
+                    processing: true,
+                    paging: true,
+                    searching: true,
+                    autoWidth: false,
+                    responsive: false,
+                    scrollX: true,
+                    order: [],
+                    stateSave: true,
+                    initComplete: function () {
+                        this.api()
+                            .columns()
+                            .every(function () {
+                                let column = this;
+
+                                let header = column.header();
+                                // change the background
+                                header.style.backgroundColor = '#4F81BD';
+                                header.style.color = 'white';
+
+                                let title = column.footer().textContent;
+
+                                // Special handling for Rofo Date column
+                                if (title.trim() === "Rofo Date") {
+                                    // Create flatpickr input for date
+                                    let dateInput = document.createElement('input');
+                                    dateInput.placeholder = title;
+                                    dateInput.className = "form-control";
+                                    dateInput.style.width = '100%';
+
+                                    column.footer().replaceChildren(dateInput);
+
+                                    // Initialize flatpickr
+                                    flatpickr(dateInput, {
+                                        dateFormat: "Y/m/d",
+                                        onChange: function(selectedDates, dateStr) {
+                                            // Only search and draw when both dates are selected in range mode
+                                            //if (selectedDates.length === 2) {
+                                            // Replace "to" with "-" in the date range string
+                                            //    const formattedDateStr = dateStr.replace(" to ", "-");
+                                            //    column.search(formattedDateStr).draw();
+                                            //}
+                                            column.search(dateStr).draw();
+                                        },
+                                        //mode: "range",
+                                    });
+                                } else {
+                                    // Default handling for other columns
+                                    let input = document.createElement('input');
+                                    input.placeholder = title;
+                                    input.className = "form-control";
+                                    input.style.width = '100%';
+                                    column.footer().replaceChildren(input);
+
+                                    // Debounced event listener for user input (1 second delay)
+                                    input.addEventListener('keyup', debounce(() => {
+                                        if (column.search() !== input.value) {
+                                            column.search(input.value).draw();
+                                        }
+                                    }, 1000));
+                                }
+                            });
+                    }
+                });
+
+                new DataTable.Buttons(table, {
+                    buttons: [
+                        {
+                            extend: 'copyHtml5',
+                            text: '<i class="ri-file-copy-line"></i> Copy',
+                            className: 'btn btn-secondary'
+                        },
+                        {
+                            extend: 'excelHtml5',
+                            text: '<i class="ri-file-excel-2-line"></i> Excel',
+                            className: 'btn btn-success'
+                        },
+                        {
+                            extend: 'csvHtml5',
+                            text: '<i class="ri-file-text-line"></i> CSV',
+                            className: 'btn btn-info'
+                        }
+                    ]
+                });
+
+                table
+                    .buttons(0, null)
+                    .container()
+                    .insertBefore(".dt-search");
+            }
+            else {
+                table.ajax.reload();
+            }
+        }
+        
+        $(document).ready(async function () {
+            // check if roomId and verId are present in the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('roomId');
+            const verId = urlParams.get('verId');
+            if (roomId) {
+                await roomSelectChange(roomId);
+                roomSelect.val(roomId);
+            }
+            if (verId) {
+                versionSelect.val(verId).trigger('change');
+            }
+            // If both room and version are selected, reload the table
+            if (roomSelect.val() && versionSelect.val()) {
+                reloadTable();
+            }
+        });
+    </script>
+}

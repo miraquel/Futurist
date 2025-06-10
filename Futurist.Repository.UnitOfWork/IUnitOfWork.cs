@@ -13,7 +13,7 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     IJobMonitoringRepository JobMonitoringRepository { get; }
     IExchangeRateRepository ExchangeRateRepository { get; }
     IItemAdjustmentRepository ItemAdjustmentRepository { get; }
-    IFgCostVerRepository FgCostVerRepository { get; }
+    IReportVersionRepository ReportVersionRepository { get; }
     IItemForecastRepository ItemForecastRepository { get; }
     IScmReportRepository ScmReportRepository { get; }
     IDbTransaction? CurrentTransaction { get; }

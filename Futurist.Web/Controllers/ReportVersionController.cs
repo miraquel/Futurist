@@ -1,43 +1,30 @@
 ﻿using Futurist.Common.Helpers;
-using Futurist.Repository.Command.FgCostVerCommand;
 using Futurist.Service.Interface;
-using Futurist.Web.Requests.FgCostVer;
+using Futurist.Web.Requests.ReportVersion;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Futurist.Web.Controllers;
 
-[Authorize]
-public class FgCostVerController : Controller
+[Authorize(Roles = "costing,sc,rni,admin,marketing_domestik,marketing_export")]
+public class ReportVersionController : Controller
 {
-    private readonly IFgCostVerService _fgCostVerService;
+    private readonly IReportVersionService _reportVersionService;
 
-    public FgCostVerController(IFgCostVerService fgCostVerService)
+    public ReportVersionController(IReportVersionService reportVersionService)
     {
-        _fgCostVerService = fgCostVerService;
+        _reportVersionService = reportVersionService;
     }
 
     // GET
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> GetAllFgCostVer()
     {
-        var response = await _fgCostVerService.GetFgCostVerRoomIdsAsync();
-        
-        if (response.IsSuccess)
+        if (TempData["Errors"] != null)
         {
-            ViewBag.RoomIds = response.Data;
-        }
-        else
-        {
-            ViewBag.Error = string.Join(", ", response.Errors);
+            ViewBag.Errors = TempData["Errors"];
         }
         
-        return View();
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Process()
-    {
-        var response = await _fgCostVerService.GetFgCostVerRoomIdsAsync();
+        var response = await _reportVersionService.GetVersionRoomIdsAsync();
         
         if (response.IsSuccess)
         {
@@ -51,9 +38,57 @@ public class FgCostVerController : Controller
         return View();
     }
     
-    public async Task<IActionResult> DownloadSummaryFgCostVer([FromQuery] int room)
+    public IActionResult GetAllFgCostVerDetailsByRofoId([FromQuery] int rofoId, [FromQuery] int verId)
     {
-        var response = await _fgCostVerService.GetAllFgCostVerAsync(room);
+        if (rofoId > 0 && verId > 0)
+        {
+            ViewBag.RofoId = rofoId;
+            ViewBag.VerId = verId;
+            return View();
+        }
+        
+        TempData["Errors"] = "Invalid room or Rofo ID.";
+        return RedirectToAction(nameof(GetAllFgCostVer));
+
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "costing")]
+    public async Task<IActionResult> Process()
+    {
+        var response = await _reportVersionService.GetVersionRoomIdsAsync();
+        
+        if (response.IsSuccess)
+        {
+            ViewBag.RoomIds = response.Data;
+        }
+        else
+        {
+            ViewBag.Error = string.Join(", ", response.Errors);
+        }
+        
+        return View();
+    }
+
+    public async Task<IActionResult> GetAllMupVer()
+    {
+        var response = await _reportVersionService.GetVersionRoomIdsAsync();
+        
+        if (response.IsSuccess)
+        {
+            ViewBag.RoomIds = response.Data;
+        }
+        else
+        {
+            ViewBag.Error = string.Join(", ", response.Errors);
+        }
+        
+        return View();
+    }
+    
+    public async Task<IActionResult> DownloadSummaryFgCostVer([FromQuery] int room, [FromQuery] int verId)
+    {
+        var response = await _reportVersionService.GetAllFgCostVerAsync(room, verId);
     
         if (response is not { IsSuccess: true, Data: not null }) return BadRequest(response.Errors);
         
@@ -89,10 +124,10 @@ public class FgCostVerController : Controller
             else
             {
                 row.Cell(1).Value = dto.Room;
-                row.Cell(2).Value = dto.ItemId;
-                row.Cell(3).Value = dto.ItemName;
+                row.Cell(2).Value = dto.ProductId;
+                row.Cell(3).Value = dto.ProductName;
                 row.Cell(4).Value = dto.Unit;
-                row.Cell(5).Value = dto.InKg;
+                row.Cell(5).Value = dto.UnitInKg;
                 row.Cell(5).Style.NumberFormat.Format = "#,##0";
                 row.Cell(6).Value = dto.SalesPrice;
                 row.Cell(6).Style.NumberFormat.Format = "#,##0";
@@ -140,35 +175,58 @@ public class FgCostVerController : Controller
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "costing,sc,rni,admin,marketing_domestik,marketing_export")]
 [Route("api/[controller]/[action]")]
-public class FgCostVerApiController : ControllerBase
+public class ReportVersionApiController : ControllerBase
 {
-    private readonly IFgCostVerService _fgCostVerService;
+    private readonly IReportVersionService _reportVersionService;
 
-    public FgCostVerApiController(IFgCostVerService fgCostVerService)
+    public ReportVersionApiController(IReportVersionService reportVersionService)
     {
-        _fgCostVerService = fgCostVerService;
+        _reportVersionService = reportVersionService;
     }
     
     [HttpGet]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> GetAllFgCostVer(int roomId)
+    public async Task<IActionResult> GetAllFgCostVer([FromQuery] int room, [FromQuery] int verId)
     {
-        var result = await _fgCostVerService.GetAllFgCostVerAsync(roomId);
+        var result = await _reportVersionService.GetAllFgCostVerAsync(room, verId);
+        if (result is not { IsSuccess: true, Data: not null })
+        {
+            return BadRequest(new { title = string.Join(", ", result.Errors) });
+        }
+        return Ok(result);
+    }
+    
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GetAllFgCostVerDetailsByRofoId([FromQuery] int rofoId, [FromQuery] int verId)
+    {
+        if (rofoId <= 0 || verId <= 0)
+        {
+            return BadRequest(new { title = "Invalid Rofo ID or Version ID." });
+        }
+
+        var result = await _reportVersionService.GetAllFgCostVerDetailsByRofoIdAsync(rofoId, verId);
+        if (result is not { IsSuccess: true, Data: not null })
+        {
+            return BadRequest(new { title = string.Join(", ", result.Errors) });
+        }
+        
         return Ok(result);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> InsertFgCostVer([FromBody] InsertFgCostVerRequest request)
+    [Authorize(Roles = "costing")]
+    public async Task<IActionResult> InsertVersion([FromBody] InsertVersionRequest request)
     {
         if (request.RoomId <= 0 || string.IsNullOrWhiteSpace(request.Notes))
         {
             return BadRequest(new { title = "Invalid input data." });
         }
 
-        var result = await _fgCostVerService.InsertFgCostVerAsync(request.RoomId, request.Notes);
+        var result = await _reportVersionService.InsertVersionAsync(request.RoomId, request.Notes);
 
         if (result.IsSuccess)
         {
@@ -179,9 +237,52 @@ public class FgCostVerApiController : ControllerBase
     }
     
     [HttpGet]
-    public async Task<IActionResult> GetFgCostVerRoomIds()
+    public async Task<IActionResult> GetVersionRoomIds()
     {
-        var result = await _fgCostVerService.GetFgCostVerRoomIdsAsync();
+        var result = await _reportVersionService.GetVersionRoomIdsAsync();
+        if (result is not { IsSuccess: true, Data: not null })
+        {
+            return BadRequest(new { title = string.Join(", ", result.Errors) });
+        }
+        return Ok(result);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetVersions(int room)
+    {
+        if (room <= 0)
+        {
+            return BadRequest(new { title = "Invalid room ID." });
+        }
+
+        var result = await _reportVersionService.GetVersionsAsync(room);
+        if (result is not { IsSuccess: true, Data: not null })
+        {
+            return BadRequest(new { title = string.Join(", ", result.Errors) });
+        }
+        
+        return Ok(result);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetAllMupVer([FromQuery] int room, [FromQuery] int verId)
+    {
+        if (room <= 0)
+        {
+            return BadRequest(new { title = "Invalid room ID." });
+        }
+        
+        if (verId <= 0)
+        {
+            return BadRequest(new { title = "Invalid version ID." });
+        }
+
+        var result = await _reportVersionService.GetAllMupVerAsync(room, verId);
+        if (result is not { IsSuccess: true, Data: not null })
+        {
+            return BadRequest(new { title = string.Join(", ", result.Errors) });
+        }
+        
         return Ok(result);
     }
 }

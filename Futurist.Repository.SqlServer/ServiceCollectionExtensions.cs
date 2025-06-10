@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using Futurist.Repository.Interface;
-using Futurist.Repository.UnitOfWork;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,8 +19,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IJobMonitoringRepository, JobMonitoringRepository>();
         services.AddScoped<IExchangeRateRepository, ExchangeRateRepository>();
         services.AddScoped<IItemAdjustmentRepository, ItemAdjustmentRepository>();
-        services.AddScoped<IFgCostVerRepository, FgCostVerRepository>();
+        services.AddScoped<IReportVersionRepository, ReportVersionRepository>();
         services.AddScoped<IItemForecastRepository, ItemForecastRepository>();
+        services.AddScoped<IScmReportRepository, ScmReportRepository>();
         
         services.AddScoped<IDbConnection>(s =>
         {
