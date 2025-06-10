@@ -15,6 +15,7 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     IItemAdjustmentRepository ItemAdjustmentRepository { get; }
     IFgCostVerRepository FgCostVerRepository { get; }
     IItemForecastRepository ItemForecastRepository { get; }
+    IScmReportRepository ScmReportRepository { get; }
     IDbTransaction? CurrentTransaction { get; }
     IDbTransaction BeginTransaction();
     Task CommitAsync();
