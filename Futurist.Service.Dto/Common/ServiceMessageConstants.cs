@@ -83,4 +83,20 @@ public static class ServiceMessageConstants
     public const string ItemForecastImportFailed = "Item Forecast import failed";
     public const string ItemForecastRoomIdsFound = "Item Forecast room IDs found";
     public const string ItemForecastRoomIdsNotFound = "Item Forecast room IDs not found";
+    public const string DomesticByProductCustomerReportRetrieved = "Domestic By Product Customer Report retrieved";
+    public const string ErrorRetrievingDomesticByProductCustomerReport = "Error retrieving Domestic By Product Customer Report";
+    public const string DomesticByProductReportRetrieved = "Domestic By Product Report retrieved";
+    public const string ErrorRetrievingDomesticByProductReport = "Error retrieving Domestic By Product Report";
+    public const string DomesticByCustomerReportRetrieved = "Domestic By Customer Report retrieved";
+    public const string ErrorRetrievingDomesticByCustomerReport = "Error retrieving Domestic By Customer Report";
+    public const string DomesticRawDataRetrieved = "Domestic Raw Data retrieved";
+    public const string ErrorRetrievingDomesticRawData = "Error retrieving Domestic Raw Data";
+    public const string ExportByProductCustomerReportRetrieved = "Export By Product Customer Report retrieved";
+    public const string ErrorRetrievingExportByProductCustomerReport = "Error retrieving Export By Product Customer Report";
+    public const string ExportByProductReportRetrieved = "Export By Product Report retrieved";
+    public const string ErrorRetrievingExportByProductReport = "Error retrieving Export By Product Report";
+    public const string ExportByCustomerReportRetrieved = "Export By Customer Report retrieved";
+    public const string ErrorRetrievingExportByCustomerReport = "Error retrieving Export By Customer Report";
+    public const string ExportRawDataRetrieved = "Export Raw Data retrieved";
+    public const string ErrorRetrievingExportRawData = "Error retrieving Export Raw Data";
 }

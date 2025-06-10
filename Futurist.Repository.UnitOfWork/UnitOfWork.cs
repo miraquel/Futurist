@@ -21,6 +21,7 @@ public class UnitOfWork : IUnitOfWork
         IItemAdjustmentRepository itemAdjustmentRepository,
         IFgCostVerRepository fgCostVerRepository,
         IItemForecastRepository itemForecastRepository,
+        IScmReportRepository scmReportRepository,
         Func<IDbTransaction> transactionFactory)
     {
         _dbConnection = dbConnection;
@@ -35,7 +36,7 @@ public class UnitOfWork : IUnitOfWork
         JobMonitoringRepository = jobMonitoringRepository;
         FgCostRepository = fgCostRepository;
         ItemForecastRepository = itemForecastRepository;
-        
+        ScmReportRepository = scmReportRepository;
     }
     
     public IDbTransaction? CurrentTransaction { get; private set; }
@@ -56,6 +57,7 @@ public class UnitOfWork : IUnitOfWork
     public IItemAdjustmentRepository ItemAdjustmentRepository { get; }
     public IFgCostVerRepository FgCostVerRepository { get; }
     public IItemForecastRepository ItemForecastRepository { get; }
+    public IScmReportRepository ScmReportRepository { get; }
 
     public async Task CommitAsync()
     {
