@@ -1,5 +1,4 @@
 ﻿using Futurist.Domain;
-using Futurist.Domain.Common;
 using Futurist.Repository.Command.ItemAdjustmentCommand;
 
 namespace Futurist.Repository.Interface;

@@ -1,7 +1,5 @@
-﻿using System.Data;
-using Futurist.Domain;
+﻿using Futurist.Domain;
 using Futurist.Domain.Common;
-using Futurist.Repository.Command;
 using Futurist.Repository.Command.BomStdCommand;
 
 namespace Futurist.Repository.Interface;

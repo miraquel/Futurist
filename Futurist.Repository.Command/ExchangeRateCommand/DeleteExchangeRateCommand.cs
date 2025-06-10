@@ -1,6 +1,4 @@
-﻿using Futurist.Domain;
-
-namespace Futurist.Repository.Command.ExchangeRateCommand;
+﻿namespace Futurist.Repository.Command.ExchangeRateCommand;
 
 public class DeleteExchangeRateCommand : BaseCommand
 {

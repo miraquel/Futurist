@@ -1,6 +1,5 @@
 ﻿using Futurist.Service.Dto;
 using Futurist.Service.Dto.Common;
-using Hangfire.Storage.Monitoring;
 
 namespace Futurist.Service.Interface;
 

@@ -1,5 +1,4 @@
-﻿using ClosedXML.Excel;
-using Futurist.Common.Helpers;
+﻿using Futurist.Common.Helpers;
 using Futurist.Service.Dto.Common;
 using Futurist.Service.Interface;
 using Microsoft.AspNetCore.Authorization;

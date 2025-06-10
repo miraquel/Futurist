@@ -1,6 +1,4 @@
 ﻿using System.Data;
-using System.Data.SqlTypes;
-using System.Transactions;
 using Dapper;
 using Futurist.Common.Helpers;
 using Futurist.Domain;

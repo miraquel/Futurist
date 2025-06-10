@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Futurist.Domain;
+﻿using Futurist.Domain;
 using Futurist.Domain.Common;
 using Futurist.Repository.Command.MupCommand;
 

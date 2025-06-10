@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-using System.Reflection;
-using Futurist.Common.Helpers;
+﻿using Futurist.Common.Helpers;
 using Futurist.Service.Command.ExchangeRateCommand;
 using Futurist.Service.Interface;
 using Microsoft.AspNetCore.Authorization;
