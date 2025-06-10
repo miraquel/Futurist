@@ -50,11 +50,10 @@ public class ItemForecastService : IItemForecastService
         }
     }
 
-    public async Task<ServiceResponse> ImportAsync(ImportCommand serviceCommand)
+    public async Task<ServiceResponse<int>> ImportAsync(ImportCommand serviceCommand)
     {
         try
         {
-            var createdDate = DateTime.UtcNow;
             var itemForecastCommands = ExcelHelper.ParseExcel(serviceCommand.Stream, row => new InsertItemForecastCommand
             {
                 Room = row.Cell(1).TryGetValue(out int room) ? room : 0,
@@ -94,9 +93,16 @@ public class ItemForecastService : IItemForecastService
                 errors.Add($"{ServiceMessageConstants.ItemForecastForcedPriceInvalid}. Rows: {string.Join(", ", forcedPriceErrors.Take(10))}{(forcedPriceErrors.Length > 10 ? "..." : "")}");
             }
             
+            // check if there is more than one room distinctively
+            var roomIds = itemForecastCommands.Select(x => x.Room).Distinct().ToArray();
+            if (roomIds.Length != 1)
+            {
+                errors.Add(ServiceMessageConstants.ItemAdjustmentMustBeInOneRoom);
+            }
+            
             if (errors.Count > 0)
             {
-                return new ServiceResponse
+                return new ServiceResponse<int>
                 {
                     Errors = errors,
                     Message = ServiceMessageConstants.ItemForecastImportValidationFailed
@@ -110,16 +116,17 @@ public class ItemForecastService : IItemForecastService
 
             _unitOfWork.CurrentTransaction?.Commit();
 
-            return new ServiceResponse
+            return new ServiceResponse<int>
             {
-                Message = ServiceMessageConstants.ItemForecastImportSuccess
+                Message = ServiceMessageConstants.ItemForecastImportSuccess,
+                Data = roomIds.FirstOrDefault()
             };
         }
         catch (Exception e)
         {
             _logger.Error(e, "ItemForecastImportAsync failed {@command}", e.Message);
             
-            return new ServiceResponse
+            return new ServiceResponse<int>
             {
                 Errors = [e.Message],
                 Message = ServiceMessageConstants.ItemForecastImportFailed

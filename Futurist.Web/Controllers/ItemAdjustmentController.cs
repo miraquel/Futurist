@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Futurist.Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = "costing,sc,admin")]
 public class ItemAdjustmentController : Controller
 {
     private readonly IItemAdjustmentService _itemAdjustmentService;
@@ -16,7 +16,7 @@ public class ItemAdjustmentController : Controller
         _itemAdjustmentService = itemAdjustmentService;
     }
     
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index([FromQuery] int room = 0)
     {
         if (TempData["Success"] != null)
         {
@@ -36,6 +36,11 @@ public class ItemAdjustmentController : Controller
         else
         {
             ViewBag.Error = response.ErrorMessage;
+        }
+        
+        if (room > 0)
+        {
+           ViewBag.InitialRoomId = room;
         }
         
         return View();
@@ -76,11 +81,11 @@ public class ItemAdjustmentController : Controller
     }
     
     [HttpPost]
-    public async Task<IActionResult> Import([FromForm(Name = "file")] IFormFile fileInput)
+    public async Task<IActionResult> Import([FromForm(Name = "file")] IFormFile fileInput, [FromQuery] int room)
     {
         if (fileInput.Length == 0)
         {
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { room });
         }
         var command = new ImportCommand
         {
@@ -96,12 +101,13 @@ public class ItemAdjustmentController : Controller
         {
             TempData["Errors"] = response.Errors;
         }
-        return RedirectToAction(nameof(Index));
+        
+        return RedirectToAction(nameof(Index), new { room = response.Data > 0 ? response.Data : room });
     }
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "costing,sc,admin")]
 [ValidateAntiForgeryToken]
 [Route("api/[controller]/[action]")]
 public class ItemAdjustmentApiController : ControllerBase

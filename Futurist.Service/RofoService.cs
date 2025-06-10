@@ -115,7 +115,7 @@ public class RofoService : IRofoService
         }
     }
 
-    public async Task<ServiceResponse> ImportAsync(ImportCommand serviceCommand)
+    public async Task<ServiceResponse<int>> ImportAsync(ImportCommand serviceCommand)
     {
         try
         {
@@ -167,7 +167,7 @@ public class RofoService : IRofoService
 
             if (errors.Count != 0)
             {
-                return new ServiceResponse
+                return new ServiceResponse<int>
                 {
                     Errors = errors,
                     Message = ServiceMessageConstants.RofoImportFailed
@@ -203,9 +203,10 @@ public class RofoService : IRofoService
 
             _logger.Information("Rofo {@command}", bulkInsertCommand);
 
-            return new ServiceResponse
+            return new ServiceResponse<int>
             {
-                Message = ServiceMessageConstants.RofoImported
+                Message = ServiceMessageConstants.RofoImported,
+                Data = rofoRooms.First()
             };
         }
         catch (Exception e)
@@ -217,7 +218,7 @@ public class RofoService : IRofoService
             
             _logger.Error(e, "ImportAsync failed {@command}", e.Message);
             
-            return new ServiceResponse
+            return new ServiceResponse<int>
             {
                 Errors = [e.Message],
                 Message = ServiceMessageConstants.RofoImportFailed

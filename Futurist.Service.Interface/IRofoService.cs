@@ -9,6 +9,6 @@ public interface IRofoService
     Task<ServiceResponse<PagedListDto<RofoDto>>> GetPagedListAsync(PagedListRequestDto filter);
     Task<ServiceResponse<IEnumerable<RofoDto>>> GetRofoListAsync(int room);
     Task<ServiceResponse<RofoDto>> GetByIdAsync(int rofoId);
-    Task<ServiceResponse> ImportAsync(ImportCommand serviceCommand);
+    Task<ServiceResponse<int>> ImportAsync(ImportCommand serviceCommand);
     Task<ServiceResponse<IEnumerable<int>>> GetRofoRoomIdsAsync();
 }

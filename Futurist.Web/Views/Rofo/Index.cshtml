@@ -51,7 +51,7 @@
                 </div>
 
                 <div class="d-flex justify-content-between">
-                    <form asp-controller="Rofo" asp-action="Import" method="post" enctype="multipart/form-data">
+                    <form asp-controller="Rofo" asp-action="Import" asp-route-room="0" id="formRofo" onsubmit="submitForm()" method="post" enctype="multipart/form-data">
                         <div class="input-group">
                             <input type="file" id="fileInput" name="file" class="form-control" aria-describedby="fileInputAddon" aria-label="Upload" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
                             <button type="submit" class="btn btn-outline-success material-shadow-none" id="fileInputAddon">
@@ -104,6 +104,7 @@
 @section scripts{
     <script src="/assets/js/datatables.min.js"></script>
     <script src="/assets/js/flatpickr.js"></script>
+    <script src="/assets/js/helper.js"></script>
 
     <script>
         // get AntiForgeryToken using jquery
@@ -112,16 +113,13 @@
 
         roomSelect.change(function () {
             $('#datatables-rofo').DataTable().ajax.reload();
-        });
 
-        // Debounce helper function
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
+            // update the window url to include the selected room
+            const room = roomSelect.val();
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('room', room);
+            window.history.pushState({}, '', currentUrl.toString());
+        });
 
         function downloadRofo() {
             // change the room id in the download link
@@ -130,146 +128,166 @@
             // edit the query room
             linkDownload.href = linkDownload.href.replace(/room=\d+/, `room=${room}`);
         }
-
-        // Replace gridjs initialization with DataTables initialization following RofoDto structure
-        if (document.getElementById("datatable-rofo") || document.getElementById("datatables-rofo")) {
-            $('#datatables-rofo').DataTable({
-                searchDelay: 1000,
-                ajax: {
-                    url: `/api/RofoApi/GetRofoPagedList`,
-                    data: function(d) {
-                        const query = {
-                            pageNumber: (d.start / d.length) + 1,
-                            pageSize: d.length,
-                        };
-                        if (d.search && d.search.value) {
-                            query.Search = d.search.value;
-                        }
-                        if (d.order && d.order.length) {
-                            query.SortBy = d.columns[d.order[0].column].data;
-                            query.IsSortAscending = d.order[0].dir === 'asc';
-                        }
-
-                        d.columns.forEach((column, _) => {
-                            if (column.search && column.search.value) {
-                                // Encode the search value for URL safety.
-                                query[`Filters.${column.data.charAt(0).toUpperCase() + column.data.slice(1)}`] = column.search.value;
-                            }
-                        });
-
-                        // get room id from dropdown and add to query
-                        query['Filters.Room'] = $("#roomSelect").val();
-                        
-                        return query;
-                    },
-                    beforeSend: function(xhr) {
-                        xhr.setRequestHeader("RequestVerificationToken", token);
-                    },
-                    dataSrc: function(json) {
-                        // Check if response follows ServiceResponse<PagedListDto<RofoDto>> structure:
-                        if (json.data && Array.isArray(json.data.items)) {
-                            json.recordsTotal = json.data.totalCount;
-                            json.recordsFiltered = json.data.totalCount;
-                            return json.data.items;
-                        }
-                        // Fallback: if json itself is an array.
-                        return json;
-                    }
-                },
-                columns: [
-                    { data: 'room', width: '50px' },
-                    {
-                        data: 'rofoDate',
-                        defaultContent: '',
-                        render: function(data) {
-                            return moment(data).format("DD MMM YYYY");
-                        },
-                        width: '100px'
-                    },
-                    { data: 'itemId', width: '100px' },
-                    { data: 'itemName' },
-                    { 
-                        data: 'qty', 
-                        width: '80px',
-                        render: function(data, type) {
-                            // For sorting/filtering use the raw number
-                            if (type === 'sort' || type === 'filter') {
-                                return data ? parseFloat(data) : 0;
-                            }
-
-                            // For display, round and format with thousands separator
-                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
-                        }
-                    }
-                ],
-                columnDefs: [
-                    {
-                        targets: [0, 1, 2], // Column indices for Room, QtyRofo, Qty, etc.
-                        className: 'text-center'
-                    }
-                ],
-                processing: true,
-                serverSide: true,
-                paging: true,
-                searching: true,
-                ordering: true,
-                autoWidth: false,
-                responsive: true,
-                scrollX: true,
-                initComplete: function () {
-                    this.api()
-                        .columns()
-                        .every(function () {
-                            let column = this;
-                            let title = column.footer().textContent;
-
-                            let header = column.header();
-                            // change the background
-                            header.style.backgroundColor = '#4F81BD';
-                            header.style.color = 'white';
-
-                            // Special handling for Rofo Date column
-                            if (title.trim() === "Rofo Date") {
-                                // Create flatpickr input for date
-                                let dateInput = document.createElement('input');
-                                dateInput.placeholder = title;
-                                dateInput.className = "form-control";
-                                dateInput.style.width = '100%';
-
-                                column.footer().replaceChildren(dateInput);
-
-                                // Initialize flatpickr
-                                flatpickr(dateInput, {
-                                    dateFormat: "Y/m/d",
-                                    onChange: function(selectedDates, dateStr) {
-                                        // Only search and draw when both dates are selected in range mode
-                                        //if (selectedDates.length === 2) {
-                                        // Replace "to" with "-" in the date range string
-                                        //    const formattedDateStr = dateStr.replace(" to ", "-");
-                                        //    column.search(formattedDateStr).draw();
-                                        //}
-                                        column.search(dateStr).draw();
-                                    },
-                                    //mode: "range",
-                                });
-                            } else {
-                                // Default handling for other columns
-                                let input = document.createElement('input');
-                                input.placeholder = title;
-                                input.className = "form-control";
-                                input.style.width = '100%';
-                                column.footer().replaceChildren(input);
-
-                                // Debounced event listener for user input (1 second delay)
-                                input.addEventListener('keyup', debounce(() => {
-                                    if (column.search() !== input.value) {
-                                        column.search(input.value).draw();
-                                    }
-                                }, 1000));
-                            }
-                        });
-                }
-            });
+        
+        function submitForm() {
+            // change the room id in the form action
+            const room = roomSelect.val();
+            const formRofo = $("#formRofo")[0];
+            // edit the query room
+            formRofo.action = formRofo.action.replace(/room=\d+/, `room=${room}`);
         }
+        
+        $(document).ready(function () {
+            const initRoom = '@ViewBag.InitialRoomId';
+            if (initRoom) {
+                // Set the initial value of the room select
+                roomSelect.val(initRoom);
+            }
+
+            if (document.getElementById("datatable-rofo") || document.getElementById("datatables-rofo")) {
+                $('#datatables-rofo').DataTable({
+                    searchDelay: 1000,
+                    ajax: {
+                        url: `/api/RofoApi/GetRofoPagedList`,
+                        data: function(d) {
+                            const query = {
+                                pageNumber: (d.start / d.length) + 1,
+                                pageSize: d.length,
+                            };
+                            if (d.search && d.search.value) {
+                                query.Search = d.search.value;
+                            }
+                            if (d.order && d.order.length) {
+                                query.SortBy = d.columns[d.order[0].column].data;
+                                query.IsSortAscending = d.order[0].dir === 'asc';
+                            }
+
+                            d.columns.forEach((column, _) => {
+                                if (column.search && column.search.value) {
+                                    // Encode the search value for URL safety.
+                                    query[`Filters.${column.data.charAt(0).toUpperCase() + column.data.slice(1)}`] = column.search.value;
+                                }
+                            });
+
+                            // get room id from dropdown and add to query
+                            query['Filters.Room'] = $("#roomSelect").val();
+
+                            return query;
+                        },
+                        beforeSend: function(xhr) {
+                            xhr.setRequestHeader("RequestVerificationToken", token);
+                        },
+                        dataSrc: function(json) {
+                            // Check if response follows ServiceResponse<PagedListDto<RofoDto>> structure:
+                            if (json.data && Array.isArray(json.data.items)) {
+                                json.recordsTotal = json.data.totalCount;
+                                json.recordsFiltered = json.data.totalCount;
+                                return json.data.items;
+                            }
+                            // Fallback: if json itself is an array.
+                            return json;
+                        }
+                    },
+                    columns: [
+                        { data: 'room', width: '50px' },
+                        {
+                            data: 'rofoDate',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw date
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? data : '';
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? moment(data).format("DD MMM YYYY") : ''
+                            }
+                            width: '100px'
+                        },
+                        { data: 'itemId', width: '100px' },
+                        { data: 'itemName' },
+                        {
+                            data: 'qty',
+                            width: '80px',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        }
+                    ],
+                    columnDefs: [
+                        {
+                            targets: [0, 1, 2], // Column indices for Room, QtyRofo, Qty, etc.
+                            className: 'text-center'
+                        }
+                    ],
+                    processing: true,
+                    serverSide: true,
+                    paging: true,
+                    searching: true,
+                    ordering: true,
+                    autoWidth: false,
+                    responsive: true,
+                    scrollX: true,
+                    initComplete: function () {
+                        this.api()
+                            .columns()
+                            .every(function () {
+                                let column = this;
+                                let title = column.footer().textContent;
+
+                                let header = column.header();
+                                // change the background
+                                header.style.backgroundColor = '#4F81BD';
+                                header.style.color = 'white';
+
+                                // Special handling for Rofo Date column
+                                if (title.trim() === "Rofo Date") {
+                                    // Create flatpickr input for date
+                                    let dateInput = document.createElement('input');
+                                    dateInput.placeholder = title;
+                                    dateInput.className = "form-control";
+                                    dateInput.style.width = '100%';
+
+                                    column.footer().replaceChildren(dateInput);
+
+                                    // Initialize flatpickr
+                                    flatpickr(dateInput, {
+                                        dateFormat: "Y/m/d",
+                                        onChange: function(selectedDates, dateStr) {
+                                            // Only search and draw when both dates are selected in range mode
+                                            //if (selectedDates.length === 2) {
+                                            // Replace "to" with "-" in the date range string
+                                            //    const formattedDateStr = dateStr.replace(" to ", "-");
+                                            //    column.search(formattedDateStr).draw();
+                                            //}
+                                            column.search(dateStr).draw();
+                                        },
+                                        //mode: "range",
+                                    });
+                                } else {
+                                    // Default handling for other columns
+                                    let input = document.createElement('input');
+                                    input.placeholder = title;
+                                    input.className = "form-control";
+                                    input.style.width = '100%';
+                                    column.footer().replaceChildren(input);
+
+                                    // Debounced event listener for user input (1 second delay)
+                                    input.addEventListener('keyup', debounce(() => {
+                                        if (column.search() !== input.value) {
+                                            column.search(input.value).draw();
+                                        }
+                                    }, 1000));
+                                }
+                            });
+                    }
+                });
+            }
+        });
     </script>
 }
