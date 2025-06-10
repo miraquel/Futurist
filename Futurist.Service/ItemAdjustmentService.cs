@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
-using Futurist.Common.Helpers;
+﻿using Futurist.Common.Helpers;
 using Futurist.Repository.Command.ItemAdjustmentCommand;
 using Futurist.Repository.UnitOfWork;
 using Futurist.Service.Command.ItemAdjustmentCommand;
@@ -77,7 +76,7 @@ public class ItemAdjustmentService : IItemAdjustmentService
         }
     }
 
-    public async Task<ServiceResponse> ImportAsync(ImportCommand serviceCommand)
+    public async Task<ServiceResponse<int>> ImportAsync(ImportCommand serviceCommand)
     {
         try
         {
@@ -134,7 +133,7 @@ public class ItemAdjustmentService : IItemAdjustmentService
             
             if (errors.Count > 0)
             {
-                return new ServiceResponse
+                return new ServiceResponse<int>
                 {
                     Errors = errors,
                     Message = ServiceMessageConstants.ItemAdjustmentUploadFailed
@@ -163,9 +162,10 @@ public class ItemAdjustmentService : IItemAdjustmentService
                 await _unitOfWork.CommitAsync();
             }
 
-            return new ServiceResponse
+            return new ServiceResponse<int>
             {
-                Message = ServiceMessageConstants.ItemAdjustmentUploaded
+                Message = ServiceMessageConstants.ItemAdjustmentUploaded,
+                Data = roomIds.First()
             };
         }
         catch (Exception e)
@@ -177,7 +177,7 @@ public class ItemAdjustmentService : IItemAdjustmentService
             
             _logger.Error(e, "ImportAsync failed {@command}", e.Message);
             
-            return new ServiceResponse
+            return new ServiceResponse<int>
             {
                 Errors = [e.Message],
                 Message = ServiceMessageConstants.ItemAdjustmentUploadFailed

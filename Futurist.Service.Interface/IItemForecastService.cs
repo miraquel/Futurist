@@ -7,6 +7,6 @@ namespace Futurist.Service.Interface;
 public interface IItemForecastService
 {
     Task<ServiceResponse<IEnumerable<ItemForecastSpDto>>> GetItemForecastListAsync(int room);
-    Task<ServiceResponse> ImportAsync(ImportCommand serviceCommand);
+    Task<ServiceResponse<int>> ImportAsync(ImportCommand serviceCommand);
     Task<ServiceResponse<IEnumerable<int>>> GetItemForecastRoomIdsAsync();
 }

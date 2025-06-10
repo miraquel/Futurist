@@ -59,7 +59,7 @@
                 </div>
 
                 <div class="d-flex justify-content-between">
-                    <form asp-controller="ItemForecast" asp-action="Import" method="post" enctype="multipart/form-data">
+                    <form asp-controller="ItemForecast" asp-action="Import" asp-route-room="0" onsubmit="importData()" method="post" enctype="multipart/form-data">
                         <div class="input-group">
                             <input type="file" id="fileInput" name="file" class="form-control" aria-describedby="fileInputAddon" aria-label="Upload" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
                             <button type="submit" class="btn btn-outline-success material-shadow-none" id="fileInputAddon">
@@ -123,23 +123,21 @@
             
 @section scripts{
     <script src="/assets/js/datatables.min.js"></script>
+    <script src="/assets/js/helper.js"></script>
 
     <script>
         // get AntiForgeryToken using jquery
         const token = $('input[name="__RequestVerificationToken"]').val();
         const roomSelect = $("#roomSelect");
 
-        // Debounce helper function
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
-
         function reloadTable() {
             $('#datatables-item-adjustments').DataTable().ajax.reload();
+
+            // update the window url to include the selected room
+            const room = roomSelect.val();
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('room', room);
+            window.history.pushState({}, '', currentUrl.toString());
         }
 
         roomSelect.change(function () {
@@ -153,8 +151,22 @@
             // edit the query room
             linkDownload.href = linkDownload.href.replace(/room=\d+/, `room=${room}`);
         }
+        
+        function importData() {
+            // change the room id in the form action
+            const room = roomSelect.val();
+            const formImport = $("#formImport")[0];
+            // edit the query room
+            formImport.action = formImport.action.replace(/room=\d+/, `room=${room}`);
+        }
 
         $(document).ready(function() {
+            // init room select with the current room from the ViewBag
+            const roomId = '@ViewBag.InitialRoomId';
+            if (roomId) {
+                roomSelect.val(roomId);
+            }
+            // Initialize datatables
             $('#datatables-item-adjustments').DataTable({
                 searchDelay: 1000,
                 ajax: {
@@ -184,35 +196,45 @@
                         data: 'price', 
                         width: '100px',
                         render: function(data, type) {
-                            return data ? Intl.NumberFormat('en-US', { style: 'decimal', maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(parseFloat(data)) : '';
+                            return data ? numberFormat.format(parseFloat(data)) : '';
                         }
                     },
                     { 
                         data: 'latestPurchaseDate', 
                         width: '150px',
-                        render: function(data) {
-                            return moment(data).format("DD MMM YYYY");
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw date
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? data : '';
+                            }
+                            // For display, round and format with thousands separator
+                            return data ? moment(data).format("DD MMM YYYY") : ''
                         },
                     },
                     { 
                         data: 'forecastDate', 
                         width: '150px',
-                        render: function(data) {
-                            return moment(data).format("DD MMM YYYY");
-                        },
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw date
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? data : '';
+                            }
+                            // For display, round and format with thousands separator
+                            return data ? moment(data).format("DD MMM YYYY") : ''
+                        }
                     },
                     { 
                         data: 'forecastPrice', 
                         width: '100px',
                         render: function(data, type) {
-                            return data ? Intl.NumberFormat('en-US', { style: 'decimal', maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(parseFloat(data)) : '';
+                            return data ? numberFormat.format(parseFloat(data)) : '';
                         }
                     },
                     { 
                         data: 'forcedPrice', 
                         width: '100px',
                         render: function(data, type) {
-                            return data != null ? Intl.NumberFormat('en-US', { style: 'decimal', maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(parseFloat(data)) : '';
+                            return data != null ? numberFormat.format(parseFloat(data)) : '';
                         }
                     }
                 ],
