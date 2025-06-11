@@ -1,5 +1,5 @@
 # Futurist
-Futurist is intended for internal use within PT. Gandum Mas Kencana. The app consists of 2 apps: the **Futurist ** app.Web** and **Futurist.Hangfire**
+Futurist is intended for internal use within PT. Gandum Mas Kencana. The app consists of 2 apps: the **Futurist.Web** and **Futurist.Hangfire**
 The MVC web app serves as the frontend + synchronous backend processor, and Hangfire serves as the backend asynchronous processor.
 
 ## How to use
