@@ -17,10 +17,7 @@
     <div class="col-lg-12">
         <div class="card">
             <div class="card-header">
-                
-                
                 <h1>FG Cost Details for Rofo #@ViewBag.RofoId</h1>
-
                 <div class="d-flex justify-content-between">
                     <a href="javascript:history.back();" class="btn btn-danger">
                         <i class="ri-arrow-left-fill"></i>
@@ -92,20 +89,12 @@
 
 @section Scripts {
     <script src="/assets/js/datatables.min.js"></script>
-    <script src="/assets/js/flatpickr.js"></script>  
+    <script src="/assets/js/flatpickr.js"></script>
+    <script src="/assets/js/helper.js"></script>
     
     <script>        
         const rofoId = @ViewBag.RofoId;
         const token = $('input[name="__RequestVerificationToken"]').val();
-        
-        // Debounce helper function
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
 
         function reloadTable() {
             $('#datatables-fgcost-result').DataTable().ajax.reload();
@@ -154,8 +143,13 @@
                         data: 'rofoDate',
                         width: '100px',
                         defaultContent: '',
-                        render: function(data) {
-                            return moment(data).format("DD MMM YYYY");
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw date
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? data : '';
+                            }
+                            // For display, round and format with thousands separator
+                            return data ? moment(data).format("DD MMM YYYY") : ''
                         }
                     },
                     { 
@@ -168,7 +162,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                            return data ? numberFormat.format(data) : '';
                         }
                     },
                     { data: 'itemId', defaultContent: '' },
@@ -188,7 +182,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                            return data ? numberFormat.format(data) : '';
                         }
                     },
                     { 
@@ -201,7 +195,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                            return data ? numberFormat.format(data) : '';
                         }
                     },
                     { 
@@ -214,7 +208,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                            return data ? numberFormat.format(data) : '';
                         }
                     },
                     { 
@@ -227,7 +221,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                            return data ? numberFormat.format(data) : '';
                         }
                     },
                     { 
@@ -240,7 +234,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                            return data ? numberFormat.format(data) : '';
                         }
                     },
                     { data: 'source', defaultContent: '' },
@@ -255,7 +249,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                            return data ? numberFormat.format(data) : '';
                         }
                     },
                 ],

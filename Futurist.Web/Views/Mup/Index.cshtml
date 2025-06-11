@@ -110,7 +110,8 @@
 @section Scripts {
     <script src="/assets/js/datatables.min.js"></script>
     <script src="/assets/js/flatpickr.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+    <script src="/assets/js/signalr.js"></script>
+    <script src="/assets/js/helper.js"></script>
     
     <script>
         const roomSelect = $("#roomSelect");
@@ -202,35 +203,9 @@
             });
         }
 
-        // Debounce helper function
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
-
         function reloadTable() {
-            $('#datatables-mup-result').DataTable().ajax.reload();
-        }
-
-        $('#roomSelect').change(function () {
-            reloadTable();
-            updateProcessingUI();
-        });
-        
-        function downloadMup() {
-            // change the room id in the download link
-            const room = roomSelect.val();
-            const linkDownload = $("#linkDownload")[0];
-            // edit the query room
-            linkDownload.href = linkDownload.href.replace(/room=\d+/, `room=${room}`);
-        }
-
-        // Load errors using selected room id from dropdown
-        if (document.getElementById("datatables-mup-result") || document.getElementById("datatables-mup-result")) {
-            $('#datatables-mup-result').DataTable({
+            const table = $('#datatables-mup-result').DataTable({
+                destroy: true, // Destroy previous instance to avoid conflicts
                 searchDelay: 1000,
                 ajax: {
                     url: '/api/MupApi/MupResultPagedList/',
@@ -280,16 +255,21 @@
                     { data: 'room', defaultContent: '' },
                     { data: 'productId', defaultContent: '' },
                     { data: 'productName', width: '200px', defaultContent: '' },
-                    { 
-                        data: 'rofoDate', 
-                        defaultContent: '', 
-                        render: function(data) { 
-                            return moment(data).format("DD MMM YYYY"); 
-                        },
+                    {
+                        data: 'rofoDate',
+                        defaultContent: '',
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw date
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? data : '';
+                            }
+                            // For display, round and format with thousands separator
+                            return data ? moment(data).format("DD MMM YYYY") : ''
+                        }
                         width: '100px'
                     },
-                    { 
-                        data: 'qtyRofo', 
+                    {
+                        data: 'qtyRofo',
                         defaultContent: '',
                         render: function(data, type) {
                             // For sorting/filtering use the raw number
@@ -298,7 +278,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                            return data ? numberFormat.format(data) : '';
                         }
                     },
                     { data: 'itemId', defaultContent: '' },
@@ -308,21 +288,8 @@
                     { data: 'itemAllocatedName', width: '200px', defaultContent: '' },
                     { data: 'unitId', defaultContent: '' },
                     { data: 'inventBatch', defaultContent: '' },
-                    { 
-                        data: 'qty', 
-                        defaultContent: '', 
-                        render: function(data, type) {
-                            // For sorting/filtering use the raw number
-                            if (type === 'sort' || type === 'filter') {
-                                return data ? parseFloat(data) : 0;
-                            }
-
-                            // For display, round and format with thousands separator
-                            return data ? parseFloat(data).toLocaleString() : '';
-                        } 
-                    },
-                    { 
-                        data: 'price', 
+                    {
+                        data: 'qty',
                         defaultContent: '',
                         render: function(data, type) {
                             // For sorting/filtering use the raw number
@@ -331,13 +298,26 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                            return data ? numberFormat.format(data) : '';
+                        }
+                    },
+                    {
+                        data: 'price',
+                        defaultContent: '',
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw number
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? parseFloat(data) : 0;
+                            }
+
+                            // For display, round and format with thousands separator
+                            return data ? numberFormat.format(data) : '';
                         }
                     },
                     { data: 'source', defaultContent: '' },
                     { data: 'refId', defaultContent: '' },
-                    { 
-                        data: 'latestPurchasePrice', 
+                    {
+                        data: 'latestPurchasePrice',
                         defaultContent: '',
                         render: function(data, type) {
                             // For sorting/filtering use the raw number
@@ -346,11 +326,11 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                            return data ? numberFormat.format(data) : '';
                         }
                     },
-                    { 
-                        data: 'gap', 
+                    {
+                        data: 'gap',
                         defaultContent: '',
                         render: function(data, type) {
                             // For sorting/filtering use the raw number
@@ -359,7 +339,7 @@
                             }
 
                             // For display, round and format with thousands separator
-                            return data ? Intl.NumberFormat("en-US", { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(data) : '';
+                            return data ? numberFormat.format(data) : '';
                         }
                     }
                 ],
@@ -381,14 +361,14 @@
                         .columns()
                         .every(function () {
                             let column = this;
-                            
+
                             let header = column.header();
                             // change the background
                             header.style.backgroundColor = '#4F81BD';
                             header.style.color = 'white';
-                            
+
                             let title = column.footer().textContent;
-                            
+
                             // Special handling for Rofo Date column
                             if (title.trim() === "Rofo Date") {
                                 // Create flatpickr input for date
@@ -396,16 +376,16 @@
                                 dateInput.placeholder = title;
                                 dateInput.className = "form-control";
                                 dateInput.style.width = '100%';
-                                
+
                                 column.footer().replaceChildren(dateInput);
-                                
+
                                 // Initialize flatpickr
                                 flatpickr(dateInput, {
                                     dateFormat: "Y/m/d",
                                     onChange: function(selectedDates, dateStr) {
                                         // Only search and draw when both dates are selected in range mode
                                         //if (selectedDates.length === 2) {
-                                            // Replace "to" with "-" in the date range string
+                                        // Replace "to" with "-" in the date range string
                                         //    const formattedDateStr = dateStr.replace(" to ", "-");
                                         //    column.search(formattedDateStr).draw();
                                         //}
@@ -431,6 +411,44 @@
                         });
                 }
             });
+
+            new DataTable.Buttons(table, {
+                buttons: [
+                    {
+                        extend: 'copyHtml5',
+                        text: '<i class="ri-file-copy-line"></i> Copy',
+                        className: 'btn btn-secondary'
+                    },
+                    {
+                        extend: 'excelHtml5',
+                        text: '<i class="ri-file-excel-2-line"></i> Excel',
+                        className: 'btn btn-success'
+                    },
+                    {
+                        extend: 'csvHtml5',
+                        text: '<i class="ri-file-text-line"></i> CSV',
+                        className: 'btn btn-info'
+                    }
+                ]
+            });
+
+            table
+                .buttons(0, null)
+                .container()
+                .insertBefore(".dt-search");
+        }
+
+        $('#roomSelect').change(function () {
+            reloadTable();
+            updateProcessingUI();
+        });
+        
+        function downloadMup() {
+            // change the room id in the download link
+            const room = roomSelect.val();
+            const linkDownload = $("#linkDownload")[0];
+            // edit the query room
+            linkDownload.href = linkDownload.href.replace(/room=\d+/, `room=${room}`);
         }
 
         // Initialize SignalR when document is ready

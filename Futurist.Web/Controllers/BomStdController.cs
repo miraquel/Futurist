@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Futurist.Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = "costing,sc,rni,admin")]
 [Route("[controller]/[action]")]
 public class BomStdController : Controller
 {
@@ -66,7 +66,7 @@ public class BomStdController : Controller
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "costing,sc,rni,admin")]
 [Route("api/[controller]/[action]")]
 public class BomStdApiController : ControllerBase
 {

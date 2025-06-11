@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Futurist.Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = "costing,sc,rni,admin")]
 public class FgCostController : Controller
 {
     private readonly IFgCostService _fgCostService;
@@ -48,6 +48,7 @@ public class FgCostController : Controller
         return View();
     }
     
+    [Authorize(Roles = "costing,sc,admin")]
     public async Task<IActionResult> Process()
     {
         var response = await _fgCostService.GetFgCostRoomIdsAsync();
@@ -278,7 +279,7 @@ public class FgCostController : Controller
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "costing,sc,rni,admin")]
 [Route("api/[controller]/[action]")]
 public class FgCostApiController : ControllerBase
 {
@@ -375,6 +376,7 @@ public class FgCostApiController : ControllerBase
     
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "costing,sc,admin")]
     public IActionResult CalculateFgCost([FromBody] int roomId)
     {
         return Ok(_fgCostService.CalculateFgCostJob(roomId));
