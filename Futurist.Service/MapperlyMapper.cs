@@ -102,4 +102,36 @@ public partial class MapperlyMapper
     public partial IEnumerable<ItemForecastSpDto> MapToIEnumerableDto(IEnumerable<ItemForecastSp> entities);
     public partial PagedList<ItemForecastSp> MapToPagedList(PagedListDto<ItemForecastSpDto> dto);
     public partial PagedListDto<ItemForecastSpDto> MapToPagedListDto(PagedList<ItemForecastSp> entity);
+    
+    // ScmReport
+    public partial ScmReport MapToEntity(ScmReportDto dto);
+    public partial ScmReportDto MapToDto(ScmReport entity);
+    public partial IEnumerable<ScmReport> MapToIEnumerable(IEnumerable<ScmReportDto> dtos);
+    public partial IEnumerable<ScmReportDto> MapToIEnumerableDto(IEnumerable<ScmReport> entities);
+    public partial PagedList<ScmReport> MapToPagedList(PagedListDto<ScmReportDto> dto);
+    public partial PagedListDto<ScmReportDto> MapToPagedListDto(PagedList<ScmReport> entity);
+    
+    // Versions
+    public partial Versions MapToEntity(VersionsDto dto);
+    public partial VersionsDto MapToDto(Versions entity);
+    public partial IEnumerable<Versions> MapToIEnumerable(IEnumerable<VersionsDto> dtos);
+    public partial IEnumerable<VersionsDto> MapToIEnumerableDto(IEnumerable<Versions> entities);
+    public partial PagedList<Versions> MapToPagedList(PagedListDto<VersionsDto> dto);
+    public partial PagedListDto<VersionsDto> MapToPagedListDto(PagedList<Versions> entity);
+    
+    // MupVerSp
+    public partial MupVerSp MapToEntity(MupVerSpDto dto);
+    public partial MupVerSpDto MapToDto(MupVerSp entity);
+    public partial IEnumerable<MupVerSp> MapToIEnumerable(IEnumerable<MupVerSpDto> dtos);
+    public partial IEnumerable<MupVerSpDto> MapToIEnumerableDto(IEnumerable<MupVerSp> entities);
+    public partial PagedList<MupVerSp> MapToPagedList(PagedListDto<MupVerSpDto> dto);
+    public partial PagedListDto<MupVerSpDto> MapToPagedListDto(PagedList<MupVerSp> entity);
+    
+    // FgCostVerDetailSp
+    public partial FgCostVerDetailSp MapToEntity(FgCostVerDetailSpDto dto);
+    public partial FgCostVerDetailSpDto MapToDto(FgCostVerDetailSp entity);
+    public partial IEnumerable<FgCostVerDetailSp> MapToIEnumerable(IEnumerable<FgCostVerDetailSpDto> dtos);
+    public partial IEnumerable<FgCostVerDetailSpDto> MapToIEnumerableDto(IEnumerable<FgCostVerDetailSp> entities);
+    public partial PagedList<FgCostVerDetailSp> MapToPagedList(PagedListDto<FgCostVerDetailSpDto> dto);
+    public partial PagedListDto<FgCostVerDetailSpDto> MapToPagedListDto(PagedList<FgCostVerDetailSp> entity);
 }
