@@ -8,7 +8,7 @@ using Futurist.Service.Dto;
 
 namespace Futurist.Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = "costing,sc,admin")]
 public class ExchangeRateController : Controller
 {
     private readonly IExchangeRateService _exchangeRateService;
@@ -105,7 +105,7 @@ public class ExchangeRateController : Controller
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "costing,sc,admin")]
 [Route("api/[controller]/[action]")]
 public class ExchangeRateApiController : ControllerBase
 {

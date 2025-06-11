@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Futurist.Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = "costing,sc,rni,admin")]
 [Route("[controller]/[action]")]
 public class MupController : Controller
 {
@@ -67,6 +67,7 @@ public class MupController : Controller
         return View();
     }
     
+    [Authorize(Roles = "costing,sc,admin")]
     public async Task<IActionResult> Process()
     {
         var response = await _mupService.GetMupRoomIdsAsync();
@@ -257,7 +258,7 @@ public class MupController : Controller
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "costing,sc,rni,admin")]
 [Route("api/[controller]/[action]")]
 public class MupApiController : ControllerBase
 {
@@ -270,6 +271,7 @@ public class MupApiController : ControllerBase
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "costing,sc,admin")]
     public IActionResult ProcessMup([FromBody] int roomId)
     {
         return Ok(_mupService.ProcessMupJob(roomId));

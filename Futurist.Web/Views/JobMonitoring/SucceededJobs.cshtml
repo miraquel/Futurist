@@ -48,18 +48,10 @@
 
 @section Scripts {
     <script src="/assets/js/datatables.min.js"></script>
+    <script src="/assets/js/helper.js"></script>
     
     <script>
-        // Debounce helper function
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
-        
-        function formatDuration(milliseconds) {
+                function formatDuration(milliseconds) {
             if (milliseconds < 1000) {
                 return milliseconds + ' ms';
             } else {
