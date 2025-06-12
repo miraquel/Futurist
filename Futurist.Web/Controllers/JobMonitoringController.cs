@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Futurist.Web.Controllers;
 
-[Authorize(Roles = "admin")]
+[Authorize(Roles = "admin,costing")]
 public class JobMonitoringController : Controller
 {
     // GET
@@ -21,7 +21,7 @@ public class JobMonitoringController : Controller
 }
 
 [ApiController]
-[Authorize(Roles = "admin")]
+[Authorize(Roles = "admin,costing")]
 [Route("api/[controller]/[action]")]
 public class JobMonitoringApiController : ControllerBase
 {
