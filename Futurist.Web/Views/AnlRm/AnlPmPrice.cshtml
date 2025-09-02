@@ -1,0 +1,447 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "Analisa PM Price";
+    ViewBag.pageTitle = "Analisa PM Price";
+    Layout = "_Layout";
+}
+
+@section styles{
+    <link href="/assets/css/datatables.min.css" rel="stylesheet">
+    <link href="/assets/css/select2/select2.min.css" rel="stylesheet"/>
+    <link href="/assets/css/select2/select2-bootstrap-5-theme.min.css" rel="stylesheet"/>
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>Analisa PM Price</h1>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label" for="roomSelect">Room</label>
+                        <select class="form-control" id="roomSelect"></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="verIdSelect">Version</label>
+                        <select class="form-control" id="verIdSelect" disabled></select>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label" for="yearSelect">Year</label>
+                        <select class="form-control" id="yearSelect" disabled></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="monthSelect">Month</label>
+                        <select class="form-control" id="monthSelect" disabled></select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <table id="datatables-anl-pm-price" class="display table table-bordered dt-responsive datatable-wrapper" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>Room</th>
+                        <th>Ver ID</th>
+                        <th>Year</th>
+                        <th>Month</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Unit</th>
+                        <th>Plan Qty</th>
+                        <th>Plan Value</th>
+                        <th>Plan Price</th>
+                        <th>Act Qty</th>
+                        <th>Act Value</th>
+                        <th>Act Price</th>
+                        <th>Cont</th>
+                        <th>A/P</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>Room</th>
+                        <th>Ver ID</th>
+                        <th>Year</th>
+                        <th>Month</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Unit</th>
+                        <th>Plan Qty</th>
+                        <th>Plan Value</th>
+                        <th>Plan Price</th>
+                        <th>Act Qty</th>
+                        <th>Act Value</th>
+                        <th>Act Price</th>
+                        <th>Cont</th>
+                        <th>A/P</th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/assets/js/datatables.min.js"></script>
+    <script src="/assets/js/helper.js"></script>
+    <script src="/assets/js/select2/select2.min.js"></script>
+    <script>
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        const roomSelect = $('#roomSelect');
+        const verIdSelect = $('#verIdSelect');
+        const yearSelect = $('#yearSelect');
+        const monthSelect = $('#monthSelect');
+        const datatablesAnlPmPrice = $('#datatables-anl-pm-price');
+        let dataTableInstance = null;
+
+        function clearSelect($select) {
+            $select.val(null).trigger('change');
+        }
+
+        // Room dropdown
+        roomSelect.select2({
+            placeholder: "Select Room",
+            ajax: {
+                url: '/api/AnlRmApi/GetRoomIds',
+                type: 'GET',
+                dataType: 'json',
+                delay: 500,
+                headers: { 'RequestVerificationToken': token },
+                processResults: function (data) {
+                    return {
+                        results: data.data.map(room => ({ id: room, text: room }))
+                    };
+                },
+            }
+        });
+
+        // VerId dropdown (depends on room)
+        function loadVerIds(room) {
+            verIdSelect.select2({
+                placeholder: "Select Version",
+                ajax: {
+                    url: '/api/ReportVersionApi/GetVersions',
+                    type: 'GET',
+                    dataType: 'json',
+                    delay: 500,
+                    headers: { 'RequestVerificationToken': token },
+                    data: function() { return { room: room }; },
+                    processResults: function (data) {
+                        return {
+                            results: data.data.map(version => ({ id: version.verId, text: `Version: ${version.verId} | ${moment(version.verDate).format("DD MMM YYYY")} | ${version.notes}` }))
+                        };
+                    },
+                }
+            });
+        }
+
+        // Year dropdown (depends on room, verid)
+        function loadYears(room, verid) {
+            yearSelect.select2({
+                placeholder: "Select Year",
+                ajax: {
+                    url: '/api/AnlRmApi/GetYears',
+                    type: 'GET',
+                    dataType: 'json',
+                    delay: 500,
+                    headers: { 'RequestVerificationToken': token },
+                    data: function() { return { room: room, verid: verid }; },
+                    processResults: function (data) {
+                        return {
+                            results: data.data.map(year => ({ id: year, text: year }))
+                        };
+                    },
+                }
+            });
+        }
+
+        // Month dropdown (depends on room, verid, year)
+        function loadMonths(room, verid, year) {
+            monthSelect.select2({
+                placeholder: "Select Month",
+                ajax: {
+                    url: '/api/AnlRmApi/GetMonths',
+                    type: 'GET',
+                    dataType: 'json',
+                    delay: 500,
+                    headers: { 'RequestVerificationToken': token },
+                    data: function() { return { room: room, verid: verid, year: year }; },
+                    processResults: function (data) {
+                        return {
+                            results: data.data.map(month => ({ id: month, text: moment().month(month - 1).format("MMMM") }))
+                        };
+                    },
+                }
+            });
+        }
+
+        // Cascading logic
+        roomSelect.on('change', function() {
+            clearSelect(verIdSelect);
+            clearSelect(yearSelect);
+            clearSelect(monthSelect);
+            verIdSelect.empty();
+            yearSelect.empty();
+            monthSelect.empty();
+
+            if (roomSelect.val()) {
+                verIdSelect.prop('disabled', false);
+                loadVerIds(roomSelect.val());
+            } else {
+                verIdSelect.prop('disabled', true);
+            }
+            yearSelect.prop('disabled', true);
+            monthSelect.prop('disabled', true);
+
+            reloadDataTable();
+        });
+
+        verIdSelect.on('change', function() {
+            clearSelect(yearSelect);
+            clearSelect(monthSelect);
+            yearSelect.empty();
+            monthSelect.empty();
+
+            if (roomSelect.val() && verIdSelect.val()) {
+                yearSelect.prop('disabled', false);
+                loadYears(roomSelect.val(), verIdSelect.val());
+            } else {
+                yearSelect.prop('disabled', true);
+            }
+            monthSelect.prop('disabled', true);
+
+            reloadDataTable();
+        });
+
+        yearSelect.on('change', function() {
+            clearSelect(monthSelect);
+            monthSelect.empty();
+
+            if (roomSelect.val() && verIdSelect.val() && yearSelect.val()) {
+                monthSelect.prop('disabled', false);
+                loadMonths(roomSelect.val(), verIdSelect.val(), yearSelect.val());
+            } else {
+                monthSelect.prop('disabled', true);
+            }
+
+            reloadDataTable();
+        });
+
+        monthSelect.on('change', function() {
+            reloadDataTable();
+        });
+
+        function getRefreshButton() {
+            return {
+                text: '<i class="ri-refresh-line"></i> Refresh',
+                className: 'btn btn-soft-secondary',
+                action: function (e, dt, node, config) {
+                    dt.ajax.reload();
+                },
+                titleAttr: 'Refresh Table'
+            };
+        }
+
+        function reloadDataTable() {
+            if (roomSelect.val() && verIdSelect.val() && yearSelect.val() && monthSelect.val()) {
+                if (dataTableInstance) {
+                    dataTableInstance.ajax.reload();
+                } else {
+                    dataTableInstance = datatablesAnlPmPrice.DataTable({
+                        destroy: true,
+                        searchDelay: 1000,
+                        layout: {
+                            topEnd: {
+                                buttons: [
+                                    getRefreshButton(),
+                                    {
+                                        extend: 'copyHtml5',
+                                        text: '<i class="ri-file-copy-line"></i> Copy',
+                                        className: 'btn btn-soft-secondary',
+                                        titleAttr: 'Copy to clipboard'
+                                    },
+                                    {
+                                        extend: 'excelHtml5',
+                                        text: '<i class="ri-file-excel-2-line"></i> Excel',
+                                        className: 'btn btn-soft-secondary',
+                                        titleAttr: 'Export to Excel'
+                                    },
+                                    {
+                                        extend: 'pdfHtml5',
+                                        text: '<i class="ri-file-pdf-line"></i> PDF',
+                                        className: 'btn btn-soft-secondary',
+                                        titleAttr: 'Export to PDF'
+                                    }
+                                ]
+                            }
+                        },
+                        ajax: {
+                            url: '/api/AnlRmApi/GetAnlPmPrice',
+                            data: function() {
+                                return {
+                                    room: roomSelect.val(),
+                                    verid: verIdSelect.val(),
+                                    year: yearSelect.val(),
+                                    month: monthSelect.val()
+                                };
+                            },
+                            beforeSend: function(xhr) {
+                                xhr.setRequestHeader("RequestVerificationToken", token);
+                            },
+                            dataSrc: function(json) {
+                                if (json.data && Array.isArray(json.data.items)) {
+                                    return json.data.items;
+                                }
+                                if (Array.isArray(json.data)) {
+                                    return json.data;
+                                }
+                                return json;
+                            },
+                            error: function(err){
+                                alert(err.responseJSON.errorMessage);
+                            }
+                        },
+                        columns: [
+                            { data: 'room', width: '30px', defaultContent: '' },
+                            { data: 'verId', width: '30px', defaultContent: '' },
+                            { data: 'year', width: '30px', defaultContent: '' },
+                            { data: 'month', width: '30px', defaultContent: '' },
+                            { data: 'itemId', defaultContent: '' },
+                            { data: 'itemName', width: '200px', defaultContent: '' },
+                            { data: 'unitId', defaultContent: '' },
+                            { 
+                                data: 'planQty', 
+                                defaultContent: '', 
+                                render: function(data, type) {
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+                                    return data ? numberFormat.format(data) : '';
+                                } 
+                            },
+                            {
+                                data: 'planValue',
+                                defaultContent: '', 
+                                render: function(data, type) {
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+                                    return data ? numberFormat.format(data) : '';
+                                }
+                            },
+                            {
+                                data: 'planPrice',
+                                defaultContent: '',
+                                render: function(data, type) {
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+                                    return data ? numberFormat.format(data) : '';
+                                }
+                            },
+                            {
+                                data: 'actQty',
+                                defaultContent: '',
+                                render: function (data, type) {
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+                                    return data ? numberFormat.format(data) : '';
+                                }
+                            },
+                            {
+                                data: 'actValue',
+                                defaultContent: '',
+                                render: function(data, type) {
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+                                    return data ? numberFormat.format(data) : '';
+                                }
+                            },
+                            {
+                                data: 'actPrice',
+                                defaultContent: '',
+                                render: function(data, type) {
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+                                    return data ? numberFormat.format(data) : '';
+                                }
+                            },
+                            {
+                                data: 'cont',
+                                defaultContent: '',
+                                render: function(data, type) {
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+                                    return data ? percentFormat.format(data) : '';
+                                }
+                            },
+                            {
+                                data: 'ap',
+                                defaultContent: '',
+                                render: function(data, type) {
+                                    if (type === 'sort' || type === 'filter') {
+                                        return data ? parseFloat(data) : 0;
+                                    }
+                                    return data ? percentFormat.format(data) : '';
+                                }
+                            }
+                        ],
+                        columnDefs: [
+                            {
+                                targets: [0, 1, 2, 3, 4, 6],
+                                className: 'text-center'
+                            }
+                        ],
+                        processing: true,
+                        paging: true,
+                        searching: true,
+                        autoWidth: false,
+                        responsive: false,
+                        scrollX: true,
+                        order: [],
+                        initComplete: function () {
+                            this.api()
+                                .columns()
+                                .every(function () {
+                                    let column = this;
+                                    let title = column.footer().textContent;
+                                    let header = column.header();
+                                    header.style.backgroundColor = '#4F81BD';
+                                    header.style.color = 'white';
+                                    let input = document.createElement('input');
+                                    input.placeholder = title;
+                                    input.className = "form-control";
+                                    input.style.width = '100%';
+                                    column.footer().replaceChildren(input);
+                                    input.addEventListener('keyup', debounce(() => {
+                                        if (column.search() !== input.value) {
+                                            column.search(input.value).draw();
+                                        }
+                                    }, 1000));
+                                });
+                        }
+                    });
+                }
+            } else if (dataTableInstance) {
+                dataTableInstance.clear().draw();
+            }
+        }
+
+        $(document).ready(function() {
+            roomSelect.prop('disabled', false);
+            verIdSelect.prop('disabled', true);
+            yearSelect.prop('disabled', true);
+            monthSelect.prop('disabled', true);
+        });
+    </script>
+}
+

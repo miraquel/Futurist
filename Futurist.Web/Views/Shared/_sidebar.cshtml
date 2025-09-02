@@ -211,6 +211,34 @@
                         </div>
                     </li>
                 }
+                @if (User.IsInRole("costing") || User.IsInRole("sc") || User.IsInRole("rni") || User.IsInRole("finance") || User.IsInRole("marketing_domestik") || User.IsInRole("marketing_export") || User.IsInRole("admin"))
+                {
+                    <li class="nav-item">
+                        <a href="#anlMenuGroup" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
+                           aria-expanded="false" aria-controls="anlMenuGroup">
+                            <i class="ri-bar-chart-2-line"></i> <span>Plan Vs. Actual</span>
+                        </a>
+                        <div class="collapse menu-dropdown" id="anlMenuGroup">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="@Url.Action("AnlFgPrice", "AnlRm")" class="nav-link"> FG Price </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("AnlKurs", "AnlRm")" class="nav-link"> Kurs </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("AnlRmPrice", "AnlRm")" class="nav-link"> RM Price </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("AnlRmPriceGroup", "AnlRm")" class="nav-link"> RM Price Group </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("AnlPmPrice", "AnlRm")" class="nav-link"> PM Price </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                }
                 @if (User.Identity is { IsAuthenticated: true } && (User.IsInRole("admin") || User.IsInRole("costing")))
                 {
                     <li class="nav-item">

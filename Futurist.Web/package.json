@@ -60,6 +60,7 @@
     "gmaps": "^0.4.25",
     "gridjs": "^6.0.6",
     "isotope-layout": "^3.0.6",
+    "jquery": "^3.7.1",
     "jsvectormap": "1.4.2",
     "leaflet": "^1.9.4",
     "list.js": "^2.3.1",
