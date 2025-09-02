@@ -1,0 +1,186 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "Item PO Intransit";
+    ViewBag.pageTitle = "Item PO Intransit";
+    Layout = "_Layout";
+}
+
+@section styles{
+    <link href="/assets/css/datatables.min.css" rel="stylesheet">
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>Item PO Intransit</h1>
+            </div>
+            <div class="card-body">
+                <table id="datatables-item-po-intransit" class="display table table-bordered dt-responsive datatable-wrapper" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>PO</th>
+                        <th>Delivery Date</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Qty</th>
+                        <th>Unit</th>
+                        <th>Currency Code</th>
+                        <th>Price</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>PO</th>
+                        <th>Delivery Date</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Qty</th>
+                        <th>Unit</th>
+                        <th>Currency Code</th>
+                        <th>Price</th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/assets/js/datatables.min.js"></script>
+    <script src="/assets/js/helper.js"></script>
+    <script>
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        const datatablesItemPoIntransit = $('#datatables-item-po-intransit');
+        let dataTableInstance = null;
+
+        function getRefreshButton() {
+            return {
+                text: '<i class="ri-refresh-line"></i> Refresh',
+                className: 'btn btn-soft-secondary',
+                action: function (e, dt, node, config) {
+                    dt.ajax.reload();
+                },
+                titleAttr: 'Refresh Table'
+            };
+        }
+
+        $(document).ready(function () {
+            dataTableInstance = datatablesItemPoIntransit.DataTable({
+                destroy: true,
+                searchDelay: 1000,
+                layout: {
+                    topEnd: {
+                        buttons: [
+                            getRefreshButton(),
+                            {
+                                extend: 'copyHtml5',
+                                text: '<i class="ri-file-copy-line"></i> Copy',
+                                className: 'btn btn-soft-secondary',
+                                titleAttr: 'Copy to clipboard'
+                            },
+                            {
+                                extend: 'excelHtml5',
+                                text: '<i class="ri-file-excel-2-line"></i> Excel',
+                                className: 'btn btn-soft-secondary',
+                                titleAttr: 'Export to Excel'
+                            },
+                            {
+                                extend: 'pdfHtml5',
+                                text: '<i class="ri-file-pdf-line"></i> PDF',
+                                className: 'btn btn-soft-secondary',
+                                titleAttr: 'Export to PDF'
+                            }
+                        ]
+                    }
+                },
+                ajax: {
+                    url: '/api/CurrentDataApi/GetItemPoIntransit',
+                    type: 'GET',
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("RequestVerificationToken", token);
+                    },
+                    dataSrc: function(json) {
+                        if (json.data && Array.isArray(json.data.items)) {
+                            return json.data.items;
+                        }
+                        if (Array.isArray(json.data)) {
+                            return json.data;
+                        }
+                        return json;
+                    },
+                    error: function(err){
+                        alert(err.responseJSON?.errorMessage || "Failed to load data.");
+                    }
+                },
+                columns: [
+                    { data: 'po', defaultContent: '', width: '100px' },
+                    { 
+                        data: 'deliveryDate', 
+                        defaultContent: '',
+                        width: '120px',
+                        render: function(data) {
+                            if (!data) return '';
+                            return moment(data).format('DD MMM YYYY');
+                        }
+                    },
+                    { data: 'itemId', defaultContent: '', width: '100px' },
+                    { data: 'itemName', defaultContent: '' },
+                    { 
+                        data: 'qty', 
+                        defaultContent: '',
+                        render: function(data) {
+                            return data ? formatNumberDecimal(data) : '';
+                        }
+                    },
+                    { data: 'unit', defaultContent: '', width: '50px' },
+                    { data: 'currencyCode', defaultContent: '', width: '50px' },
+                    { 
+                        data: 'price', 
+                        defaultContent: '', 
+                        render: function(data) {
+                            return data ? formatNumberDecimal(data) : '';
+                        }
+                    }
+                ],
+                columnDefs: [
+                    { targets: [0, 1, 2, 5, 6], className: 'text-center' },
+                    { targets: [4, 7], className: 'text-end' }
+                ],
+                processing: true,
+                paging: true,
+                searching: true,
+                autoWidth: false,
+                responsive: false,
+                scrollX: true,
+                order: [],
+                initComplete: function () {
+                    this.api()
+                        .columns()
+                        .every(function () {
+                            let column = this;
+                            let title = column.footer().textContent;
+                            let header = column.header();
+                            header.style.backgroundColor = '#4F81BD';
+                            header.style.color = 'white';
+                            let input = document.createElement('input');
+                            input.placeholder = title;
+                            input.className = "form-control";
+                            input.style.width = '100%';
+                            column.footer().replaceChildren(input);
+                            input.addEventListener('keyup', function() {
+                                if (column.search() !== input.value) {
+                                    column.search(input.value).draw();
+                                }
+                            });
+                        });
+                }
+            });
+        });
+    </script>
+}
+

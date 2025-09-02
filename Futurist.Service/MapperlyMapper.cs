@@ -165,6 +165,31 @@ public partial class MapperlyMapper
     public partial IEnumerable<AnlPmPrice> MapToIEnumerable(IEnumerable<AnlPmPriceDto> dtos);
     public partial IEnumerable<AnlPmPriceDto> MapToIEnumerableDto(IEnumerable<AnlPmPrice> entities);
     public partial PagedList<AnlPmPrice> MapToPagedList(PagedListDto<AnlPmPriceDto> dto);
+    
+    // ItemOnHand
+    public partial ItemOnHand MapToEntity(ItemOnHandDto dto);
+    public partial ItemOnHandDto MapToDto(ItemOnHand entity);
+    public partial IEnumerable<ItemOnHand> MapToIEnumerable(IEnumerable<ItemOnHandDto> dtos);
+    public partial IEnumerable<ItemOnHandDto> MapToIEnumerableDto(IEnumerable<ItemOnHand> entities);
+    public partial PagedList<ItemOnHand> MapToPagedList(PagedListDto<ItemOnHandDto> dto);
+    public partial PagedListDto<ItemOnHandDto> MapToPagedListDto(PagedList<ItemOnHand> entity);
+    
+    // ItemPoIntransit
+    public partial ItemPoIntransit MapToEntity(ItemPoIntransitDto dto);
+    public partial ItemPoIntransitDto MapToDto(ItemPoIntransit entity);
+    public partial IEnumerable<ItemPoIntransit> MapToIEnumerable(IEnumerable<ItemPoIntransitDto> dtos);
+    public partial IEnumerable<ItemPoIntransitDto> MapToIEnumerableDto(IEnumerable<ItemPoIntransit> entities);
+    public partial PagedList<ItemPoIntransit> MapToPagedList(PagedListDto<ItemPoIntransitDto> dto);
+    public partial PagedListDto<ItemPoIntransitDto> MapToPagedListDto(PagedList<ItemPoIntransit> entity);
+    
+    // ItemPag
+    public partial ItemPag MapToEntity(ItemPagDto dto);
+    public partial ItemPagDto MapToDto(ItemPag entity);
+    public partial IEnumerable<ItemPag> MapToIEnumerable(IEnumerable<ItemPagDto> dtos);
+    public partial IEnumerable<ItemPagDto> MapToIEnumerableDto(IEnumerable<ItemPag> entities);
+    public partial PagedList<ItemPag> MapToPagedList(PagedListDto<ItemPagDto> dto);
+    public partial PagedListDto<ItemPagDto> MapToPagedListDto(PagedList<ItemPag> entity);
+    
     // AnlRmPriceGroup
     public partial AnlRmPriceGroup MapToEntity(AnlRmPriceGroupDto dto);
     public partial AnlRmPriceGroupDto MapToDto(AnlRmPriceGroup entity);

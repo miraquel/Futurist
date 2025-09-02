@@ -17,6 +17,7 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     IItemForecastRepository ItemForecastRepository { get; }
     IScmReportRepository ScmReportRepository { get; }
     IAnlRmRepository AnlRmRepository { get; }
+    ICurrentDataRepository CurrentDataRepository { get; }
     IDbTransaction? CurrentTransaction { get; }
     IDbTransaction BeginTransaction();
     Task CommitAsync();
