@@ -123,4 +123,10 @@ public static class ServiceMessageConstants
     public const string AnlRmPriceFound = "AnlRmPrice found";
     public const string AnlPmPriceFound = "AnlPmPrice found";
     public const string AnlPmPriceNotFound = "AnlPmPrice not found";
+    public const string ItemOnHandFound = "ItemOnHand found";
+    public const string ItemOnHandNotFound = "ItemOnHand not found";
+    public const string ItemPoIntransitFound = "ItemPoIntransit found";
+    public const string ItemPoIntransitNotFound = "ItemPoIntransit not found";
+    public const string ItemPagFound = "ItemPag found";
+    public const string ItemPagNotFound = "ItemPag not found";
 }

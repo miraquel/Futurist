@@ -38,6 +38,29 @@
                     </a>
                 </li>
                 
+                @if (User.IsInRole("costing") || User.IsInRole("sc") || User.IsInRole("rni") || User.IsInRole("finance") || User.IsInRole("admin"))
+                {
+                    <li class="nav-item">
+                        <a href="#currentData" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
+                           aria-expanded="false" aria-controls="sidebarCurrentData" data-key="t-current-data">
+                            <i class="ri-database-line"></i> <span>Current Data</span>
+                        </a>
+                        <div class="collapse menu-dropdown" id="currentData">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="@Url.Action("ItemOnHand", "CurrentData")" class="nav-link" data-key="t-item-on-hand"> Item On Hand </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("ItemPoIntransit", "CurrentData")" class="nav-link" data-key="t-item-po-intransit"> Item PO Intransit </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("ItemPag", "CurrentData")" class="nav-link" data-key="t-item-pag"> Item PAG </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                }
+                
                 @if (User.IsInRole("costing") || User.IsInRole("sc") || User.IsInRole("admin"))
                 {
                     <li class="nav-item">

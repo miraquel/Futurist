@@ -22,6 +22,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IReportVersionRepository, ReportVersionRepository>();
         services.AddScoped<IItemForecastRepository, ItemForecastRepository>();
         services.AddScoped<IScmReportRepository, ScmReportRepository>();
+        services.AddScoped<IAnlRmRepository, AnlRmRepository>();
+        services.AddScoped<IRmForecastRepository, RmForecastRepository>();
         
         services.AddScoped<IDbConnection>(s =>
         {

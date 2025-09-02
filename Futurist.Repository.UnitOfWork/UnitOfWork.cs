@@ -23,6 +23,7 @@ public class UnitOfWork : IUnitOfWork
         IItemForecastRepository itemForecastRepository,
         IScmReportRepository scmReportRepository,
         IAnlRmRepository anlRmRepository,
+        ICurrentDataRepository currentDataRepository,
         Func<IDbTransaction> transactionFactory)
     {
         _dbConnection = dbConnection;
@@ -39,6 +40,7 @@ public class UnitOfWork : IUnitOfWork
         ItemForecastRepository = itemForecastRepository;
         ScmReportRepository = scmReportRepository;
         AnlRmRepository = anlRmRepository;
+        CurrentDataRepository = currentDataRepository;
     }
     
     public IDbTransaction? CurrentTransaction { get; private set; }
@@ -61,6 +63,7 @@ public class UnitOfWork : IUnitOfWork
     public IItemForecastRepository ItemForecastRepository { get; }
     public IScmReportRepository ScmReportRepository { get; }
     public IAnlRmRepository AnlRmRepository { get; }
+    public ICurrentDataRepository CurrentDataRepository { get; }
 
     public async Task CommitAsync()
     {
