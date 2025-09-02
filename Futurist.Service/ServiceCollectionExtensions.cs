@@ -19,5 +19,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IReportVersionService, ReportVersionService>();
         services.AddScoped<IItemForecastService, ItemForecastService>();
         services.AddScoped<IScmReportService, ScmReportService>();
+        services.AddScoped<IAnlRmService, AnlRmService>();
     }
 }

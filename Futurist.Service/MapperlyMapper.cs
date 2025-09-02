@@ -134,4 +134,42 @@ public partial class MapperlyMapper
     public partial IEnumerable<FgCostVerDetailSpDto> MapToIEnumerableDto(IEnumerable<FgCostVerDetailSp> entities);
     public partial PagedList<FgCostVerDetailSp> MapToPagedList(PagedListDto<FgCostVerDetailSpDto> dto);
     public partial PagedListDto<FgCostVerDetailSpDto> MapToPagedListDto(PagedList<FgCostVerDetailSp> entity);
+    
+    // AnlRmPrice
+    public partial AnlRmPrice MapToEntity(AnlRmPriceDto dto);
+    public partial AnlRmPriceDto MapToDto(AnlRmPrice entity);
+    public partial IEnumerable<AnlRmPrice> MapToIEnumerable(IEnumerable<AnlRmPriceDto> dtos);
+    public partial IEnumerable<AnlRmPriceDto> MapToIEnumerableDto(IEnumerable<AnlRmPrice> entities);
+    public partial PagedList<AnlRmPrice> MapToPagedList(PagedListDto<AnlRmPriceDto> dto);
+    public partial PagedListDto<AnlRmPriceDto> MapToPagedListDto(PagedList<AnlRmPrice> entity);
+    
+    // AnlKurs
+    public partial AnlKurs MapToEntity(AnlKursDto dto);
+    public partial AnlKursDto MapToDto(AnlKurs entity);
+    public partial IEnumerable<AnlKurs> MapToIEnumerable(IEnumerable<AnlKursDto> dtos);
+    public partial IEnumerable<AnlKursDto> MapToIEnumerableDto(IEnumerable<AnlKurs> entities);
+    public partial PagedList<AnlKurs> MapToPagedList(PagedListDto<AnlKursDto> dto);
+    public partial PagedListDto<AnlKursDto> MapToPagedListDto(PagedList<AnlKurs> entity);
+    
+    // AnlFgPrice
+    public partial AnlFgPrice MapToEntity(AnlFgPriceDto dto);
+    public partial AnlFgPriceDto MapToDto(AnlFgPrice entity);
+    public partial IEnumerable<AnlFgPrice> MapToIEnumerable(IEnumerable<AnlFgPriceDto> dtos);
+    public partial IEnumerable<AnlFgPriceDto> MapToIEnumerableDto(IEnumerable<AnlFgPrice> entities);
+    public partial PagedList<AnlFgPrice> MapToPagedList(PagedListDto<AnlFgPriceDto> dto);
+    
+    // AnlFgPrice
+    public partial PagedListDto<AnlFgPriceDto> MapToPagedListDto(PagedList<AnlFgPrice> entity);
+    public partial AnlPmPrice MapToEntity(AnlPmPriceDto dto);
+    public partial AnlPmPriceDto MapToDto(AnlPmPrice entity);
+    public partial IEnumerable<AnlPmPrice> MapToIEnumerable(IEnumerable<AnlPmPriceDto> dtos);
+    public partial IEnumerable<AnlPmPriceDto> MapToIEnumerableDto(IEnumerable<AnlPmPrice> entities);
+    public partial PagedList<AnlPmPrice> MapToPagedList(PagedListDto<AnlPmPriceDto> dto);
+    // AnlRmPriceGroup
+    public partial AnlRmPriceGroup MapToEntity(AnlRmPriceGroupDto dto);
+    public partial AnlRmPriceGroupDto MapToDto(AnlRmPriceGroup entity);
+    public partial IEnumerable<AnlRmPriceGroup> MapToIEnumerable(IEnumerable<AnlRmPriceGroupDto> dtos);
+    public partial IEnumerable<AnlRmPriceGroupDto> MapToIEnumerableDto(IEnumerable<AnlRmPriceGroup> entities);
+    public partial PagedList<AnlRmPriceGroup> MapToPagedList(PagedListDto<AnlRmPriceGroupDto> dto);
+    public partial PagedListDto<AnlRmPriceGroupDto> MapToPagedListDto(PagedList<AnlRmPriceGroup> entity);
 }

@@ -107,4 +107,20 @@ public static class ServiceMessageConstants
     public const string MupVerNotFound = "Mup Ver not found";
     public const string FgCostVerDetailsFound = "Fg Cost Ver details found";
     public const string FgCostVerDetailsNotFound = "Fg Cost Ver details not found";
+    public const string AnlRmPriceNotFound = "AnlRmPrice not found";
+    public const string AnlKursNotFound = "AnlKurs not found";
+    public const string AnlRmRoomIdsNotFound = "AnlRmPrice room IDs not found";
+    public const string AnlRmVerIdsNotFound = "AnlRmPrice version IDs not found";
+    public const string AnlRmYearsNotFound = "AnlRmPrice years not found";
+    public const string AnlRmMonthsNotFound = "AnlRmPrice months not found";
+    public const string AnlFgPriceFound = "AnlFgPrice found";
+    public const string AnlFgPriceNotFound = "AnlFgPrice not found";
+    public const string AnlRmRoomIdsFound = "AnlRmPrice room IDs found";
+    public const string AnlRmYearsFound = "AnlRmPrice years found";
+    public const string AnlRmVerIdsFound = "AnlRmPrice version IDs found";
+    public const string AnlRmMonthsFound = "AnlRmPrice months found";
+    public const string AnlKursFound = "AnlKurs found";
+    public const string AnlRmPriceFound = "AnlRmPrice found";
+    public const string AnlPmPriceFound = "AnlPmPrice found";
+    public const string AnlPmPriceNotFound = "AnlPmPrice not found";
 }
