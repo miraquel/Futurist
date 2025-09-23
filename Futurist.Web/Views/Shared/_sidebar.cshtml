@@ -115,18 +115,30 @@
                 }
                 @if (User.IsInRole("costing") || User.IsInRole("sc") || User.IsInRole("admin"))
                 {
-                    <li>
-                        <a class="nav-link menu-link" href="@Url.Action("Index", "ItemForecast")">
-                            <i class="ri-price-tag-2-fill"></i> <span>Item Forecast Price</span>
-                        </a>
-                    </li>
-                }
-                @if (User.IsInRole("costing") || User.IsInRole("sc") || User.IsInRole("admin"))
-                {
                     <li class="nav-item">
-                        <a class="nav-link menu-link" href="@Url.Action("Index", "ItemAdjustment")">
-                            <i class="ri-price-tag-3-fill"></i> <span>Item Price Adjustment</span>
+                        <a href="#forecasting" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
+                           aria-expanded="false" aria-controls="sidebarForecasting" data-key="t-forecasting">
+                            <i class="ri-calculator-line"></i> <span>Forecasting</span>
                         </a>
+                        <div class="collapse menu-dropdown" id="forecasting">
+                            <ul class="nav nav-sm flex-column">
+                                <li>
+                                    <a class="nav-link menu-link" href="@Url.Action("RmForecast", "RmForecast")">
+                                        <i class="ri-box-1-fill"></i> <span>RM Forecast</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-link" href="@Url.Action("Index", "ItemForecast")">
+                                        <i class="ri-price-tag-2-fill"></i> <span>Forecast Upload</span>
+                                    </a>
+                                </li>
+                                @* <li class="nav-item"> *@
+                                @*     <a class="nav-link menu-link" href="@Url.Action("Index", "ItemAdjustment")"> *@
+                                @*         <i class="ri-price-tag-3-fill"></i> <span>Adjustment Upload</span> *@
+                                @*     </a> *@
+                                @* </li> *@
+                            </ul>
+                        </div>
                     </li>
                 }
                 @if (User.IsInRole("costing") || User.IsInRole("sc") || User.IsInRole("rni") || User.IsInRole("admin"))
