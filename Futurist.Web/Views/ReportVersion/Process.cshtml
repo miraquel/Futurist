@@ -45,7 +45,7 @@
                 </div>
                 
                 <label for="notes" class="form-label">Notes</label>
-                <textarea id="notes" name="notes" class="form-control mb-3" rows="3"></textarea>
+                <textarea maxlength="50" id="notes" name="notes" class="form-control mb-3" rows="3"></textarea>
 
                 <div class="d-flex justify-content-between">
                     <button class="btn btn-success" id="processFgBtn" onclick="processFgCalc()">
@@ -69,6 +69,7 @@
 </div>
 
 @section Scripts {
+    <script  src="/assets/js/datatables.min.js"></script>  
     <script>
         const roomSelect = $("#roomSelect");
         const token = $('input[name="__RequestVerificationToken"]').val();

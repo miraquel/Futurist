@@ -60,9 +60,23 @@ public class ReportVersionRepository : IReportVersionRepository
 
     public async Task<IEnumerable<int>> GetVersionRoomIdsAsync(GetVersionRoomIdsCommand command)
     {
-        const string storedProcedure = "Version_Select_Room";
+        // const string storedProcedure = "Version_Select_Room";
+        // await _dbConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+        // return await _dbConnection.QueryAsync<int>(storedProcedure, command.DbTransaction, commandType: CommandType.StoredProcedure);
+        
+        const string query = """
+                             SELECT DISTINCT Room FROM FgCost
+                             UNION
+                             SELECT DISTINCT Room FROM Mup
+                             UNION
+                             SELECT DISTINCT Room FROM BomStd
+                             UNION
+                             SELECT DISTINCT Room FROM Rofo
+                             ORDER BY Room;
+                             """;
+        
         await _dbConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
-        return await _dbConnection.QueryAsync<int>(storedProcedure, command.DbTransaction, commandType: CommandType.StoredProcedure);
+        return await _dbConnection.QueryAsync<int>(query, transaction: command.DbTransaction);
     }
 
     public async Task<IEnumerable<Versions>> GetVersionsAsync(GetVersionsCommand command)
