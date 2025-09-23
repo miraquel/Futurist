@@ -85,7 +85,7 @@
                         </a>
                     </li>
                 }
-                @if (User.IsInRole("costing") || User.IsInRole("sc") || User.IsInRole("rni") || User.IsInRole("admin"))
+                @if (User.IsInRole("costing") || User.IsInRole("sc") || User.IsInRole("rni") || User.IsInRole("finance") || User.IsInRole("admin"))
                 {
                     <li class="nav-item">
                         <a href="#mupCalculation" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
@@ -141,7 +141,7 @@
                         </div>
                     </li>
                 }
-                @if (User.IsInRole("costing") || User.IsInRole("sc") || User.IsInRole("rni") || User.IsInRole("admin"))
+                @if (User.IsInRole("costing") || User.IsInRole("sc") || User.IsInRole("rni") || User.IsInRole("finance") || User.IsInRole("admin"))
                 {
                     <li class="nav-item">
                     <a href="#fgCalculation" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
@@ -168,7 +168,7 @@
                 </li>
                 }
                 
-                @if (User.IsInRole("costing") || User.IsInRole("sc") || User.IsInRole("rni") || User.IsInRole("marketing_domestik") || User.IsInRole("marketing_export") || User.IsInRole("admin"))
+                @if (User.IsInRole("costing") || User.IsInRole("sc") || User.IsInRole("rni") || User.IsInRole("finance") || User.IsInRole("marketing_domestik") || User.IsInRole("marketing_export") || User.IsInRole("admin"))
                 {
                     <li class="nav-item">
                         <a href="#reportVersion" class="nav-link menu-link" data-bs-toggle="collapse" role="button"
@@ -186,9 +186,12 @@
                                 <li class="nav-item">
                                     <a href="@Url.Action("GetAllFgCostVer", "ReportVersion")" class="nav-link" data-key="t-summary-by-item-id"> FG Cost Version Summary </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a href="@Url.Action("GetAllMupVer", "ReportVersion")" class="nav-link" data-key="t-details"> MUP Version Details </a>
-                                </li>
+                                @if(User.IsInRole("costing") || User.IsInRole("sc") || User.IsInRole("rni") || User.IsInRole("finance") || User.IsInRole("admin"))
+                                {
+                                    <li class="nav-item">
+                                        <a href="@Url.Action("GetAllMupVer", "ReportVersion")" class="nav-link" data-key="t-details"> MUP Version Details </a>
+                                    </li>
+                                }
                             </ul>
                         </div>
                     </li>
@@ -204,9 +207,9 @@
                         </a>
                         <div class="collapse menu-dropdown" id="scmReportsDomestic">
                             <ul class="nav nav-sm flex-column">
-                                <li class="nav-item">
-                                    <a href="@Url.Action("GetDomesticByProductCustomer", "ScmReport")" class="nav-link" data-key="t-domestic-by-product-customer"> Product & Customer </a>
-                                </li>
+                                @* <li class="nav-item"> *@
+                                @*     <a href="@Url.Action("GetDomesticByProductCustomer", "ScmReport")" class="nav-link" data-key="t-domestic-by-product-customer"> Product & Customer </a> *@
+                                @* </li> *@
                                 <li class="nav-item">
                                     <a href="@Url.Action("GetDomesticByProduct", "ScmReport")" class="nav-link" data-key="t-domestic-by-product"> Product </a>
                                 </li>
@@ -230,9 +233,9 @@
                         </a>
                         <div class="collapse menu-dropdown" id="scmReportsExport">
                             <ul class="nav nav-sm flex-column">
-                                <li class="nav-item">
-                                    <a href="@Url.Action("GetExportByProductCustomer", "ScmReport")" class="nav-link" data-key="t-export-by-product-customer"> Product & Customer </a>
-                                </li>
+                                @* <li class="nav-item"> *@
+                                @*     <a href="@Url.Action("GetExportByProductCustomer", "ScmReport")" class="nav-link" data-key="t-export-by-product-customer"> Product & Customer </a> *@
+                                @* </li> *@
                                 <li class="nav-item">
                                     <a href="@Url.Action("GetExportByProduct", "ScmReport")" class="nav-link" data-key="t-export-by-product"> Product </a>
                                 </li>
