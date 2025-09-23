@@ -7,7 +7,7 @@ using Riok.Mapperly.Abstractions;
 namespace Futurist.Service;
 
 [Mapper]
-public partial class MapperlyMapper
+public partial class MapperlyMapper 
 {
     // Common
     public partial PagedListRequest MapToPagedListRequest(PagedListRequestDto dto);
@@ -150,6 +150,14 @@ public partial class MapperlyMapper
     public partial IEnumerable<AnlKursDto> MapToIEnumerableDto(IEnumerable<AnlKurs> entities);
     public partial PagedList<AnlKurs> MapToPagedList(PagedListDto<AnlKursDto> dto);
     public partial PagedListDto<AnlKursDto> MapToPagedListDto(PagedList<AnlKurs> entity);
+    
+    // RmForecast
+    public partial RmForecast MapToEntity(RmForecastDto dto);
+    public partial RmForecastDto MapToDto(RmForecast entity);
+    public partial IEnumerable<RmForecast> MapToIEnumerable(IEnumerable<RmForecastDto> dtos);
+    public partial IEnumerable<RmForecastDto> MapToIEnumerableDto(IEnumerable<RmForecast> entities);
+    public partial PagedList<RmForecast> MapToPagedList(PagedListDto<RmForecastDto> dto);
+    public partial PagedListDto<RmForecastDto> MapToPagedListDto(PagedList<RmForecast> entity);
     
     // AnlFgPrice
     public partial AnlFgPrice MapToEntity(AnlFgPriceDto dto);
