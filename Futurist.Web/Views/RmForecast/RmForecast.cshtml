@@ -1,0 +1,311 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "RM Forecast";
+    ViewBag.pageTitle = "RM Forecast";
+    Layout = "_Layout";
+}
+
+@section styles{
+    <link href="/assets/css/datatables.min.css" rel="stylesheet">
+    <link href="/assets/css/select2/select2.min.css" rel="stylesheet"/>
+    <link href="/assets/css/select2/select2-bootstrap-5-theme.min.css" rel="stylesheet"/>
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>RM Forecast</h1>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label" for="roomSelect">Room</label>
+                        <select class="form-control" id="roomSelect"></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="yearSelect">Year</label>
+                        <select class="form-control" id="yearSelect" disabled></select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <table id="datatables-rm-forecast" class="display table table-bordered dt-responsive datatable-wrapper" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Room</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Unit</th>
+                        <th>Group Substitusi</th>
+                        <th>Group Procurement</th>
+                        <th>Latest Purchase Date</th>
+                        <th>Latest Purchase Price</th>
+                        <th>January</th>
+                        <th>February</th>
+                        <th>March</th>
+                        <th>April</th>
+                        <th>May</th>
+                        <th>June</th>
+                        <th>July</th>
+                        <th>August</th>
+                        <th>September</th>
+                        <th>October</th>
+                        <th>November</th>
+                        <th>December</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>Year</th>
+                        <th>Room</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Unit</th>
+                        <th>Group Substitusi</th>
+                        <th>Group Procurement</th>
+                        <th>Latest Purchase Date</th>
+                        <th>Latest Purchase Price</th>
+                        <th>January</th>
+                        <th>February</th>
+                        <th>March</th>
+                        <th>April</th>
+                        <th>May</th>
+                        <th>June</th>
+                        <th>July</th>
+                        <th>August</th>
+                        <th>September</th>
+                        <th>October</th>
+                        <th>November</th>
+                        <th>December</th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/assets/js/datatables.min.js"></script>
+    <script src="/assets/js/helper.js"></script>
+    <script src="/assets/js/select2/select2.min.js"></script>
+    <script>
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        const roomSelect = $('#roomSelect');
+        const yearSelect = $('#yearSelect');
+        const datatablesRmForecast = $('#datatables-rm-forecast');
+        let dataTableInstance = null;
+
+        function clearSelect($select) {
+            $select.val(null).trigger('change');
+        }
+
+        // Room dropdown
+        roomSelect.select2({
+            placeholder: "Select Room",
+            ajax: {
+                url: '/api/RmForecastApi/GetRoomIds',
+                type: 'GET',
+                dataType: 'json',
+                delay: 500,
+                headers: { 'RequestVerificationToken': token },
+                processResults: function (data) {
+                    return {
+                        results: data.data.map(room => ({ id: room, text: room }))
+                    };
+                },
+            }
+        });
+
+        // Year dropdown (depends on room)
+        function loadYears(room) {
+            yearSelect.select2({
+                placeholder: "Select Year",
+                ajax: {
+                    url: '/api/RmForecastApi/GetYears',
+                    type: 'GET',
+                    dataType: 'json',
+                    delay: 500,
+                    headers: { 'RequestVerificationToken': token },
+                    data: function() { return { room: room }; },
+                    processResults: function (data) {
+                        return {
+                            results: data.data.map(year => ({ id: year, text: year }))
+                        };
+                    },
+                }
+            });
+        }
+
+        // Cascading logic
+        roomSelect.on('change', function() {
+            clearSelect(yearSelect);
+            yearSelect.empty();
+
+            if (roomSelect.val()) {
+                yearSelect.prop('disabled', false);
+                loadYears(roomSelect.val());
+            } else {
+                yearSelect.prop('disabled', true);
+            }
+
+            reloadDataTable();
+        });
+
+        yearSelect.on('change', function() {
+            reloadDataTable();
+        });
+
+        function getRefreshButton() {
+            return {
+                text: '<i class="ri-refresh-line"></i> Refresh',
+                className: 'btn btn-soft-secondary',
+                action: function (e, dt, node, config) {
+                    dt.ajax.reload();
+                },
+                titleAttr: 'Refresh Table'
+            };
+        }
+
+        function reloadDataTable() {
+            if (roomSelect.val() && yearSelect.val()) {
+                if (dataTableInstance) {
+                    dataTableInstance.ajax.reload();
+                } else {
+                    dataTableInstance = datatablesRmForecast.DataTable({
+                        destroy: true,
+                        searchDelay: 1000,
+                        layout: {
+                            topEnd: {
+                                buttons: [
+                                    getRefreshButton(),
+                                    {
+                                        extend: 'copyHtml5',
+                                        text: '<i class="ri-file-copy-line"></i> Copy',
+                                        className: 'btn btn-soft-secondary',
+                                        titleAttr: 'Copy to clipboard'
+                                    },
+                                    {
+                                        extend: 'excelHtml5',
+                                        text: '<i class="ri-file-excel-2-line"></i> Excel',
+                                        className: 'btn btn-soft-secondary',
+                                        titleAttr: 'Export to Excel'
+                                    },
+                                    {
+                                        extend: 'pdfHtml5',
+                                        text: '<i class="ri-file-pdf-line"></i> PDF',
+                                        className: 'btn btn-soft-secondary',
+                                        titleAttr: 'Export to PDF'
+                                    }
+                                ]
+                            }
+                        },
+                        ajax: {
+                            url: '/api/RmForecastApi/GetAll',
+                            data: function() {
+                                return {
+                                    room: roomSelect.val(),
+                                    year: yearSelect.val()
+                                };
+                            },
+                            beforeSend: function(xhr) {
+                                xhr.setRequestHeader("RequestVerificationToken", token);
+                            },
+                            dataSrc: function(json) {
+                                if (json.data && Array.isArray(json.data.items)) {
+                                    return json.data.items;
+                                }
+                                if (Array.isArray(json.data)) {
+                                    return json.data;
+                                }
+                                return json;
+                            },
+                            error: function(err){
+                                alert(err.responseJSON.errorMessage);
+                            }
+                        },
+                        columns: [
+                            { data: 'year', width: '30px', defaultContent: '' },
+                            { data: 'room', width: '30px', defaultContent: '' },
+                            { data: 'itemId', defaultContent: '' },
+                            { data: 'itemName', width: '200px', defaultContent: '' },
+                            { data: 'unitId', defaultContent: '' },
+                            { data: 'groupSubstitusi', defaultContent: '' },
+                            { data: 'groupProcurement', defaultContent: '' },
+                            { 
+                                data: 'latestPurchaseDate', 
+                                defaultContent: '', 
+                                render: function(data) {
+                                    return data ? moment(data).format('DD MMM YYYY') : '';
+                                }
+                            },
+                            { 
+                                data: 'latestPurchasePrice', 
+                                defaultContent: '', 
+                                render: function(data) {
+                                    return data ? numberFormat.format(data) : '';
+                                }
+                            },
+                            { data: 'january', defaultContent: '', render: function(data){ return data ? numberFormat.format(data) : ''; }},
+                            { data: 'february', defaultContent: '', render: function(data){ return data ? numberFormat.format(data) : ''; }},
+                            { data: 'march', defaultContent: '', render: function(data){ return data ? numberFormat.format(data) : ''; }},
+                            { data: 'april', defaultContent: '', render: function(data){ return data ? numberFormat.format(data) : ''; }},
+                            { data: 'may', defaultContent: '', render: function(data){ return data ? numberFormat.format(data) : ''; }},
+                            { data: 'june', defaultContent: '', render: function(data){ return data ? numberFormat.format(data) : ''; }},
+                            { data: 'july', defaultContent: '', render: function(data){ return data ? numberFormat.format(data) : ''; }},
+                            { data: 'august', defaultContent: '', render: function(data){ return data ? numberFormat.format(data) : ''; }},
+                            { data: 'september', defaultContent: '', render: function(data){ return data ? numberFormat.format(data) : ''; }},
+                            { data: 'october', defaultContent: '', render: function(data){ return data ? numberFormat.format(data) : ''; }},
+                            { data: 'november', defaultContent: '', render: function(data){ return data ? numberFormat.format(data) : ''; }},
+                            { data: 'december', defaultContent: '', render: function(data){ return data ? numberFormat.format(data) : ''; }}
+                        ],
+                        columnDefs: [
+                            {
+                                targets: [0, 1, 2, 4],
+                                className: 'text-center'
+                            }
+                        ],
+                        processing: true,
+                        paging: true,
+                        searching: true,
+                        autoWidth: false,
+                        responsive: false,
+                        scrollX: true,
+                        order: [],
+                        initComplete: function () {
+                            this.api()
+                                .columns()
+                                .every(function () {
+                                    let column = this;
+                                    let title = column.footer().textContent;
+                                    let header = column.header();
+                                    header.style.backgroundColor = '#4F81BD';
+                                    header.style.color = 'white';
+                                    let input = document.createElement('input');
+                                    input.placeholder = title;
+                                    input.className = "form-control";
+                                    input.style.width = '100%';
+                                    column.footer().replaceChildren(input);
+                                    input.addEventListener('keyup', debounce(() => {
+                                        if (column.search() !== input.value) {
+                                            column.search(input.value).draw();
+                                        }
+                                    }, 1000));
+                                });
+                        }
+                    });
+                }
+            } else if (dataTableInstance) {
+                dataTableInstance.clear().draw();
+            }
+        }
+
+        $(document).ready(function() {
+            roomSelect.prop('disabled', false);
+            yearSelect.prop('disabled', true);
+        });
+    </script>
+}

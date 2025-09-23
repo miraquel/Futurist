@@ -113,6 +113,12 @@ public static class ServiceMessageConstants
     public const string AnlRmVerIdsNotFound = "AnlRmPrice version IDs not found";
     public const string AnlRmYearsNotFound = "AnlRmPrice years not found";
     public const string AnlRmMonthsNotFound = "AnlRmPrice months not found";
+    public const string RmForecastFound = "RmForecast found";
+    public const string RmForecastNotFound = "RmForecast not found";
+    public const string RmForecastYearsFound = "Years found";
+    public const string RmForecastYearsNotFound = "Years not found";
+    public const string RmForecastRoomIdsFound = "Room IDs found";
+    public const string RmForecastRoomIdsNotFound = "Room IDs not found";
     public const string AnlFgPriceFound = "AnlFgPrice found";
     public const string AnlFgPriceNotFound = "AnlFgPrice not found";
     public const string AnlRmRoomIdsFound = "AnlRmPrice room IDs found";
