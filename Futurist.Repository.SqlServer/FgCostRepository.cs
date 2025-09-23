@@ -20,15 +20,15 @@ public class FgCostRepository : IFgCostRepository
 
     public async Task<SpTask?> CalculateFgCostAsync(CalculateFgCostCommand command)
     {
-        const string sql = "EXEC ProjectionCalc @RoomId";
+        const string sql = "EXEC ProjectionCalc @Room";
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
-        return await _sqlConnection.QuerySingleOrDefaultAsync<SpTask>(sql, new { command.RoomId },
+        return await _sqlConnection.QuerySingleOrDefaultAsync<SpTask>(sql, new { command.Room },
             transaction: command.DbTransaction, commandTimeout: command.Timeout);
     }
 
     public async Task<IEnumerable<FgCostSp>> GetSummaryFgCostAsync(GetSummaryFgCostCommand command)
     {
-        const string sql = "EXEC FgCost_Select @RoomId";
+        const string sql = "EXEC FgCost_Select @Room";
         
         Dictionary<string, string> columnMappings = new()
         {
@@ -43,7 +43,7 @@ public class FgCostRepository : IFgCostRepository
             (type, columnName) => mapper(type, columnName)!));
         
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
-        return await _sqlConnection.QueryAsync<FgCostSp>(sql, new { command.RoomId },
+        return await _sqlConnection.QueryAsync<FgCostSp>(sql, new { command.Room },
             transaction: command.DbTransaction);
     }
 
@@ -307,9 +307,9 @@ public class FgCostRepository : IFgCostRepository
 
     public async Task<IEnumerable<FgCostDetailSp>> GetFgCostDetailsAsync(GetFgCostDetailCommand command)
     {
-        const string sql = "EXEC FgCostDetail_Select @RoomId";
+        const string sql = "EXEC FgCostDetail_Select @Room";
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
-        return await _sqlConnection.QueryAsync<FgCostDetailSp>(sql, new { command.RoomId },
+        return await _sqlConnection.QueryAsync<FgCostDetailSp>(sql, new { Room = command.Room },
             transaction: command.DbTransaction);
     }
 
