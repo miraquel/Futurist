@@ -1,4 +1,6 @@
-﻿namespace Futurist.Service.Dto;
+﻿using System.Data.SqlTypes;
+
+namespace Futurist.Service.Dto;
 
 public class BomStdDto
 {
@@ -6,6 +8,7 @@ public class BomStdDto
     public string BomId { get; set; } = string.Empty;
     public string ProductId { get; set; } = string.Empty;
     public string ProductName { get; set; } = string.Empty;
+    public DateTime RofoDate { get; set; } = SqlDateTime.MinValue.Value;
     public string ItemId { get; set; } = string.Empty;
     public string ItemName { get; set; } = string.Empty;
     public decimal BomQty { get; set; }
