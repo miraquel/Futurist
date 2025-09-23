@@ -129,10 +129,17 @@ public class ScmReportRepository : IScmReportRepository
             { "INVENTBATCHID", nameof(ScmReport.InventBatchId) },
             { "QTY", nameof(ScmReport.Qty) },
             { "QTYINKG", nameof(ScmReport.QtyInKg) },
+            { "SALESPRICE", nameof(ScmReport.SalesPrice) },
+            { "SALESPRICEINKG", nameof(ScmReport.SalesPriceInKg) },
+            { "LINEPERCENT", nameof(ScmReport.LinePercent) },
+            { "SUMLINEDISCMST", nameof(ScmReport.SumLineDiscMst) },
             { "SALESAMOUNT", nameof(ScmReport.SalesAmount) },
             { "RMPMAMOUNT", nameof(ScmReport.RmpmAmount) },
             { "STDCOST", nameof(ScmReport.StdCost) },
-            { "%RMPM", nameof(ScmReport.RmpmPercentage) }
+            { "%RMPM", nameof(ScmReport.RmpmPercentage) },
+            { "COGS", nameof(ScmReport.Cogs) },
+            { "%COGS", nameof(ScmReport.CogsPercentage) },
+            { "MARGIN", nameof(ScmReport.Margin) }
         };
 
         var mapper = new Func<Type, string, PropertyInfo?>((type, columnName) =>
