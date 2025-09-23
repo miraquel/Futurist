@@ -1,10 +1,13 @@
-﻿namespace Futurist.Domain;
+﻿using System.Data.SqlTypes;
+
+namespace Futurist.Domain;
 public class BomStd
 {
     public int? Room { get; set; }
     public string BomId { get; set; } = string.Empty;
     public string ProductId { get; set; } = string.Empty;
     public string ProductName { get; set; } = string.Empty;
+    public DateTime RofoDate { get; set; } = SqlDateTime.MinValue.Value;
     public string ItemId { get; set; } = string.Empty;
     public string ItemName { get; set; } = string.Empty;
     public decimal BomQty { get; set; }

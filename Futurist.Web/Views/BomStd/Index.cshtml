@@ -56,6 +56,7 @@
                         <th>Room</th>
                         <th>Product ID</th>
                         <th>Product Name</th>
+                        <th>Rofo Date</th>
                         <th>Bom ID</th>
                         <th>Item ID</th>
                         <th>Item Name</th>
@@ -66,6 +67,7 @@
                         <th>Room</th>
                         <th>Product ID</th>
                         <th>Product Name</th>
+                        <th>Rofo Date</th>
                         <th>Bom ID</th>
                         <th>Item ID</th>
                         <th>Item Name</th>
@@ -223,6 +225,19 @@
                     { data: 'room', width: '30px', defaultContent: '' },
                     { data: 'productId', width: '30px', defaultContent: '' },
                     { data: 'productName', defaultContent: '' },
+                    {
+                        data: 'rofoDate',
+                        defaultContent: '',
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw date
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? data : '';
+                            }
+                            // For display, round and format with thousands separator
+                            return data ? moment(data).format("DD MMM YYYY") : ''
+                        },
+                        width: '100px'
+                    },
                     { data: 'bomId', width: '120px', defaultContent: '' },
                     { data: 'itemId', width: '120px', defaultContent: '' },
                     { data: 'itemName', defaultContent: '' }
