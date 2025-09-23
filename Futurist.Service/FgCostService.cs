@@ -29,7 +29,7 @@ public class FgCostService : IFgCostService
             //var transaction = _unitOfWork.BeginTransaction();
             var command = new CalculateFgCostCommand
             {
-                RoomId = roomId,
+                Room = roomId,
                 Timeout = 18000
                 //DbTransaction = transaction
             };
@@ -69,7 +69,7 @@ public class FgCostService : IFgCostService
     {
         try
         {
-            var result = await _unitOfWork.FgCostRepository.GetSummaryFgCostAsync(new GetSummaryFgCostCommand { RoomId = roomId });
+            var result = await _unitOfWork.FgCostRepository.GetSummaryFgCostAsync(new GetSummaryFgCostCommand { Room = roomId });
             return new ServiceResponse<IEnumerable<FgCostSpDto>>
             {
                 Data = _mapper.MapToIEnumerableDto(result),
@@ -118,7 +118,7 @@ public class FgCostService : IFgCostService
     {
         try
         {
-            var result = await _unitOfWork.FgCostRepository.GetFgCostDetailsAsync(new GetFgCostDetailCommand { RoomId = roomId });
+            var result = await _unitOfWork.FgCostRepository.GetFgCostDetailsAsync(new GetFgCostDetailCommand { Room = roomId });
             return new ServiceResponse<IEnumerable<FgCostDetailSpDto>>
             {
                 Data = _mapper.MapToIEnumerableDto(result),

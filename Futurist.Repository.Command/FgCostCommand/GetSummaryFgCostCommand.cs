@@ -2,5 +2,5 @@
 
 public class GetSummaryFgCostCommand : BaseCommand
 {
-    public int RoomId { get; init; }
+    public int Room { get; init; }
 }
