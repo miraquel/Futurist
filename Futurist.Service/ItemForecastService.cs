@@ -87,11 +87,11 @@ public class ItemForecastService : IItemForecastService
                 errors.Add($"{ServiceMessageConstants.ItemForecastForecastDateInvalid}. Rows: {string.Join(", ", forecastDateErrors.Take(10))}{(forecastDateErrors.Length > 10 ? "..." : "")}");
             }
             
-            if (itemForecastCommands.Any(x => x.ForcedPrice == 0))
-            {
-                var forcedPriceErrors = itemForecastCommands.Select((x, i) => new { x, i }).Where(x => x.x.ForcedPrice == 0).Select(x => x.i + 2).ToArray();
-                errors.Add($"{ServiceMessageConstants.ItemForecastForcedPriceInvalid}. Rows: {string.Join(", ", forcedPriceErrors.Take(10))}{(forcedPriceErrors.Length > 10 ? "..." : "")}");
-            }
+            // if (itemForecastCommands.Any(x => x.ForcedPrice == 0))
+            // {
+            //     var forcedPriceErrors = itemForecastCommands.Select((x, i) => new { x, i }).Where(x => x.x.ForcedPrice == 0).Select(x => x.i + 2).ToArray();
+            //     errors.Add($"{ServiceMessageConstants.ItemForecastForcedPriceInvalid}. Rows: {string.Join(", ", forcedPriceErrors.Take(10))}{(forcedPriceErrors.Length > 10 ? "..." : "")}");
+            // }
             
             // check if there is more than one room distinctively
             var roomIds = itemForecastCommands.Select(x => x.Room).Distinct().ToArray();

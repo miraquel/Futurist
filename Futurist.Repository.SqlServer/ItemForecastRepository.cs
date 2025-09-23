@@ -48,11 +48,8 @@ public class ItemForecastRepository : IItemForecastRepository
         {
             parameters.Add("@ForecastDate", command.ForecastDate);
         }
-
-        if (command.ForcedPrice != 0)
-        {
-            parameters.Add("@ForcedPrice", command.ForcedPrice);
-        }
+        
+        parameters.Add("@ForcedPrice", command.ForcedPrice);
         
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
         await _sqlConnection.ExecuteAsync(
