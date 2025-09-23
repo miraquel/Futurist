@@ -67,10 +67,16 @@
                             <th>Batch</th>
                             <th>Quantity</th>
                             <th>Quantity in KG</th>
+                            <th>Sales Price</th>
+                            <th>Line Discount (%)</th>
+                            <th>Line Discount</th>
                             <th>Sales Amount</th>
                             <th>RMPM Amount</th>
                             <th>Standard Cost</th>
+                            <th>COGS</th>
                             <th>%RMPM</th>
+                            <th>%COGS</th>
+                            <th>Margin</th>
                         </tr>
                     </thead>
                     <tfoot>
@@ -88,10 +94,16 @@
                             <th>Batch</th>
                             <th>Quantity</th>
                             <th>Quantity in KG</th>
+                            <th>Sales Price</th>
+                            <th>Line Discount (%)</th>
+                            <th>Line Discount</th>
                             <th>Sales Amount</th>
                             <th>RMPM Amount</th>
                             <th>Standard Cost</th>
+                            <th>COGS</th>
                             <th>%RMPM</th>
+                            <th>%COGS</th>
+                            <th>Margin</th>
                         </tr>
                     </tfoot>
                 </table>
@@ -246,6 +258,41 @@
                             return data ? numberFormat.format(data) : '';
                         }
                     },
+                    {
+                        data: 'salesPrice',
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw number
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? parseFloat(data) : 0;
+                            }
+
+                            // For display, round and format with thousands separator
+                            return data ? numberFormat.format(data) : '';
+                        }
+                    },
+                    {
+                        data: 'linePercent',
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw number
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? parseFloat(data) : 0;
+                            }
+                            // For display, round and format with thousands separator
+                            return data ? percentFormat2Decimals.format(data) : '';
+                        }
+                    },
+                    {
+                        data: 'sumLineDiscMst',
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw number
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? parseFloat(data) : 0;
+                            }
+
+                            // For display, round and format with thousands separator
+                            return data ? numberFormat.format(data) : '';
+                        }
+                    },
                     { 
                         data: 'salesAmount',
                         render: function(data, type) {
@@ -282,7 +329,19 @@
                             return data ? numberFormat.format(data) : '';
                         }
                     },
-                    { 
+                    {
+                        data: 'cogs',
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw number
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? parseFloat(data) : 0;
+                            }
+
+                            // For display, round and format with thousands separator
+                            return data ? numberFormat.format(data) : '';
+                        }
+                    },
+                    {
                         data: 'rmpmPercentage',
                         render: function(data, type) {
                             // For sorting/filtering use the raw number
@@ -292,7 +351,30 @@
                             // For display, round and format with thousands separator
                             return data ? percentFormat.format(data) : '';
                         }
-                    }
+                    },
+                    {
+                        data: 'cogsPercentage',
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw number
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? parseFloat(data) : 0;
+                            }
+                            // For display, round and format with thousands separator
+                            return data ? percentFormat.format(data) : '';
+                        }
+                    },
+                    {
+                        data: 'margin',
+                        render: function(data, type) {
+                            // For sorting/filtering use the raw number
+                            if (type === 'sort' || type === 'filter') {
+                                return data ? parseFloat(data) : 0;
+                            }
+
+                            // For display, round and format with thousands separator
+                            return data ? numberFormat.format(data) : '';
+                        }
+                    },
                 ],
                 columnDefs: [
                     {
