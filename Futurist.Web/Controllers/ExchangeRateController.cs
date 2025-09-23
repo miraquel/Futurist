@@ -100,7 +100,7 @@ public class ExchangeRateController : Controller
         });
 
         return File(result, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            $"FgCostDetail_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+            $"ExchangeRate_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
     }
 }
 

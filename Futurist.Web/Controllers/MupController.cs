@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Futurist.Web.Controllers;
 
-[Authorize(Roles = "costing,sc,rni,admin")]
+[Authorize(Roles = "costing,sc,rni,finance,admin")]
 [Route("[controller]/[action]")]
 public class MupController : Controller
 {
@@ -258,7 +258,7 @@ public class MupController : Controller
 }
 
 [ApiController]
-[Authorize(Roles = "costing,sc,rni,admin")]
+[Authorize(Roles = "costing,sc,rni,finance,admin")]
 [Route("api/[controller]/[action]")]
 public class MupApiController : ControllerBase
 {
