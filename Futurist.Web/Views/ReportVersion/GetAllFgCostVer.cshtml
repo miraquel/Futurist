@@ -56,7 +56,7 @@
                         <th>Rofo ID</th>
                         <th>Product ID</th>
                         <th>Product Name</th>
-                        <th>Unit ID</th>
+                        <th>Unit</th>
                         <th>Unit In Kg</th>
                         <th>Sales Price</th>
                         <th>Rofo Date</th>
@@ -85,7 +85,7 @@
                         <th>Rofo ID</th>
                         <th>Product ID</th>
                         <th>Product Name</th>
-                        <th>Unit ID</th>
+                        <th>Unit</th>
                         <th>Unit In Kg</th>
                         <th>Sales Price</th>
                         <th>Rofo Date</th>
@@ -230,6 +230,10 @@
                             data: 'rofoId',
                             defaultContent: '',
                             render: function(data) {
+                                const authorized = @User.IsInRole("costing").ToString().ToLower() || @User.IsInRole("sc").ToString().ToLower() || @User.IsInRole("admin").ToString().ToLower();
+                                if (!authorized) {
+                                    return data; // Return plain text if not authorized
+                                }
                                 return '<a href="/ReportVersion/GetAllFgCostVerDetailsByRofoId?rofoId=' + data + '&verId=' + versionSelect.val() + '">' + data + '</a>';
                             }
                         },

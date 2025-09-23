@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Futurist.Web.Controllers;
 
-[Authorize(Roles = "costing,sc,rni,admin,marketing_domestik,marketing_export")]
+[Authorize(Roles = "costing,sc,rni,finance,admin,marketing_domestik,marketing_export")]
 public class ReportVersionController : Controller
 {
     private readonly IReportVersionService _reportVersionService;
@@ -38,6 +38,7 @@ public class ReportVersionController : Controller
         return View();
     }
     
+    [Authorize(Roles = "costing,sc,admin")]
     public IActionResult GetAllFgCostVerDetailsByRofoId([FromQuery] int rofoId, [FromQuery] int verId)
     {
         if (rofoId > 0 && verId > 0)
@@ -70,6 +71,7 @@ public class ReportVersionController : Controller
         return View();
     }
 
+    [Authorize(Roles = "costing,sc,rni,finance,admin")]
     public async Task<IActionResult> GetAllMupVer()
     {
         var response = await _reportVersionService.GetVersionRoomIdsAsync();
@@ -175,7 +177,7 @@ public class ReportVersionController : Controller
 }
 
 [ApiController]
-[Authorize(Roles = "costing,sc,rni,admin,marketing_domestik,marketing_export")]
+[Authorize(Roles = "costing,sc,rni,finance,admin,marketing_domestik,marketing_export")]
 [Route("api/[controller]/[action]")]
 public class ReportVersionApiController : ControllerBase
 {
