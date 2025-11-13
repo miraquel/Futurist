@@ -313,4 +313,34 @@ public class AnlRmService : IAnlRmService
             };
         }
     }
+
+    public async Task<ServiceResponse<IEnumerable<AnlCostPriceDto>>> GetAnlCostPriceAsync(int room, int verId, int year, int month, string itemId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = new GetAnlCostPriceCommand
+            {
+                Room = room,
+                VerId = verId,
+                Year = year,
+                Month = month,
+                ItemId = itemId
+            };
+            var result = await _unitOfWork.AnlRmRepository.GetAnlCostPriceAsync(command, cancellationToken);
+            return new ServiceResponse<IEnumerable<AnlCostPriceDto>>
+            {
+                Data = _mapper.MapToIEnumerableDto(result),
+                Message = "AnlCostPrice found"
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "AnlCostPrice {@command}", e.Message);
+            return new ServiceResponse<IEnumerable<AnlCostPriceDto>>
+            {
+                Errors = [e.Message],
+                Message = "AnlCostPrice not found"
+            };
+        }
+    }
 }

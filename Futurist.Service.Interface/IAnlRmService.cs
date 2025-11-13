@@ -15,4 +15,6 @@ public interface IAnlRmService
     Task<ServiceResponse<IEnumerable<int>>> GetMonthsAsync(int room, int verId, int year, CancellationToken cancellationToken);
     Task<ServiceResponse<IEnumerable<int>>> GetVerIdsAsync(CancellationToken cancellationToken);
     Task<ServiceResponse<IEnumerable<AnlRmPriceGroupDto>>> GetAnlRmPriceGroupAsync(int room, int verId, int year, int month, CancellationToken cancellationToken);
+    Task<ServiceResponse<IEnumerable<AnlCostPriceDto>>> GetAnlCostPriceAsync(int room, int verId, int year, int month,
+        string itemId, CancellationToken cancellationToken);
 }

@@ -205,4 +205,12 @@ public partial class MapperlyMapper
     public partial IEnumerable<AnlRmPriceGroupDto> MapToIEnumerableDto(IEnumerable<AnlRmPriceGroup> entities);
     public partial PagedList<AnlRmPriceGroup> MapToPagedList(PagedListDto<AnlRmPriceGroupDto> dto);
     public partial PagedListDto<AnlRmPriceGroupDto> MapToPagedListDto(PagedList<AnlRmPriceGroup> entity);
+    
+    // AnlCostPrice
+    public partial AnlCostPrice MapToEntity(AnlCostPriceDto dto);
+    public partial AnlCostPriceDto MapToDto(AnlCostPrice entity);
+    public partial IEnumerable<AnlCostPrice> MapToIEnumerable(IEnumerable<AnlCostPriceDto> dtos);
+    public partial IEnumerable<AnlCostPriceDto> MapToIEnumerableDto(IEnumerable<AnlCostPrice> entities);
+    public partial PagedList<AnlCostPrice> MapToPagedList(PagedListDto<AnlCostPriceDto> dto);
+    public partial PagedListDto<AnlCostPriceDto> MapToPagedListDto(PagedList<AnlCostPrice> entity);
 }

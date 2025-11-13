@@ -1,0 +1,208 @@
+﻿@model dynamic
+
+@{
+    Layout = "_Layout";
+}
+
+@section styles{
+    <link href="/assets/css/datatables.min.css" rel="stylesheet">
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>Analisa Cost Price for ItemId: @ViewBag.ItemId, Room: @ViewBag.Room, Ver ID: @ViewBag.VerId, Year: @ViewBag.Year, Month: @ViewBag.Month</h1>
+            </div>
+            <div class="card-body">
+                <table id="datatables-anl-cost-price" class="display table table-bordered dt-responsive datatable-wrapper" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>Room</th>
+                        <th>Ver ID</th>
+                        <th>Year</th>
+                        <th>Month</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Unit</th>
+                        <th>Group Substitusi</th>
+                        <th>Plan Qty</th>
+                        <th>Plan Price</th>
+                        <th>Act Qty</th>
+                        <th>Act Price</th>
+                        <th>Contr</th>
+                        <th>A/P</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>Room</th>
+                        <th>Ver ID</th>
+                        <th>Year</th>
+                        <th>Month</th>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Unit</th>
+                        <th>Group Substitusi</th>
+                        <th>Plan Qty</th>
+                        <th>Plan Price</th>
+                        <th>Act Qty</th>
+                        <th>Act Price</th>
+                        <th>Contr</th>
+                        <th>A/P</th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/assets/js/datatables.min.js"></script>
+    <script src="/assets/js/helper.js"></script>
+    <script>
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        const datatablesAnlCostPrice = $('#datatables-anl-cost-price');
+        
+        function getRefreshButton() {
+            return {
+                text: '<i class="ri-refresh-line"></i> Refresh',
+                className: 'btn btn-soft-secondary',
+                action: function () {
+                    reloadDataTable();
+                },
+                titleAttr: 'Refresh Data'
+            };
+        }
+
+        function reloadDataTable() {
+            datatablesAnlCostPrice.DataTable({
+                destroy: true,
+                searchDelay: 1000,
+                layout: {
+                    topEnd: {
+                        buttons: [
+                            getRefreshButton(),
+                            {
+                                extend: 'copyHtml5',
+                                text: '<i class="ri-file-copy-line"></i> Copy',
+                                className: 'btn btn-soft-secondary',
+                                titleAttr: 'Copy to clipboard'
+                            },
+                            {
+                                extend: 'excelHtml5',
+                                text: '<i class="ri-file-excel-2-line"></i> Excel',
+                                className: 'btn btn-soft-secondary',
+                                titleAttr: 'Export to Excel'
+                            },
+                            {
+                                extend: 'pdfHtml5',
+                                text: '<i class="ri-file-pdf-line"></i> PDF',
+                                className: 'btn btn-soft-secondary',
+                                titleAttr: 'Export to PDF'
+                            }
+                        ]
+                    }
+                },
+                ajax: {
+                    url: '/api/AnlRmApi/GetAnlCostPrice',
+                    data: function() {
+                        return {
+                            room: @ViewBag.Room,
+                            verid: @ViewBag.VerId,
+                            year: @ViewBag.Year,
+                            month: @ViewBag.Month,
+                            itemid: @ViewBag.ItemId
+                        };
+                    },
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("RequestVerificationToken", token);
+                    },
+                    dataSrc: function(json) {
+                        if (json.data && Array.isArray(json.data.items)) {
+                            return json.data.items;
+                        }
+                        if (Array.isArray(json.data)) {
+                            return json.data;
+                        }
+                        return json;
+                    },
+                    error: function(err){
+                        alert(err.responseJSON.errorMessage);
+                    }
+                },
+                columns: [
+                    { data: 'room', defaultContent: '' },
+                    { data: 'verId', defaultContent: '' },
+                    { data: 'year', defaultContent: '' },
+                    { data: 'month', defaultContent: '' },
+                    { data: 'itemId', defaultContent: '' },
+                    { data: 'itemName', defaultContent: '' },
+                    { data: 'unit', defaultContent: '' },
+                    { data: 'groupSubstitusi', defaultContent: '' },
+                    { data: 'planQty', defaultContent: '', render: numberRender },
+                    { data: 'planPrice', defaultContent: '', render: numberRender },
+                    { data: 'actQty', defaultContent: '', render: numberRender },
+                    { data: 'actPrice', defaultContent: '', render: numberRender },
+                    { data: 'contr', defaultContent: '', render: percentRender },
+                    { data: 'ap', defaultContent: '', render: percentRender }
+                ],
+                columnDefs: [
+                    {
+                        targets: [0, 1, 2, 3, 6, 7],
+                        className: 'text-center'
+                    }
+                ],
+                processing: true,
+                paging: true,
+                searching: true,
+                autoWidth: false,
+                responsive: false,
+                scrollX: true,
+                order: [],
+                initComplete: function () {
+                    this.api()
+                        .columns()
+                        .every(function () {
+                            let column = this;
+                            let title = column.footer().textContent;
+                            let header = column.header();
+                            header.style.backgroundColor = '#4F81BD';
+                            header.style.color = 'white';
+                            let input = document.createElement('input');
+                            input.placeholder = title;
+                            input.className = "form-control";
+                            input.style.width = '100%';
+                            column.footer().replaceChildren(input);
+                            input.addEventListener('keyup', debounce(() => {
+                                if (column.search() !== input.value) {
+                                    column.search(input.value).draw();
+                                }
+                            }, 1000));
+                        });
+                }
+            });
+        }
+        
+        $(document).ready(function () {
+            reloadDataTable();
+        });
+
+        function numberRender(data, type) {
+            if (type === 'sort' || type === 'filter') {
+                return data ? parseFloat(data) : 0;
+            }
+            return data ? numberFormat.format(data) : '';
+        }
+        
+        function percentRender(data, type) {
+            if (type === 'sort' || type === 'filter') {
+                return data ? parseFloat(data) : 0;
+            }
+            return data ? percentFormat.format(data) : '';
+        }
+    </script>
+}
