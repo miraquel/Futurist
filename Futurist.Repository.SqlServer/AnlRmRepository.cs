@@ -257,7 +257,10 @@ public class AnlRmRepository : IAnlRmRepository
     {
         Dictionary<string, string> columnMappings = new()
         {
-            { "A/P", nameof(AnlFgPrice.Ap) }
+            { "A/P", nameof(AnlFgPrice.Ap) },
+            { "ActDisc%", nameof(AnlFgPrice.ActDiscPct) },
+            { "ActDisc%Lm", nameof(AnlFgPrice.ActDiscPctLm) }
+            // Add more mappings here if any other column names differ from property names
         };
 
         var mapper = new Func<Type, string, PropertyInfo?>((type, columnName) =>

@@ -101,7 +101,9 @@ public class ReportVersionRepository : IReportVersionRepository
             { "Yield Prev", nameof(FgCostVerSp.YieldPrev) },
             { "RmPm+Y Prev", nameof(FgCostVerSp.CostRmPmYPrev) },
             { "CostPrice Prev", nameof(FgCostVerSp.CostPricePrev) },
-            { "Delta Absolute", nameof(FgCostVerSp.DeltaAbsolute) }
+            { "Delta Absolute", nameof(FgCostVerSp.DeltaAbsolute) },
+            { "Ratio RMPM/S", nameof(FgCostVerSp.RatioRmPmToSalesPrice) },
+            { "Ratio CP/S", nameof(FgCostVerSp.RatioCostPriceToSalesPrice) }
         };
 
         var mapper = new Func<Type, string, PropertyInfo?>((type, columnName) =>
