@@ -10,17 +10,26 @@ public class AnlFgPriceDto
     public string ItemName { get; set; } = string.Empty;
     public string UnitId { get; set; } = string.Empty;
     public decimal PlanQty { get; set; }
-    public decimal PlanValue { get; set; }
-    public decimal PlanPrice { get; set; }
+    public decimal PlanCostValue { get; set; }
+    public decimal PlanCostPrice { get; set; }
     public decimal PlanRmPrice { get; set; }
     public decimal PlanPmPrice { get; set; }
     public decimal PlanStdCostPrice { get; set; }
     public decimal ActQty { get; set; }
-    public decimal ActValue { get; set; }
-    public decimal ActPrice { get; set; }
+    public decimal ActCostValue { get; set; }
+    public decimal ActCostPrice { get; set; }
     public decimal ActRmPrice { get; set; }
     public decimal ActPmPrice { get; set; }
     public decimal ActStdCostPrice { get; set; }
+    public decimal ActStdCostPriceLm { get; set; }
     public decimal Cont { get; set; }
     public decimal Ap { get; set; }
+    public decimal ActCostPriceLm { get; set; }
+    public decimal PlanNetSalesPriceIndex { get; set; }
+    public decimal ActNetSalesPrice { get; set; }
+    public decimal ActNetSalesPriceLm { get; set; }
+    public decimal ActGrossSalesPrice { get; set; }
+    public decimal ActGrossSalesPriceLm { get; set; }
+    public decimal ActDiscPct { get; set; }
+    public decimal ActDiscPctLm { get; set; }
 }

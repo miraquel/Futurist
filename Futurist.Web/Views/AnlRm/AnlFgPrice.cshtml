@@ -52,13 +52,19 @@
                         <th>Item Name</th>
                         <th>Unit</th>
                         <th>Plan Qty</th>
-                        <th>Plan Value</th>
-                        <th>Plan Price</th>
+                        <th>Plan Cost Price</th>
                         <th>Act Qty</th>
-                        <th>Act Value</th>
-                        <th>Act Price</th>
+                        <th>Act Cost Price</th>
                         <th>Cont</th>
                         <th>A/P</th>
+                        <th>Cost Price LM</th>
+                        <th>Plan Net Sales Price</th>
+                        <th>Act Net Sales Price</th>
+                        <th>Net Sales Price LM</th>
+                        <th>Act Gross Sales Price</th>
+                        <th>Gross Sales Price LM</th>
+                        <th>Act Disc %</th>
+                        <th>Disc % LM</th>
                     </tr>
                     </thead>
                     <tfoot>
@@ -71,13 +77,19 @@
                         <th>Item Name</th>
                         <th>Unit</th>
                         <th>Plan Qty</th>
-                        <th>Plan Value</th>
-                        <th>Plan Price</th>
+                        <th>Plan Cost Price</th>
                         <th>Act Qty</th>
-                        <th>Act Value</th>
-                        <th>Act Price</th>
+                        <th>Act Cost Price</th>
                         <th>Cont</th>
                         <th>A/P</th>
+                        <th>Cost Price LM</th>
+                        <th>Plan Net Sales Price</th>
+                        <th>Act Net Sales Price</th>
+                        <th>Net Sales Price LM</th>
+                        <th>Act Gross Sales Price</th>
+                        <th>Gross Sales Price LM</th>
+                        <th>Act Disc %</th>
+                        <th>Disc % LM</th>
                     </tr>
                     </tfoot>
                 </table>
@@ -311,89 +323,28 @@
                             { data: 'verId', width: '30px', defaultContent: '' },
                             { data: 'year', width: '30px', defaultContent: '' },
                             { data: 'month', width: '30px', defaultContent: '' },
-                            { data: 'itemId', defaultContent: '' },
+                            {
+                                data: 'itemId', defaultContent: '',
+                                render: function(data) {
+                                    return '<a href="/AnlRm/AnlCostPrice?itemId=' + encodeURIComponent(data) + '&room=' + encodeURIComponent(roomSelect.val()) + '&verid=' + encodeURIComponent(verIdSelect.val()) + '&year=' + encodeURIComponent(yearSelect.val()) + '&month=' + encodeURIComponent(monthSelect.val()) + '" target="_blank" rel="noopener noreferrer" >' + data + '</a>';
+                                }
+                            },
                             { data: 'itemName', width: '200px', defaultContent: '' },
                             { data: 'unitId', defaultContent: '' },
-                            { 
-                                data: 'planQty', 
-                                defaultContent: '', 
-                                render: function(data, type) {
-                                    if (type === 'sort' || type === 'filter') {
-                                        return data ? parseFloat(data) : 0;
-                                    }
-                                    return data ? numberFormat.format(data) : '';
-                                } 
-                            },
-                            {
-                                data: 'planValue',
-                                defaultContent: '', 
-                                render: function(data, type) {
-                                    if (type === 'sort' || type === 'filter') {
-                                        return data ? parseFloat(data) : 0;
-                                    }
-                                    return data ? numberFormat.format(data) : '';
-                                }
-                            },
-                            {
-                                data: 'planPrice',
-                                defaultContent: '',
-                                render: function(data, type) {
-                                    if (type === 'sort' || type === 'filter') {
-                                        return data ? parseFloat(data) : 0;
-                                    }
-                                    return data ? numberFormat.format(data) : '';
-                                }
-                            },
-                            {
-                                data: 'actQty',
-                                defaultContent: '',
-                                render: function (data, type) {
-                                    if (type === 'sort' || type === 'filter') {
-                                        return data ? parseFloat(data) : 0;
-                                    }
-                                    return data ? numberFormat.format(data) : '';
-                                }
-                            },
-                            {
-                                data: 'actValue',
-                                defaultContent: '',
-                                render: function(data, type) {
-                                    if (type === 'sort' || type === 'filter') {
-                                        return data ? parseFloat(data) : 0;
-                                    }
-                                    return data ? numberFormat.format(data) : '';
-                                }
-                            },
-                            {
-                                data: 'actPrice',
-                                defaultContent: '',
-                                render: function(data, type) {
-                                    if (type === 'sort' || type === 'filter') {
-                                        return data ? parseFloat(data) : 0;
-                                    }
-                                    return data ? numberFormat.format(data) : '';
-                                }
-                            },
-                            {
-                                data: 'cont',
-                                defaultContent: '',
-                                render: function(data, type) {
-                                    if (type === 'sort' || type === 'filter') {
-                                        return data ? parseFloat(data) : 0;
-                                    }
-                                    return data ? percentFormat.format(data) : '';
-                                }
-                            },
-                            {
-                                data: 'ap',
-                                defaultContent: '',
-                                render: function(data, type) {
-                                    if (type === 'sort' || type === 'filter') {
-                                        return data ? parseFloat(data) : 0;
-                                    }
-                                    return data ? percentFormat.format(data) : '';
-                                }
-                            }
+                            { data: 'planQty', defaultContent: '', render: numberRender },
+                            { data: 'planCostPrice', defaultContent: '', render: numberRender },
+                            { data: 'actQty', defaultContent: '', render: numberRender },
+                            { data: 'actCostPrice', defaultContent: '', render: numberRender },
+                            { data: 'cont', defaultContent: '', render: percentRender },
+                            { data: 'ap', defaultContent: '', render: percentRender },
+                            { data: 'actCostPriceLm', defaultContent: '', render: numberRender },
+                            { data: 'planNetSalesPriceIndex', defaultContent: '', render: numberRender },
+                            { data: 'actNetSalesPrice', defaultContent: '', render: numberRender },
+                            { data: 'actNetSalesPriceLm', defaultContent: '', render: numberRender },
+                            { data: 'actGrossSalesPrice', defaultContent: '', render: numberRender },
+                            { data: 'actGrossSalesPriceLm', defaultContent: '', render: numberRender },
+                            { data: 'actDiscPct', defaultContent: '', render: percentRender },
+                            { data: 'actDiscPctLm', defaultContent: '', render: percentRender }
                         ],
                         columnDefs: [
                             {
@@ -434,6 +385,19 @@
             } else if (dataTableInstance) {
                 dataTableInstance.clear().draw();
             }
+        }
+
+        function numberRender(data, type) {
+            if (type === 'sort' || type === 'filter') {
+                return data ? parseFloat(data) : 0;
+            }
+            return data ? numberFormat.format(data) : '';
+        }
+        function percentRender(data, type) {
+            if (type === 'sort' || type === 'filter') {
+                return data ? parseFloat(data) : 0;
+            }
+            return data ? percentFormat.format(data) : '';
         }
 
         $(document).ready(function() {
