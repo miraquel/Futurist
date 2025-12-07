@@ -203,6 +203,26 @@ public class AnlRmRepository : IAnlRmRepository
         return await _sqlConnection.QueryAsync<AnlRmPriceGroup>(sqlCommand);
     }
 
+    public async Task<IEnumerable<AnlCostPrice>> GetAnlCostPriceAsync(GetAnlCostPriceCommand command, CancellationToken cancellationToken)
+    {
+        const string query = "AnlCostPriceByItemId_plan_vs_actual";
+        AnlCostPriceMapping();
+        var parameters = new DynamicParameters();
+        parameters.Add("@Room", command.Room);
+        parameters.Add("@VerId", command.VerId);
+        parameters.Add("@Year", command.Year);
+        parameters.Add("@Month", command.Month);
+        parameters.Add("@ItemId", command.ItemId);
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+        var sqlCommand = new CommandDefinition(
+            query,
+            parameters,
+            command.DbTransaction,
+            cancellationToken: cancellationToken,
+            commandType: CommandType.StoredProcedure);
+        return await _sqlConnection.QueryAsync<AnlCostPrice>(sqlCommand);
+    }
+
     private static void AnlRmPriceMapping()
     {
         Dictionary<string, string> columnMappings = new()
@@ -271,6 +291,19 @@ public class AnlRmRepository : IAnlRmRepository
             type.GetProperty(columnMappings.GetValueOrDefault(columnName, columnName)));
         SqlMapper.SetTypeMap(typeof(AnlRmPriceGroup), new CustomPropertyTypeMap(
             typeof(AnlRmPriceGroup),
+            (type, columnName) => mapper(type, columnName)!));
+    }
+    
+    private static void AnlCostPriceMapping()
+    {
+        Dictionary<string, string> columnMappings = new()
+        {
+            { "A/P", nameof(AnlCostPrice.Ap) }
+        };
+        var mapper = new Func<Type, string, PropertyInfo?>((type, columnName) =>
+            type.GetProperty(columnMappings.GetValueOrDefault(columnName, columnName)));
+        SqlMapper.SetTypeMap(typeof(AnlCostPrice), new CustomPropertyTypeMap(
+            typeof(AnlCostPrice),
             (type, columnName) => mapper(type, columnName)!));
     }
 }

@@ -33,6 +33,16 @@ public class AnlRmController : Controller
     {
         return View();
     }
+    
+    public IActionResult AnlCostPrice(int room, int verId, int year, int month, string itemId)
+    {
+        ViewBag.Room = room;
+        ViewBag.VerId = verId;
+        ViewBag.Year = year;
+        ViewBag.Month = month;
+        ViewBag.ItemId = itemId;
+        return View();
+    }
 }
 
 [ApiController]
@@ -130,6 +140,17 @@ public class AnlRmApiController : ControllerBase
     public async Task<IActionResult> GetAnlPmPriceAsync([FromQuery] int room, [FromQuery] int verId, [FromQuery] int year, [FromQuery] int month, CancellationToken cancellationToken)
     {
         var response = await _anlRmService.GetAnlPmPriceAsync(room, verId, year, month, cancellationToken);
+        return response.IsSuccess
+            ? Ok(response)
+            : BadRequest(response);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAnlCostPriceAsync([FromQuery] int room, [FromQuery] int verId,
+        [FromQuery] int year, [FromQuery] int month,
+        [FromQuery] string itemId, CancellationToken cancellationToken)
+    {
+        var response = await _anlRmService.GetAnlCostPriceAsync(room, verId, year, month, itemId, cancellationToken);
         return response.IsSuccess
             ? Ok(response)
             : BadRequest(response);
