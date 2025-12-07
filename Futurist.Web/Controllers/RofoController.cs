@@ -110,6 +110,7 @@ public class RofoController : Controller
                 row.Cell(3).Value = "Item Id";
                 row.Cell(4).Value = "Item Name";
                 row.Cell(5).Value = "Qty";
+                row.Cell(6).Value = "Sales Price";
             }
             else
             {
@@ -119,7 +120,9 @@ public class RofoController : Controller
                 row.Cell(3).Value = dto.ItemId;
                 row.Cell(4).Value = dto.ItemName;
                 row.Cell(5).Value = dto.Qty;
-                row.Cell(5).Style.NumberFormat.Format = "#,##0";
+                row.Cell(5).Style.NumberFormat.Format = "#,##0.00";
+                row.Cell(6).Value = dto.SalesPrice;
+                row.Cell(6).Style.NumberFormat.Format = "#,##0";
             }
         });
 

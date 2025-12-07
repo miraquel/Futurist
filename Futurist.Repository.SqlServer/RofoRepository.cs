@@ -180,6 +180,7 @@ internal class RofoRepository : IRofoRepository
         dataTable.Columns.Add("ItemName", typeof(string));
         dataTable.Columns.Add("Qty", typeof(decimal));
         dataTable.Columns.Add("QtyRem", typeof(decimal));
+        dataTable.Columns.Add("SalesPrice", typeof(decimal));
         dataTable.Columns.Add("CreatedBy", typeof(string));
         dataTable.Columns.Add("CreatedDate", typeof(DateTime));
         dataTable.Columns.Add("RecId", typeof(int));
@@ -187,7 +188,7 @@ internal class RofoRepository : IRofoRepository
         foreach (var item in command.Rofos)
         {
             var itemName = item.ItemName.Length > 60 ? item.ItemName[..60] : item.ItemName;
-            dataTable.Rows.Add(item.Room, item.RofoDate, item.ItemId, itemName, item.Qty, item.QtyRem, item.CreatedBy, item.CreatedDate);
+            dataTable.Rows.Add(item.Room, item.RofoDate, item.ItemId, itemName, item.Qty, item.QtyRem, item.SalesPrice, item.CreatedBy, item.CreatedDate);
         }
         
         await sqlBulkCopy.WriteToServerAsync(dataTable);
