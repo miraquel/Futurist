@@ -126,7 +126,8 @@ public class RofoService : IRofoService
                 RofoDate = row.Cell(2).TryGetValue(out DateTime rofoDate) ? rofoDate : DateTime.MinValue,
                 ItemId = row.Cell(3).Value.ToString(),
                 ItemName = row.Cell(4).Value.ToString(),
-                Qty = row.Cell(5).TryGetValue(out decimal qty) ? qty : 0,
+                Qty = row.Cell(5).TryGetValue(out decimal qty) ? Math.Ceiling(qty) : 0,
+                SalesPrice = row.Cell(6).TryGetValue(out decimal salesPrice) ? salesPrice : 0,
                 CreatedBy = string.IsNullOrEmpty(serviceCommand.User) ? "Unknown" : serviceCommand.User,
                 CreatedDate = createdDate,
             }).ToArray();

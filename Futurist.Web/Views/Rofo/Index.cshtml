@@ -60,12 +60,8 @@
                             </button>
                         </div>
                     </form>
-                    <div >
-                        <a asp-controller="Rofo" asp-action="DownloadTemplate" class="btn btn-info">
-                            <span class="ri-download-2-fill me-1"></span>
-                            Download Template
-                        </a>
-                        <a asp-controller="Rofo" asp-action="ExportRofo" asp-route-room="0" onclick="downloadRofo()" id="linkDownload" class="btn btn-info ms-2">
+                    <div>
+                        <a asp-controller="Rofo" asp-action="ExportRofo" asp-route-room="0" onclick="downloadRofo()" id="linkDownload" class="btn btn-info">
                             <i class="ri-file-excel-2-fill"></i>
                             Download Result
                         </a>
@@ -83,6 +79,7 @@
                         <th>Item Id</th>
                         <th>Item Name</th>
                         <th>Qty</th>
+                        <th>Sales Price</th>
                     </tr>
                     </thead>
                     <tfoot>
@@ -92,6 +89,7 @@
                             <th>Item ID</th>
                             <th>Item Name</th>
                             <th>Qty</th>
+                            <th>Sales Price</th>
                     </tfoot>
                 </table>
             </div><!-- end card-body -->
@@ -208,6 +206,19 @@
                         {
                             data: 'qty',
                             width: '80px',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+
+                                // For display, round and format with thousands separator
+                                return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'salesPrice',
+                            width: '100px',
                             render: function(data, type) {
                                 // For sorting/filtering use the raw number
                                 if (type === 'sort' || type === 'filter') {
