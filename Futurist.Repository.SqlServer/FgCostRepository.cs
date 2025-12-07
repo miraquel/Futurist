@@ -28,19 +28,8 @@ public class FgCostRepository : IFgCostRepository
 
     public async Task<IEnumerable<FgCostSp>> GetSummaryFgCostAsync(GetSummaryFgCostCommand command)
     {
+        CustomMapping();
         const string sql = "EXEC FgCost_Select @Room";
-        
-        Dictionary<string, string> columnMappings = new()
-        {
-            { "RmPm+Y", nameof(FgCostSp.RmPmYield) }
-        };
-
-        var mapper = new Func<Type, string, PropertyInfo?>((type, columnName) =>
-            type.GetProperty(columnMappings.GetValueOrDefault(columnName, columnName)));
-
-        SqlMapper.SetTypeMap(typeof(FgCostSp), new CustomPropertyTypeMap(
-            typeof(FgCostSp),
-            (type, columnName) => mapper(type, columnName)!));
         
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
         return await _sqlConnection.QueryAsync<FgCostSp>(sql, new { command.Room },
@@ -49,6 +38,7 @@ public class FgCostRepository : IFgCostRepository
 
     public async Task<PagedList<FgCostSp>> GetSummaryFgCostPagedListAsync(GetSummaryFgCostPagedListCommand command)
     {
+        CustomMapping();
         const string sql = """
                            SELECT a.[Room]
                            ,a.[RofoId]
@@ -1015,5 +1005,21 @@ public class FgCostRepository : IFgCostRepository
         await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
         var fgCostDetailCount = await _sqlConnection.ExecuteScalarAsync<int>(queryTemplate.RawSql, queryTemplate.Parameters, command.DbTransaction);
         return new PagedList<FgCostDetailSp>(fgCostDetailList, pagedListRequest.PageNumber, pagedListRequest.PageSize, fgCostDetailCount);
+    }
+    
+    private static void CustomMapping()
+    {
+        Dictionary<string, string> columnMappings = new()
+        {
+            { "Ratio RMPM/S", nameof(FgCostSp.RatioRmPmToSalesPrice) },
+            { "Ratio CP/S", nameof(FgCostSp.RatioCostPriceToSalesPrice) }
+        };
+
+        var mapper = new Func<Type, string, PropertyInfo?>((type, columnName) =>
+            type.GetProperty(columnMappings.GetValueOrDefault(columnName, columnName)));
+
+        SqlMapper.SetTypeMap(typeof(FgCostSp), new CustomPropertyTypeMap(
+            typeof(FgCostSp),
+            (type, columnName) => mapper(type, columnName)!));
     }
 }

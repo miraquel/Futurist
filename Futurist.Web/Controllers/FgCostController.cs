@@ -92,10 +92,10 @@ public class FgCostController : Controller
                 row.Cell(9).Value = "Yield";
                 row.Cell(10).Value = "RM Price";
                 row.Cell(11).Value = "PM Price";
-                row.Cell(12).Value = "RMPM+Y";
-                row.Cell(13).Value = "Std Cost Price";
-                row.Cell(14).Value = "Cost Price";
-                row.Cell(15).Value = "Sales Price Index";
+                // row.Cell(12).Value = "RMPM+Y";
+                row.Cell(12).Value = "Std Cost Price";
+                row.Cell(13).Value = "Cost Price";
+                row.Cell(14).Value = "Sales Price Index";
             }
             else
             {
@@ -115,14 +115,14 @@ public class FgCostController : Controller
                 row.Cell(10).Style.NumberFormat.Format = "#,##0";
                 row.Cell(11).Value = dto.PmPrice;
                 row.Cell(11).Style.NumberFormat.Format = "#,##0";
-                row.Cell(12).Value = dto.RmPmYield;
+                // row.Cell(12).Value = dto.RmPmYield;
+                // row.Cell(12).Style.NumberFormat.Format = "#,##0";
+                row.Cell(12).Value = dto.StdCostPrice;
                 row.Cell(12).Style.NumberFormat.Format = "#,##0";
-                row.Cell(13).Value = dto.StdCostPrice;
+                row.Cell(13).Value = dto.CostPrice;
                 row.Cell(13).Style.NumberFormat.Format = "#,##0";
-                row.Cell(14).Value = dto.CostPrice;
+                row.Cell(14).Value = dto.SalesPrice;
                 row.Cell(14).Style.NumberFormat.Format = "#,##0";
-                row.Cell(15).Value = dto.SalesPriceIndex;
-                row.Cell(15).Style.NumberFormat.Format = "#,##0";
             }
         });
         

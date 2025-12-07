@@ -16,5 +16,8 @@ public class FgCostSpDto
     public decimal RmPmYield { get; set; }
     public decimal StdCostPrice { get; set; }
     public decimal CostPrice { get; set; }
-    public decimal SalesPriceIndex { get; set; }
+    public decimal SalesPrice { get; set; }
+    public decimal RatioRmPmToSalesPrice { get; set; }
+    public decimal RatioCostPriceToSalesPrice { get; set; }
+    public string GroupFg { get; set; } = string.Empty;
 }

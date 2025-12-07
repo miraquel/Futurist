@@ -49,15 +49,18 @@
                         <th>Product Name</th>
                         <th>Unit</th>
                         <th>Unit in Kg</th>
+                        <th>Group FG</th>
                         <th>Rofo Date</th>
                         <th>Rofo Qty</th>
                         <th>Yield</th>
                         <th>RM Price</th>
                         <th>PM Price</th>
-                        <th>RMPM+Y</th>
+                        @* <th>RMPM+Y</th> *@
                         <th>Std Cost Price</th>
                         <th>Cost Price</th>
-                        <th>Sales Price Index</th>
+                        <th>Sales Price</th>
+                        <th>Ratio RMPM/S</th>
+                        <th>Ratio CP/S</th>
                     </tr>
                     </thead>
                     <tfoot>
@@ -68,15 +71,18 @@
                         <th>Product Name</th>
                         <th>Unit</th>
                         <th>Unit in Kg</th>
+                        <th>Group FG</th>
                         <th>Rofo Date</th>
                         <th>Rofo Qty</th>
                         <th>Yield</th>
                         <th>RM Price</th>
                         <th>PM Price</th>
-                        <th>RMPM+Y</th>
+                        @* <th>RMPM+Y</th> *@
                         <th>Std Cost Price</th>
                         <th>Cost Price</th>
-                        <th>Sales Price Index</th>
+                        <th>Sales Price</th>
+                        <th>Ratio RMPM/S</th>
+                        <th>Ratio CP/S</th>
                     </tr>
                     </tfoot>
                 </table>
@@ -138,6 +144,7 @@
                         { data: 'productName', defaultContent: '' },
                         { data: 'unit', defaultContent: '' },
                         { data: 'unitInKg', defaultContent: '' },
+                        { data: 'groupFg', defaultContent: '' },
                         {
                             data: 'rofoDate',
                             defaultContent: '',
@@ -201,19 +208,19 @@
                                 return data ? numberFormat.format(data) : '';
                             }
                         },
-                        {
-                            data: 'rmPmYield',
-                            defaultContent: '',
-                            render: function(data, type) {
-                                // For sorting/filtering use the raw number
-                                if (type === 'sort' || type === 'filter') {
-                                    return data ? parseFloat(data) : 0;
-                                }
-
-                                // For display, round and format with thousands separator
-                                return data ? numberFormat.format(data) : '';
-                            }
-                        },
+                        // {
+                        //     data: 'rmPmYield',
+                        //     defaultContent: '',
+                        //     render: function(data, type) {
+                        //         // For sorting/filtering use the raw number
+                        //         if (type === 'sort' || type === 'filter') {
+                        //             return data ? parseFloat(data) : 0;
+                        //         }
+                        //
+                        //         // For display, round and format with thousands separator
+                        //         return data ? numberFormat.format(data) : '';
+                        //     }
+                        // },
                         {
                             data: 'stdCostPrice',
                             defaultContent: '',
@@ -241,7 +248,7 @@
                             }
                         },
                         {
-                            data: 'salesPriceIndex',
+                            data: 'salesPrice',
                             defaultContent: '',
                             render: function(data, type) {
                                 // For sorting/filtering use the raw number
@@ -251,6 +258,30 @@
 
                                 // For display, round and format with thousands separator
                                 return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'ratioRmPmToSalesPrice',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? percentFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'ratioCostPriceToSalesPrice',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? percentFormat.format(data) : '';
                             }
                         }
                     ],
