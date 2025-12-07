@@ -18,6 +18,8 @@ public class FgCostVerSpDto
     public decimal StdCostPrice { get; set; }
     public decimal CostPrice { get; set; }
     public decimal SalesPrice { get; set; }
+    public decimal RatioRmPmToSalesPrice { get; set; }
+    public decimal RatioCostPriceToSalesPrice { get; set; }
     public string PreviousCalc { get; set; } = string.Empty;
     public decimal RofoQtyPrev { get; set; }
     public decimal SalesPricePrev { get; set; }
@@ -28,4 +30,5 @@ public class FgCostVerSpDto
     public decimal StdCostPrev { get; set; }
     public decimal CostPricePrev { get; set; }
     public decimal DeltaAbsolute { get; set; }
+    public string GroupFg { get; set; } = string.Empty;
 }

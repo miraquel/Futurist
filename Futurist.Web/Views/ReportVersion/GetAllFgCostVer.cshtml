@@ -58,6 +58,7 @@
                         <th>Product Name</th>
                         <th>Unit</th>
                         <th>Unit In Kg</th>
+                        <th>Group FG</th>
                         <th>Sales Price</th>
                         <th>Rofo Date</th>
                         <th>Rofo Qty</th>
@@ -65,15 +66,17 @@
                         <th>PM Price</th>
                         <th>Std Cost Price</th>
                         <th>Yield</th>
-                        <th>RmPm+Y</th>
+                        @* <th>RmPm+Y</th> *@
                         <th>Cost Price</th>
+                        <th>Ratio RMPM/S</th>
+                        <th>Ratio CP/S</th>
                         <th>Previous Calc</th>
                         <th>Rofo Qty Prev</th>
                         <th>RM Prev</th>
                         <th>PM Prev</th>
                         <th>Std Cost Prev</th>
                         <th>Yield Prev</th>
-                        <th>RmPm+Y Prev</th>
+                        @* <th>RmPm+Y Prev</th> *@
                         <th>Cost Price Prev</th>
                         <th>Delta Absolute</th>
                     </tr>
@@ -87,6 +90,7 @@
                         <th>Product Name</th>
                         <th>Unit</th>
                         <th>Unit In Kg</th>
+                        <th>Group FG</th>
                         <th>Sales Price</th>
                         <th>Rofo Date</th>
                         <th>Rofo Qty</th>
@@ -94,15 +98,17 @@
                         <th>PM Price</th>
                         <th>Std Cost Price</th>
                         <th>Yield</th>
-                        <th>RmPm+Y</th>
+                        @* <th>RmPm+Y</th> *@
                         <th>Cost Price</th>
+                        <th>Ratio RMPM/S</th>
+                        <th>Ratio CP/S</th>
                         <th>Previous Calc</th>
                         <th>Rofo Qty Prev</th>
                         <th>RM Prev</th>
                         <th>PM Prev</th>
                         <th>Std Cost Prev</th>
                         <th>Yield Prev</th>
-                        <th>RmPm+Y Prev</th>
+                        @* <th>RmPm+Y Prev</th> *@
                         <th>Cost Price Prev</th>
                         <th>Delta Absolute</th>
                     </tr>
@@ -256,6 +262,7 @@
                                 return data ? numberFormat.format(data) : '';
                             }
                         },
+                        { data: 'groupFg', defaultContent: '' },
                         {
                             data: 'salesPrice',
                             defaultContent: '',
@@ -341,18 +348,18 @@
                                 return data ? percentFormat.format(data) : '';
                             }
                         },
-                        {
-                            data: 'costRmPmY',
-                            defaultContent: '',
-                            render: function(data, type) {
-                                // For sorting/filtering use the raw number
-                                if (type === 'sort' || type === 'filter') {
-                                    return data ? parseFloat(data) : 0;
-                                }
-                                // For display, round and format with thousands separator
-                                return data ? numberFormat.format(data) : '';
-                            }
-                        },
+                        // {
+                        //     data: 'costRmPmY',
+                        //     defaultContent: '',
+                        //     render: function(data, type) {
+                        //         // For sorting/filtering use the raw number
+                        //         if (type === 'sort' || type === 'filter') {
+                        //             return data ? parseFloat(data) : 0;
+                        //         }
+                        //         // For display, round and format with thousands separator
+                        //         return data ? numberFormat.format(data) : '';
+                        //     }
+                        // },
                         {
                             data: 'costPrice',
                             defaultContent: '',
@@ -363,6 +370,32 @@
                                 }
                                 // For display, round and format with thousands separator
                                 return data ? numberFormat.format(data) : '';
+                            }
+                        },
+                        // <th>Ratio RMPM/S</th>
+                        // <th>Ratio CP/S</th>
+                        {
+                            data: 'ratioRmPmToSalesPrice',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? percentFormat.format(data) : '';
+                            }
+                        },
+                        {
+                            data: 'ratioCostPriceToSalesPrice',
+                            defaultContent: '',
+                            render: function(data, type) {
+                                // For sorting/filtering use the raw number
+                                if (type === 'sort' || type === 'filter') {
+                                    return data ? parseFloat(data) : 0;
+                                }
+                                // For display, round and format with thousands separator
+                                return data ? percentFormat.format(data) : '';
                             }
                         },
                         { data: 'previousCalc', defaultContent: '' },
@@ -426,18 +459,18 @@
                                 return data ? percentFormat.format(data) : '';
                             }
                         },
-                        {
-                            data: 'costRmPmYPrev',
-                            defaultContent: '',
-                            render: function(data, type) {
-                                // For sorting/filtering use the raw number
-                                if (type === 'sort' || type === 'filter') {
-                                    return data ? parseFloat(data) : 0;
-                                }
-                                // For display, round and format with thousands separator
-                                return data ? numberFormat.format(data) : '';
-                            }
-                        },
+                        // {
+                        //     data: 'costRmPmYPrev',
+                        //     defaultContent: '',
+                        //     render: function(data, type) {
+                        //         // For sorting/filtering use the raw number
+                        //         if (type === 'sort' || type === 'filter') {
+                        //             return data ? parseFloat(data) : 0;
+                        //         }
+                        //         // For display, round and format with thousands separator
+                        //         return data ? numberFormat.format(data) : '';
+                        //     }
+                        // },
                         {
                             data: 'costPricePrev',
                             defaultContent: '',
@@ -459,7 +492,7 @@
                                     return data ? parseFloat(data) : 0;
                                 }
                                 // For display, round and format with thousands separator
-                                return data ? numberFormat.format(data) : '';
+                                return data ? percentFormat.format(data) : '';
                             }
                         },
                     ],
