@@ -16,4 +16,6 @@ public interface IAnlRmRepository
     Task<IEnumerable<int>> GetVerIdsAsync(GetVerIdsCommand command, CancellationToken cancellationToken);
     Task<IEnumerable<AnlRmPriceGroup>> GetAnlRmPriceGroupAsync(GetAnlRmPriceGroupCommand command, CancellationToken cancellationToken);
     Task<IEnumerable<AnlCostPrice>> GetAnlCostPriceAsync(GetAnlCostPriceCommand command, CancellationToken cancellationToken);
+    Task<IEnumerable<FgPlanCostPrice>> GetFgPlanCostPriceAsync(GetFgPlanCostPriceCommand command);
+    Task<IEnumerable<BomStdVsActDet>> GetBomStdVsActDetAsync(GetBomStdVsActDetCommand command);
 }

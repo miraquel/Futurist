@@ -1,0 +1,178 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "BOM RM Plan vs Actual Details";
+    int verId = ViewBag.VerId ?? 0;
+    int room = ViewBag.Room ?? 0;
+    int tahun = ViewBag.Tahun ?? 0;
+    int bulan = ViewBag.Bulan ?? 0;
+    string productId = ViewBag.ProductId ?? "";
+}
+
+@section styles {
+    <link href="/assets/css/datatables.min.css" rel="stylesheet">
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex align-items-center mb-3 gap-3">
+        <a href="@Url.Action("FgPlanCostPrice", "AnlRm")" class="btn btn-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <h4 class="mb-0">BOM RM Plan vs Actual Details</h4>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <div class="row g-2">
+                <div class="col-auto">
+                    <span class="badge bg-secondary">Ver ID: @verId</span>
+                </div>
+                <div class="col-auto">
+                    <span class="badge bg-secondary">Room: @room</span>
+                </div>
+                <div class="col-auto">
+                    <span class="badge bg-secondary">Year: @tahun</span>
+                </div>
+                <div class="col-auto">
+                    <span class="badge bg-secondary">Month: @bulan</span>
+                </div>
+                <div class="col-auto">
+                    <span class="badge bg-primary">Product: @productId</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+        <div class="table-responsive">
+            <table id="tblBomStdVsActDet" class="table table-bordered table-striped table-hover table-sm" style="width:100%">
+                <thead>
+                    <tr style="background-color:#4F81BD; color:white; text-align:center;">
+                        <th rowspan="2" style="vertical-align:middle; width:120px;">Item Plan</th>
+                        <th rowspan="2" style="vertical-align:middle; width:200px;">Item Name Plan</th>
+                        <th rowspan="2" style="vertical-align:middle; width:80px;">Unit Plan</th>
+                        <th rowspan="2" style="vertical-align:middle; width:120px;">Group Plan</th>
+                        <th colspan="5" style="border-bottom:1px solid #ccc;">Plan</th>
+                        <th rowspan="2" style="vertical-align:middle; width:120px;">Item Act</th>
+                        <th rowspan="2" style="vertical-align:middle; width:200px;">Item Name Act</th>
+                        <th rowspan="2" style="vertical-align:middle; width:80px;">Unit Act</th>
+                        <th rowspan="2" style="vertical-align:middle; width:150px;">Group Substitusi Act</th>
+                        <th colspan="4" style="border-bottom:1px solid #ccc;">Actual</th>
+                    </tr>
+                    <tr style="background-color:#4F81BD; color:white; text-align:center;">
+                        <th style="width:100px;">Qty Plan</th>
+                        <th style="width:100px;">Qty in Kg Plan</th>
+                        <th style="width:120px;">Price Plan</th>
+                        <th style="width:120px;">RM Value Plan</th>
+                        <th style="width:100px;">Yield Plan</th>
+                        <th style="width:100px;">Qty Actual</th>
+                        <th style="width:100px;">Qty in Kg Actual</th>
+                        <th style="width:120px;">RM Price Actual</th>
+                        <th style="width:120px;">RM Value Actual</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th></th><th></th><th></th><th></th>
+                        <th></th><th></th><th></th><th></th><th></th>
+                        <th></th><th></th><th></th><th></th>
+                        <th></th><th></th><th></th><th></th>
+                    </tr>
+                </tfoot>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="/assets/js/datatables.min.js"></script>
+    <script src="/assets/js/helper.js"></script>
+    <script>
+        $(document).ready(function () {
+            const verId = @verId;
+            const room = @room;
+            const tahun = @tahun;
+            const bulan = @bulan;
+            const productId = '@Html.Raw(Uri.EscapeDataString(productId))';
+
+            function numRender2(data, type) {
+                if (type === 'sort' || type === 'filter') return data != null ? parseFloat(data) : 0;
+                return data != null ? formatNumberDecimal(data, 2) : '';
+            }
+            function numRender4(data, type) {
+                if (type === 'sort' || type === 'filter') return data != null ? parseFloat(data) : 0;
+                return data != null ? formatNumberDecimal(data, 4) : '';
+            }
+
+            const table = $('#tblBomStdVsActDet').DataTable({
+                processing: true,
+                serverSide: false,
+                scrollX: true,
+                autoWidth: false,
+                responsive: false,
+                layout: {
+                    topEnd: {
+                        buttons: [
+                            {
+                                extend: 'copyHtml5',
+                                text: '<i class="ri-file-copy-line"></i> Copy',
+                                className: 'btn btn-soft-secondary',
+                                titleAttr: 'Copy to clipboard'
+                            },
+                            {
+                                extend: 'excelHtml5',
+                                text: '<i class="ri-file-excel-2-line"></i> Excel',
+                                className: 'btn btn-soft-secondary',
+                                titleAttr: 'Export to Excel'
+                            },
+                            {
+                                extend: 'pdfHtml5',
+                                text: '<i class="ri-file-pdf-line"></i> PDF',
+                                className: 'btn btn-soft-secondary',
+                                titleAttr: 'Export to PDF'
+                            }
+                        ]
+                    }
+                },
+                ajax: {
+                    url: '/api/AnlRmApi/GetBomStdVsActDet',
+                    type: 'GET',
+                    data: { verId, room, tahun, bulan, productId: decodeURIComponent(productId) },
+                    dataSrc: function (json) {
+                        return json.data ?? [];
+                    }
+                },
+                columns: [
+                    { data: 'itemPlan',           width: '120px', defaultContent: '' },
+                    { data: 'itemNamePlan',       width: '200px', defaultContent: '' },
+                    { data: 'unitIdPlan',         width: '80px',  defaultContent: '' },
+                    { data: 'groupPlan',          width: '120px', defaultContent: '' },
+                    { data: 'qtyPlan',            width: '100px', defaultContent: '', className: 'text-end', render: numRender2 },
+                    { data: 'qtyInKgPlan',        width: '100px', defaultContent: '', className: 'text-end', render: numRender4 },
+                    { data: 'pricePlan',          width: '120px', defaultContent: '', className: 'text-end', render: numRender2 },
+                    { data: 'valuePlan',          width: '120px', defaultContent: '', className: 'text-end', render: numRender2 },
+                    { data: 'yieldPlan',          width: '100px', defaultContent: '', className: 'text-end', render: numRender4 },
+                    { data: 'itemIdAct',          width: '120px', defaultContent: '' },
+                    { data: 'itemNameAct',        width: '200px', defaultContent: '' },
+                    { data: 'unitIdAct',          width: '80px',  defaultContent: '' },
+                    { data: 'groupSubstitusiAct', width: '150px', defaultContent: '' },
+                    { data: 'qtyAct',             width: '100px', defaultContent: '', className: 'text-end', render: numRender2 },
+                    { data: 'qtyInKgAct',         width: '100px', defaultContent: '', className: 'text-end', render: numRender4 },
+                    { data: 'priceAct',           width: '120px', defaultContent: '', className: 'text-end', render: numRender2 },
+                    { data: 'valueAct',           width: '120px', defaultContent: '', className: 'text-end', render: numRender2 }
+                ],
+                initComplete: function () {
+                    this.api().columns().every(function () {
+                        const that = this;
+                        $('input', this.footer()).on('keyup change clear', function () {
+                            if (that.search() !== this.value) {
+                                that.search(this.value).draw();
+                            }
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+}
