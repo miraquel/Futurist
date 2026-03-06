@@ -309,4 +309,42 @@ public class AnlRmRepository : IAnlRmRepository
             typeof(AnlCostPrice),
             (type, columnName) => mapper(type, columnName)!));
     }
+
+    public async Task<IEnumerable<FgPlanCostPrice>> GetFgPlanCostPriceAsync(GetFgPlanCostPriceCommand command)
+    {
+        const string query = """
+            SELECT VerId, Room, Tahun, Bulan, ProductId, ProductName, ValuePlan, ValueAct
+            FROM FgPlanCostPrice
+            WHERE Room = @Room AND VerId = @VerId AND Tahun = @Year AND Bulan = @Month
+            ORDER BY ProductId
+            """;
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON;", transaction: command.DbTransaction);
+        var sqlCommand = new CommandDefinition(
+            query,
+            new { command.Room, command.VerId, command.Year, command.Month },
+            command.DbTransaction);
+        return await _sqlConnection.QueryAsync<FgPlanCostPrice>(sqlCommand);
+    }
+
+    public async Task<IEnumerable<BomStdVsActDet>> GetBomStdVsActDetAsync(GetBomStdVsActDetCommand command)
+    {
+        const string query = """
+            SELECT VerId, Room, Tahun, Bulan,
+                   ProductIdPlan, ProductNamePlan,
+                   ItemPlan, ItemNamePlan, UnitIdPlan, GroupPlan,
+                   QtyPlan, QtyInKgPlan, PricePlan, ValuePlan, YieldPlan,
+                   ItemIdAct, ItemNameAct, UnitIdAct, GroupSubstitusiAct,
+                   QtyAct, QtyInKgAct, PriceAct, ValueAct
+            FROM BomStdVsAct_Det
+            WHERE VerId = @VerId AND Room = @Room AND Tahun = @Tahun AND Bulan = @Bulan
+              AND ProductIdPlan = @ProductId
+            ORDER BY ItemPlan
+            """;
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON;", transaction: command.DbTransaction);
+        var sqlCommand = new CommandDefinition(
+            query,
+            new { command.VerId, command.Room, command.Tahun, command.Bulan, command.ProductId },
+            command.DbTransaction);
+        return await _sqlConnection.QueryAsync<BomStdVsActDet>(sqlCommand);
+    }
 }

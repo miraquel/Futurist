@@ -213,4 +213,20 @@ public partial class MapperlyMapper
     public partial IEnumerable<AnlCostPriceDto> MapToIEnumerableDto(IEnumerable<AnlCostPrice> entities);
     public partial PagedList<AnlCostPrice> MapToPagedList(PagedListDto<AnlCostPriceDto> dto);
     public partial PagedListDto<AnlCostPriceDto> MapToPagedListDto(PagedList<AnlCostPrice> entity);
+
+    // FgPlanCostPrice
+    public partial FgPlanCostPrice MapToEntity(FgPlanCostPriceDto dto);
+    public partial FgPlanCostPriceDto MapToDto(FgPlanCostPrice entity);
+    public partial IEnumerable<FgPlanCostPrice> MapToIEnumerable(IEnumerable<FgPlanCostPriceDto> dtos);
+    public partial IEnumerable<FgPlanCostPriceDto> MapToIEnumerableDto(IEnumerable<FgPlanCostPrice> entities);
+    public partial PagedList<FgPlanCostPrice> MapToPagedList(PagedListDto<FgPlanCostPriceDto> dto);
+    public partial PagedListDto<FgPlanCostPriceDto> MapToPagedListDto(PagedList<FgPlanCostPrice> entity);
+
+    // BomStdVsActDet
+    public partial BomStdVsActDet MapToEntity(BomStdVsActDetDto dto);
+    public partial BomStdVsActDetDto MapToDto(BomStdVsActDet entity);
+    public partial IEnumerable<BomStdVsActDet> MapToIEnumerable(IEnumerable<BomStdVsActDetDto> dtos);
+    public partial IEnumerable<BomStdVsActDetDto> MapToIEnumerableDto(IEnumerable<BomStdVsActDet> entities);
+    public partial PagedList<BomStdVsActDet> MapToPagedList(PagedListDto<BomStdVsActDetDto> dto);
+    public partial PagedListDto<BomStdVsActDetDto> MapToPagedListDto(PagedList<BomStdVsActDet> entity);
 }

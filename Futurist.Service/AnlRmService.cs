@@ -1,4 +1,5 @@
-﻿using Futurist.Repository.Command.AnlRmCommand;
+﻿using Futurist.Domain;
+using Futurist.Repository.Command.AnlRmCommand;
 using Futurist.Repository.UnitOfWork;
 using Futurist.Service.Dto;
 using Futurist.Service.Dto.Common;
@@ -340,6 +341,65 @@ public class AnlRmService : IAnlRmService
             {
                 Errors = [e.Message],
                 Message = "AnlCostPrice not found"
+            };
+        }
+    }
+
+    public async Task<ServiceResponse<IEnumerable<FgPlanCostPriceDto>>> GetFgPlanCostPriceAsync(int room, int verId, int year, int month)
+    {
+        try
+        {
+            var command = new GetFgPlanCostPriceCommand
+            {
+                Room = room,
+                VerId = verId,
+                Year = year,
+                Month = month
+            };
+            var result = await _unitOfWork.AnlRmRepository.GetFgPlanCostPriceAsync(command);
+            return new ServiceResponse<IEnumerable<FgPlanCostPriceDto>>
+            {
+                Data = _mapper.MapToIEnumerableDto(result),
+                Message = "FgPlanCostPrice found"
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "GetFgPlanCostPrice {@command}", e.Message);
+            return new ServiceResponse<IEnumerable<FgPlanCostPriceDto>>
+            {
+                Errors = [e.Message],
+                Message = "FgPlanCostPrice not found"
+            };
+        }
+    }
+
+    public async Task<ServiceResponse<IEnumerable<BomStdVsActDetDto>>> GetBomStdVsActDetAsync(int verId, int room, int tahun, int bulan, string productId)
+    {
+        try
+        {
+            var command = new GetBomStdVsActDetCommand
+            {
+                VerId = verId,
+                Room = room,
+                Tahun = tahun,
+                Bulan = bulan,
+                ProductId = productId
+            };
+            var result = await _unitOfWork.AnlRmRepository.GetBomStdVsActDetAsync(command);
+            return new ServiceResponse<IEnumerable<BomStdVsActDetDto>>
+            {
+                Data = _mapper.MapToIEnumerableDto(result),
+                Message = "BomStdVsActDet found"
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "GetBomStdVsActDet {@command}", e.Message);
+            return new ServiceResponse<IEnumerable<BomStdVsActDetDto>>
+            {
+                Errors = [e.Message],
+                Message = "BomStdVsActDet not found"
             };
         }
     }

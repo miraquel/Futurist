@@ -43,6 +43,21 @@ public class AnlRmController : Controller
         ViewBag.ItemId = itemId;
         return View();
     }
+
+    public IActionResult FgPlanCostPrice()
+    {
+        return View();
+    }
+
+    public IActionResult BomStdVsActDet(int verId, int room, int tahun, int bulan, string productId)
+    {
+        ViewBag.VerId = verId;
+        ViewBag.Room = room;
+        ViewBag.Tahun = tahun;
+        ViewBag.Bulan = bulan;
+        ViewBag.ProductId = productId;
+        return View();
+    }
 }
 
 [ApiController]
@@ -151,6 +166,26 @@ public class AnlRmApiController : ControllerBase
         [FromQuery] string itemId, CancellationToken cancellationToken)
     {
         var response = await _anlRmService.GetAnlCostPriceAsync(room, verId, year, month, itemId, cancellationToken);
+        return response.IsSuccess
+            ? Ok(response)
+            : BadRequest(response);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetFgPlanCostPrice([FromQuery] int room, [FromQuery] int verId,
+        [FromQuery] int year, [FromQuery] int month)
+    {
+        var response = await _anlRmService.GetFgPlanCostPriceAsync(room, verId, year, month);
+        return response.IsSuccess
+            ? Ok(response)
+            : BadRequest(response);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetBomStdVsActDet([FromQuery] int verId, [FromQuery] int room,
+        [FromQuery] int tahun, [FromQuery] int bulan, [FromQuery] string productId)
+    {
+        var response = await _anlRmService.GetBomStdVsActDetAsync(verId, room, tahun, bulan, productId);
         return response.IsSuccess
             ? Ok(response)
             : BadRequest(response);

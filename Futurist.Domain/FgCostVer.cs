@@ -8,16 +8,10 @@ public class FgCostVer
     public DateTime RofoDate { get; set; }
     public decimal QtyRofo { get; set; }
     public decimal Yield { get; set; }
-
     public decimal RmPrice { get; set; }
-
     public decimal PmPrice { get; set; }
-
     public decimal StdCostPrice { get; set; }
-
     public decimal CostPrice { get; set; }
-
     public int RecId { get; set; }
-
     public int VerId { get; set; }
 }
