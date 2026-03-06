@@ -49,6 +49,7 @@ serilogConfiguration.WriteTo.Logger(lc => lc
         {
             TableName = "JobLogs",
             AutoCreateSqlTable = true,
+            BatchPostingLimit = 1,
         },
         columnOptions: new ColumnOptions
         {

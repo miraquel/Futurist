@@ -48,9 +48,11 @@ public class JobLoggerAttribute : JobFilterAttribute, IElectStateFilter, IServer
             case ServiceResponse<SpTaskDto> resultTaskSp when context.Exception != null:
                 _logger.Error(context.Exception, "JobId: {JobId}, {MethodName} with Room {RoomId} {Status}, Result: {Result}", context.BackgroundJob.Id, methodName, roomId, "Failed", string.Join(", ", resultTaskSp.Errors));
                 break;
-            // map the context.Result to a dictionary
             case ServiceResponse<SpTaskDto> { Data.StatusId: false } resultTaskSp:
                 _logger.Error("JobId: {JobId}, {MethodName} with Room {RoomId} {Status}, Result: {Result}", context.BackgroundJob.Id, methodName, roomId, "Failed", resultTaskSp.Data?.StatusName);
+                break;
+            case ServiceResponse<SpTaskDto> resultTaskSp when !resultTaskSp.IsSuccess:
+                _logger.Error("JobId: {JobId}, {MethodName} with Room {RoomId} {Status}, Result: {Result}", context.BackgroundJob.Id, methodName, roomId, "Failed", resultTaskSp.ErrorMessage);
                 break;
             case ServiceResponse<SpTaskDto> resultTaskSp:
                 _logger.Information("JobId: {JobId}, {MethodName} with Room {RoomId} {Status}, Result: {Result}", context.BackgroundJob.Id, methodName, roomId, "Succeeded", resultTaskSp.Data?.StatusName);
@@ -60,6 +62,12 @@ public class JobLoggerAttribute : JobFilterAttribute, IElectStateFilter, IServer
                 break;
             case ServiceResponse<string> resultString:
                 _logger.Information("JobId: {JobId}, {MethodName} with Room {RoomId} {Status}, Result: {Result}", context.BackgroundJob.Id, methodName, roomId, "Succeeded", resultString.Data);
+                break;
+            default:
+                if (context.Exception != null)
+                    _logger.Error(context.Exception, "JobId: {JobId}, {MethodName} with Room {RoomId} {Status}, Result: {Result}", context.BackgroundJob.Id, methodName, roomId, "Failed", context.Exception.Message);
+                else
+                    _logger.Information("JobId: {JobId}, {MethodName} with Room {RoomId} {Status}, Result: {Result}", context.BackgroundJob.Id, methodName, roomId, "Succeeded", context.Result?.ToString() ?? "null");
                 break;
         }
     }
