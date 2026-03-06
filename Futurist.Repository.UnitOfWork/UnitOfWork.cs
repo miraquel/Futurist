@@ -25,6 +25,9 @@ public class UnitOfWork : IUnitOfWork
         IAnlRmRepository anlRmRepository,
         IRmForecastRepository rmForecastRepository,
         ICurrentDataRepository currentDataRepository,
+        IMaterialPlanRepository materialPlanRepository,
+        IMaterialActRepository materialActRepository,
+        IBomPlanRepository bomPlanRepository,
         Func<IDbTransaction> transactionFactory)
     {
         _dbConnection = dbConnection;
@@ -43,6 +46,9 @@ public class UnitOfWork : IUnitOfWork
         AnlRmRepository = anlRmRepository;
         RmForecastRepository = rmForecastRepository;
         CurrentDataRepository = currentDataRepository;
+        MaterialPlanRepository = materialPlanRepository;
+        MaterialActRepository = materialActRepository;
+        BomPlanRepository = bomPlanRepository;
     }
     
     public IDbTransaction? CurrentTransaction { get; private set; }
@@ -67,6 +73,9 @@ public class UnitOfWork : IUnitOfWork
     public IAnlRmRepository AnlRmRepository { get; }
     public IRmForecastRepository RmForecastRepository { get; }
     public ICurrentDataRepository CurrentDataRepository { get; }
+    public IMaterialPlanRepository MaterialPlanRepository { get; }
+    public IMaterialActRepository MaterialActRepository { get; }
+    public IBomPlanRepository BomPlanRepository { get; }
 
     public async Task CommitAsync()
     {

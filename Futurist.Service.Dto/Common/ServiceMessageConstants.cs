@@ -135,4 +135,42 @@ public static class ServiceMessageConstants
     public const string ItemPoIntransitNotFound = "ItemPoIntransit not found";
     public const string ItemPagFound = "ItemPag found";
     public const string ItemPagNotFound = "ItemPag not found";
+    
+    // Material Plan
+    public const string MaterialPlanJobAlreadyInProcess = "Material Plan Job is already in process. Please check back later.";
+    public const string MaterialPlanProcessed = "Material Plan processed";
+    public const string MaterialPlanProcessFailed = "Material Plan process failed";
+    public const string MaterialPlanProcessing = "Material Plan Processing Job has been queued. Please check back later.";
+    public const string MaterialPlanRoomIdsFound = "Material Plan room IDs found";
+    public const string MaterialPlanRoomIdsNotFound = "Material Plan room IDs not found";
+    public const string MaterialPlanVerIdsFound = "Material Plan version IDs found";
+    public const string MaterialPlanVerIdsNotFound = "Material Plan version IDs not found";
+    public const string MaterialPlanYearsFound = "Material Plan years found";
+    public const string MaterialPlanYearsNotFound = "Material Plan years not found";
+    public const string MaterialPlanMonthsFound = "Material Plan months found";
+    public const string MaterialPlanMonthsNotFound = "Material Plan months not found";
+    
+    // Material Actual
+    public const string MaterialActJobAlreadyInProcess = "Material Actual Job is already in process. Please check back later.";
+    public const string MaterialActProcessed = "Material Actual processed";
+    public const string MaterialActProcessFailed = "Material Actual process failed";
+    public const string MaterialActProcessing = "Material Actual Processing Job has been queued. Please check back later.";
+    public const string MaterialActYearsFound = "Material Actual years found";
+    public const string MaterialActYearsNotFound = "Material Actual years not found";
+    public const string MaterialActMonthsFound = "Material Actual months found";
+    public const string MaterialActMonthsNotFound = "Material Actual months not found";
+
+    // BOM Plan
+    public const string BomPlanJobAlreadyInProcess = "BOM Plan Job is already in process. Please check back later.";
+    public const string BomPlanProcessed = "BOM Plan processed";
+    public const string BomPlanProcessFailed = "BOM Plan process failed";
+    public const string BomPlanProcessing = "BOM Plan Processing Job has been queued. Please check back later.";
+    public const string BomPlanRoomIdsFound = "BOM Plan room IDs found";
+    public const string BomPlanRoomIdsNotFound = "BOM Plan room IDs not found";
+    public const string BomPlanVerIdsFound = "BOM Plan version IDs found";
+    public const string BomPlanVerIdsNotFound = "BOM Plan version IDs not found";
+    public const string BomPlanYearsFound = "BOM Plan years found";
+    public const string BomPlanYearsNotFound = "BOM Plan years not found";
+    public const string BomPlanMonthsFound = "BOM Plan months found";
+    public const string BomPlanMonthsNotFound = "BOM Plan months not found";
 }

@@ -1,0 +1,5 @@
+{
+    "dataworkspace.excludedProjects": [
+        "CogsProjection.Sql/CogsProjection.Sql.sqlproj"
+    ]
+}
