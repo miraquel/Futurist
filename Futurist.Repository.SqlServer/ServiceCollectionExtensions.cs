@@ -25,6 +25,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAnlRmRepository, AnlRmRepository>();
         services.AddScoped<IRmForecastRepository, RmForecastRepository>();
         services.AddScoped<ICurrentDataRepository, CurrentDataRepository>();
+        services.AddScoped<IMaterialPlanRepository, MaterialPlanRepository>();
+        services.AddScoped<IMaterialActRepository, MaterialActRepository>();
+        services.AddScoped<IBomPlanRepository, BomPlanRepository>();
         
         services.AddScoped<IDbConnection>(s =>
         {

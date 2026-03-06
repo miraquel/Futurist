@@ -22,5 +22,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAnlRmService, AnlRmService>();
         services.AddScoped<IRmForecastService, RmForecastService>();
         services.AddScoped<ICurrentDataService, CurrentDataService>();
+        services.AddScoped<IMaterialPlanService, MaterialPlanService>();
+        services.AddScoped<IMaterialActService, MaterialActService>();
+        services.AddScoped<IBomPlanService, BomPlanService>();
     }
 }

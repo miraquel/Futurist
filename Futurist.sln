@@ -34,6 +34,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Futurist.Hangfire", "Futuri
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Futurist.Service.Command", "Futurist.Service.Command\Futurist.Service.Command.csproj", "{A759FE7A-1B13-4BD5-8713-6CC8B7FF07F9}"
 EndProject
+Project("{42EA0DBD-9CF1-443E-919E-BE9C484E4577}") = "Futurist.Sql", "Futurist.Sql\Futurist.Sql.sqlproj", "{3FD9CDE2-0AA6-43F6-A993-CB4A32D28694}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -92,6 +94,10 @@ Global
 		{A759FE7A-1B13-4BD5-8713-6CC8B7FF07F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A759FE7A-1B13-4BD5-8713-6CC8B7FF07F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A759FE7A-1B13-4BD5-8713-6CC8B7FF07F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FD9CDE2-0AA6-43F6-A993-CB4A32D28694}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FD9CDE2-0AA6-43F6-A993-CB4A32D28694}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FD9CDE2-0AA6-43F6-A993-CB4A32D28694}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FD9CDE2-0AA6-43F6-A993-CB4A32D28694}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0C7D4D5E-E95A-4CF5-A634-09775591F413} = {8A557E11-3592-4B48-834B-46C0EE646464}
