@@ -1,0 +1,210 @@
+@{
+    ViewBag.Title = "Material Actual Calculation Process";
+    Layout = "_Layout";
+}
+
+@section styles{
+    <link href="/assets/css/select2/select2.min.css" rel="stylesheet"/>
+    <link href="/assets/css/select2/select2-bootstrap-5-theme.min.css" rel="stylesheet"/>
+    <style>
+        .disabled-button {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+    </style>
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>Material Actual Calculation</h1>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label" for="yearSelect">Year</label>
+                        <select class="form-control" id="yearSelect"></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="monthSelect">Month</label>
+                        <select class="form-control" id="monthSelect" disabled></select>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-start gap-2">
+                    <button class="btn btn-success" id="processButton" onclick="processMaterialAct()">
+                        <i class="ri-play-fill"></i>
+                        Process Material Actual
+                    </button>
+                </div>
+                <div class="alert alert-warning d-flex align-items-center gap-2 mt-3 d-none" id="processingLabel">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Processing in progress for the selected period. Please wait...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/assets/js/select2/select2.min.js"></script>
+    <script src="/assets/js/signalr.js"></script>
+
+    <script>
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        const yearSelect = $('#yearSelect');
+        const monthSelect = $('#monthSelect');
+        const processButton = $('#processButton');
+        const processingLabel = $('#processingLabel');
+        processingLabel.addClass('d-none');
+
+        const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+        let connection;
+        let inProcessYearMonths = [];
+        let pollingInterval;
+
+        function clearSelect($select) {
+            $select.val(null).trigger('change');
+        }
+
+        function getCurrentYearMonth() {
+            const year = parseInt(yearSelect.val()) || 0;
+            const month = parseInt(monthSelect.val()) || 0;
+            return year + '-' + String(month).padStart(2, '0');
+        }
+
+        // Year dropdown
+        yearSelect.select2({
+            placeholder: 'Select Year',
+            ajax: {
+                url: '/api/MaterialActApi/GetYears',
+                type: 'GET',
+                dataType: 'json',
+                delay: 300,
+                headers: { 'RequestVerificationToken': token },
+                processResults: function(data) {
+                    return { results: data.data.map(y => ({ id: y, text: y })) };
+                }
+            }
+        });
+
+        // Month dropdown (depends on year)
+        function loadMonths(year) {
+            monthSelect.select2({
+                placeholder: 'Select Month',
+                ajax: {
+                    url: '/api/MaterialActApi/GetMonths',
+                    type: 'GET',
+                    dataType: 'json',
+                    delay: 300,
+                    headers: { 'RequestVerificationToken': token },
+                    data: function() { return { year: year }; },
+                    processResults: function(data) {
+                        return { results: data.data.map(m => ({ id: m, text: monthNames[m - 1] || m })) };
+                    }
+                }
+            });
+        }
+
+        // Cascading logic
+        yearSelect.on('change', function() {
+            clearSelect(monthSelect);
+            monthSelect.empty();
+
+            if (yearSelect.val()) {
+                monthSelect.prop('disabled', false);
+                loadMonths(yearSelect.val());
+            } else {
+                monthSelect.prop('disabled', true);
+            }
+
+            updateProcessingUI();
+        });
+
+        monthSelect.on('change', function() {
+            updateProcessingUI();
+        });
+
+        // SignalR
+        function initializeSignalR() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl('/futuristHub')
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on('MaterialActProcessingStateChanged', () => {
+                refreshProcessingState();
+            });
+
+            connection.start()
+                .then(() => {
+                    refreshProcessingState();
+                    pollingInterval = setInterval(refreshProcessingState, 10000);
+                })
+                .catch(err => console.error('SignalR Connection Error: ', err));
+        }
+
+        function refreshProcessingState() {
+            connection.invoke('GetMaterialActInProcessYearMonths')
+                .then(yearMonths => {
+                    inProcessYearMonths = yearMonths || [];
+                    updateProcessingUI();
+                })
+                .catch(err => console.error('Error getting Material Actual processing state: ', err));
+        }
+
+        function updateProcessingUI() {
+            const currentYearMonth = getCurrentYearMonth();
+            if (inProcessYearMonths.includes(currentYearMonth)) {
+                processButton.addClass('disabled-button');
+                processingLabel.removeClass('d-none');
+            } else {
+                processButton.removeClass('disabled-button');
+                processingLabel.addClass('d-none');
+            }
+        }
+
+        function processMaterialAct() {
+            const year = parseInt(yearSelect.val()) || 0;
+            const month = parseInt(monthSelect.val()) || 0;
+
+            if (!year || !month) {
+                alert('Please select Year and Month.');
+                return;
+            }
+
+            if (inProcessYearMonths.includes(getCurrentYearMonth())) {
+                alert('This year/month combination is already being processed!');
+                return;
+            }
+
+            $.ajax({
+                url: '/api/MaterialActApi/ProcessMaterialAct',
+                type: 'POST',
+                data: JSON.stringify({ year, month }),
+                contentType: 'application/json',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('RequestVerificationToken', token);
+                },
+                success: function(data) {
+                    alert(data);
+                    refreshProcessingState();
+                },
+                error: function(err) {
+                    alert(err.responseText || 'An error occurred.');
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            initializeSignalR();
+
+            $(window).on('beforeunload', function() {
+                if (pollingInterval) clearInterval(pollingInterval);
+            });
+        });
+    </script>
+}
