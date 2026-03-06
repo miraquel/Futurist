@@ -1,0 +1,286 @@
+@{
+    ViewBag.Title = "Material Plan Calculation Process";
+    Layout = "_Layout";
+}
+
+@section styles{
+    <link href="/assets/css/select2/select2.min.css" rel="stylesheet"/>
+    <link href="/assets/css/select2/select2-bootstrap-5-theme.min.css" rel="stylesheet"/>
+    <style>
+        .disabled-button {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+    </style>
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h1>Material Plan Calculation</h1>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label" for="roomSelect">Room</label>
+                        <select class="form-control" id="roomSelect"></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="verIdSelect">Version</label>
+                        <select class="form-control" id="verIdSelect" disabled></select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label" for="yearSelect">Year</label>
+                        <select class="form-control" id="yearSelect" disabled></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="monthSelect">Month</label>
+                        <select class="form-control" id="monthSelect" disabled></select>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-start gap-2">
+                    <button class="btn btn-success" id="processButton" onclick="processMaterialPlan()">
+                        <i class="ri-play-fill"></i>
+                        Process Material Plan
+                    </button>
+                </div>
+                <div class="alert alert-warning d-flex align-items-center gap-2 mt-3 d-none" id="processingLabel">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Processing in progress for the selected room. Please wait...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/assets/js/select2/select2.min.js"></script>
+    <script src="/assets/js/signalr.js"></script>
+
+    <script>
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        const roomSelect = $('#roomSelect');
+        const verIdSelect = $('#verIdSelect');
+        const yearSelect = $('#yearSelect');
+        const monthSelect = $('#monthSelect');
+        const processButton = $('#processButton');
+        const processingLabel = $('#processingLabel');
+        processingLabel.addClass('d-none');
+
+        const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+        // SignalR
+        let connection;
+        let inProcessRoomIds = [];
+        let pollingInterval;
+
+        function clearSelect($select) {
+            $select.val(null).trigger('change');
+        }
+
+        // Room dropdown
+        roomSelect.select2({
+            placeholder: "Select Room",
+            ajax: {
+                url: '/api/MaterialPlanApi/GetRoomIds',
+                type: 'GET',
+                dataType: 'json',
+                delay: 300,
+                headers: { 'RequestVerificationToken': token },
+                processResults: function(data) {
+                    return { results: data.data.map(r => ({ id: r, text: r })) };
+                }
+            }
+        });
+
+        // Version dropdown (depends on room)
+        function loadVerIds(roomId) {
+            verIdSelect.select2({
+                placeholder: "Select Version",
+                ajax: {
+                    url: '/api/MaterialPlanApi/GetVerIds',
+                    type: 'GET',
+                    dataType: 'json',
+                    delay: 300,
+                    headers: { 'RequestVerificationToken': token },
+                    data: function() { return { roomId: roomId }; },
+                    processResults: function(data) {
+                        return { results: data.data.map(v => ({ id: v, text: v })) };
+                    }
+                }
+            });
+        }
+
+        // Year dropdown (depends on room, verId)
+        function loadYears(roomId, verId) {
+            yearSelect.select2({
+                placeholder: "Select Year",
+                ajax: {
+                    url: '/api/MaterialPlanApi/GetYears',
+                    type: 'GET',
+                    dataType: 'json',
+                    delay: 300,
+                    headers: { 'RequestVerificationToken': token },
+                    data: function() { return { roomId: roomId, verId: verId }; },
+                    processResults: function(data) {
+                        return { results: data.data.map(y => ({ id: y, text: y })) };
+                    }
+                }
+            });
+        }
+
+        // Month dropdown (depends on room, verId, year)
+        function loadMonths(roomId, verId, year) {
+            monthSelect.select2({
+                placeholder: "Select Month",
+                ajax: {
+                    url: '/api/MaterialPlanApi/GetMonths',
+                    type: 'GET',
+                    dataType: 'json',
+                    delay: 300,
+                    headers: { 'RequestVerificationToken': token },
+                    data: function() { return { roomId: roomId, verId: verId, year: year }; },
+                    processResults: function(data) {
+                        return { results: data.data.map(m => ({ id: m, text: monthNames[m - 1] || m })) };
+                    }
+                }
+            });
+        }
+
+        // Cascading logic
+        roomSelect.on('change', function() {
+            clearSelect(verIdSelect);
+            clearSelect(yearSelect);
+            clearSelect(monthSelect);
+            verIdSelect.empty();
+            yearSelect.empty();
+            monthSelect.empty();
+
+            if (roomSelect.val()) {
+                verIdSelect.prop('disabled', false);
+                loadVerIds(roomSelect.val());
+            } else {
+                verIdSelect.prop('disabled', true);
+            }
+            yearSelect.prop('disabled', true);
+            monthSelect.prop('disabled', true);
+
+            updateProcessingUI();
+        });
+
+        verIdSelect.on('change', function() {
+            clearSelect(yearSelect);
+            clearSelect(monthSelect);
+            yearSelect.empty();
+            monthSelect.empty();
+
+            if (roomSelect.val() && verIdSelect.val()) {
+                yearSelect.prop('disabled', false);
+                loadYears(roomSelect.val(), verIdSelect.val());
+            } else {
+                yearSelect.prop('disabled', true);
+            }
+            monthSelect.prop('disabled', true);
+        });
+
+        yearSelect.on('change', function() {
+            clearSelect(monthSelect);
+            monthSelect.empty();
+
+            if (roomSelect.val() && verIdSelect.val() && yearSelect.val()) {
+                monthSelect.prop('disabled', false);
+                loadMonths(roomSelect.val(), verIdSelect.val(), yearSelect.val());
+            } else {
+                monthSelect.prop('disabled', true);
+            }
+        });
+
+        // SignalR
+        function initializeSignalR() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/futuristHub")
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("MaterialPlanProcessingStateChanged", (roomIds) => {
+                inProcessRoomIds = roomIds || [];
+                updateProcessingUI();
+            });
+
+            connection.start()
+                .then(() => {
+                    refreshProcessingState();
+                    pollingInterval = setInterval(refreshProcessingState, 10000);
+                })
+                .catch(err => console.error("SignalR Connection Error: ", err));
+        }
+
+        function refreshProcessingState() {
+            connection.invoke("GetMaterialPlanInProcessRoomIds")
+                .then(roomIds => {
+                    inProcessRoomIds = roomIds || [];
+                    updateProcessingUI();
+                })
+                .catch(err => console.error("Error getting Material Plan processing state: ", err));
+        }
+
+        function updateProcessingUI() {
+            const currentRoomId = parseInt(roomSelect.val());
+            if (inProcessRoomIds.includes(currentRoomId)) {
+                processButton.addClass("disabled-button");
+                processingLabel.removeClass('d-none');
+            } else {
+                processButton.removeClass("disabled-button");
+                processingLabel.addClass('d-none');
+            }
+        }
+
+        function processMaterialPlan() {
+            const roomId = parseInt(roomSelect.val()) || 0;
+            const verId = parseInt(verIdSelect.val()) || 0;
+            const year = parseInt(yearSelect.val()) || 0;
+            const month = parseInt(monthSelect.val()) || 0;
+
+            if (!roomId || !verId || !year || !month) {
+                alert("Please select Room, Version, Year, and Month.");
+                return;
+            }
+
+            if (inProcessRoomIds.includes(roomId)) {
+                alert("This room is already being processed!");
+                return;
+            }
+
+            $.ajax({
+                url: '/api/MaterialPlanApi/ProcessMaterialPlan',
+                type: 'POST',
+                data: JSON.stringify({ roomId, verId, year, month }),
+                contentType: 'application/json',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader("RequestVerificationToken", token);
+                },
+                success: function(data) {
+                    alert(data);
+                    refreshProcessingState();
+                },
+                error: function(err) {
+                    alert(err.responseText || "An error occurred.");
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            initializeSignalR();
+
+            $(window).on('beforeunload', function() {
+                if (pollingInterval) clearInterval(pollingInterval);
+            });
+        });
+    </script>
+}
