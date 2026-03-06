@@ -5,8 +5,10 @@ using Futurist.Repository.SqlServer;
 using Futurist.Repository.UnitOfWork;
 using Futurist.Service;
 using Futurist.Web;
+using Futurist.Web.Auth;
 using Futurist.Web.Hangfire;
 using Hangfire;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -104,7 +106,7 @@ builder.Services.AddAuthentication(options =>
 {
     options.ForwardDefaultSelector = context =>
     {
-        var auth = context.Request.Headers["Authorization"].FirstOrDefault();
+        var auth = context.Request.Headers.Authorization.FirstOrDefault();
         if (!string.IsNullOrEmpty(auth) && auth.StartsWith("Bearer "))
             return JwtBearerDefaults.AuthenticationScheme;
         return OpenIdConnectDefaults.AuthenticationScheme;
@@ -125,8 +127,11 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero,
         NameClaimType = "preferred_username",
-        RoleClaimType = "roles" // Use the "roles" claim for authorization
+        RoleClaimType = ClaimTypes.Role
     };
+    // Map the resource_access claim from the JWT token
+    options.MapInboundClaims = false; // Prevent automatic claim mapping to preserve original claim names
+    options.TokenValidationParameters.NameClaimType = "preferred_username";
     options.Events = new JwtBearerEvents
     {
         OnAuthenticationFailed = context =>
@@ -155,6 +160,9 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+
+// Add claims transformation to extract roles from resource_access.futurist.roles
+builder.Services.AddScoped<IClaimsTransformation, KeycloakRolesClaimsTransformation>();
 
 builder.Services.AddRepositorySqlServer();
 builder.Services.AddUnitOfWork();
