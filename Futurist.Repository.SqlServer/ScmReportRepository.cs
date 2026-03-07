@@ -94,7 +94,7 @@ public class ScmReportRepository : IScmReportRepository
                            SELECT DISTINCT YEAR(INVOICEDATE) AS Year
                            FROM [SCMBI].[dbo].[FactSalesInvoice]
                            ORDER BY Year DESC;
-                           SELECT DISTINCT YEAR(INVOICEDATE) AS Year FROM [AXDW].[dbo].[FactSalesInvoice] ORDER BY Year DESC;
+                           SELECT DISTINCT YEAR(INVOICEDATE) AS Year FROM [AXGMKDW].[dbo].[FactSalesInvoice] ORDER BY Year DESC;
                            """;
         
         return await _dbConnection.QueryAsync<int>(sql);
