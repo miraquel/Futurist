@@ -11,6 +11,9 @@ CREATE PROCEDURE [dbo].[MaterialPlan_Calc]
 @Month int = 12		
 AS
 BEGIN
+	DECLARE @MessageStatusId bit
+	DECLARE @MessageStatusName NVARCHAR(MAX)
+	
 	-- hapus dulu FgPlanNotBreakDown
 	DELETE FgPlanNotBreakDown WHERE [Year] = @Year AND [Month] = @Month
 
@@ -145,8 +148,9 @@ BEGIN
 	  FROM @Result
 	  ORDER BY ItemId
 
-	SELECT * FROM [MaterialPlan]
-	WHERE Room = @Room AND VerId = @VerId AND [Year] = @Year AND [Month] = @Month 
+	SET @MessageStatusId = 1
+	SET @MessageStatusName = 'Proses Material Plan sukses.'
+	SELECT @MessageStatusId as [StatusId], @MessageStatusName as [StatusName]
 
 END
 
