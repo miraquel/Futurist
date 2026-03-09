@@ -190,4 +190,31 @@ public class AnlRmApiController : ControllerBase
             ? Ok(response)
             : BadRequest(response);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetMaterialPlanVerIdsAsync([FromQuery] int room, CancellationToken cancellationToken)
+    {
+        var response = await _anlRmService.GetMaterialPlanVerIdsAsync(room, cancellationToken);
+        return response.IsSuccess
+            ? Ok(response)
+            : BadRequest(response);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetMaterialPlanYearsAsync([FromQuery] int room, [FromQuery] int verId, CancellationToken cancellationToken)
+    {
+        var response = await _anlRmService.GetMaterialPlanYearsAsync(room, verId, cancellationToken);
+        return response.IsSuccess
+            ? Ok(response)
+            : BadRequest(response);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetMaterialPlanMonthsAsync([FromQuery] int room, [FromQuery] int verId, [FromQuery] int year, CancellationToken cancellationToken)
+    {
+        var response = await _anlRmService.GetMaterialPlanMonthsAsync(room, verId, year, cancellationToken);
+        return response.IsSuccess
+            ? Ok(response)
+            : BadRequest(response);
+    }
 }

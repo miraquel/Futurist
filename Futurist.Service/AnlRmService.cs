@@ -403,4 +403,73 @@ public class AnlRmService : IAnlRmService
             };
         }
     }
+
+    public async Task<ServiceResponse<IEnumerable<VersionsDto>>> GetMaterialPlanVerIdsAsync(int room, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = new GetMaterialPlanVerIdsCommand { Room = room };
+            var result = await _unitOfWork.AnlRmRepository.GetMaterialPlanVerIdsAsync(command, cancellationToken);
+            return new ServiceResponse<IEnumerable<VersionsDto>>
+            {
+                Data = _mapper.MapToIEnumerableDto(result),
+                Message = ServiceMessageConstants.MaterialPlanVerIdsFound
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "GetMaterialPlanVerIds {@room}", room);
+            return new ServiceResponse<IEnumerable<VersionsDto>>
+            {
+                Errors = [e.Message],
+                Message = ServiceMessageConstants.MaterialPlanVerIdsNotFound
+            };
+        }
+    }
+
+    public async Task<ServiceResponse<IEnumerable<int>>> GetMaterialPlanYearsAsync(int room, int verId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = new GetMaterialPlanYearsCommand { Room = room, VerId = verId };
+            var result = await _unitOfWork.AnlRmRepository.GetMaterialPlanYearsAsync(command, cancellationToken);
+            return new ServiceResponse<IEnumerable<int>>
+            {
+                Data = result,
+                Message = ServiceMessageConstants.MaterialPlanYearsFound
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "GetMaterialPlanYears {@room} {@verId}", room, verId);
+            return new ServiceResponse<IEnumerable<int>>
+            {
+                Errors = [e.Message],
+                Message = ServiceMessageConstants.MaterialPlanYearsNotFound
+            };
+        }
+    }
+
+    public async Task<ServiceResponse<IEnumerable<int>>> GetMaterialPlanMonthsAsync(int room, int verId, int year, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = new GetMaterialPlanMonthsCommand { Room = room, VerId = verId, Year = year };
+            var result = await _unitOfWork.AnlRmRepository.GetMaterialPlanMonthsAsync(command, cancellationToken);
+            return new ServiceResponse<IEnumerable<int>>
+            {
+                Data = result,
+                Message = ServiceMessageConstants.MaterialPlanMonthsFound
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "GetMaterialPlanMonths {@room} {@verId} {@year}", room, verId, year);
+            return new ServiceResponse<IEnumerable<int>>
+            {
+                Errors = [e.Message],
+                Message = ServiceMessageConstants.MaterialPlanMonthsNotFound
+            };
+        }
+    }
 }

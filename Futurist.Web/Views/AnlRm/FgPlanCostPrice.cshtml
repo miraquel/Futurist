@@ -110,7 +110,7 @@
             verIdSelect.select2({
                 placeholder: "Select Version",
                 ajax: {
-                    url: '/api/ReportVersionApi/GetVersions',
+                    url: '/api/AnlRmApi/GetMaterialPlanVerIds',
                     type: 'GET',
                     dataType: 'json',
                     delay: 500,
@@ -133,7 +133,7 @@
             yearSelect.select2({
                 placeholder: "Select Year",
                 ajax: {
-                    url: '/api/AnlRmApi/GetYears',
+                    url: '/api/AnlRmApi/GetMaterialPlanYears',
                     type: 'GET',
                     dataType: 'json',
                     delay: 500,
@@ -153,7 +153,7 @@
             monthSelect.select2({
                 placeholder: "Select Month",
                 ajax: {
-                    url: '/api/AnlRmApi/GetMonths',
+                    url: '/api/AnlRmApi/GetMaterialPlanMonths',
                     type: 'GET',
                     dataType: 'json',
                     delay: 500,

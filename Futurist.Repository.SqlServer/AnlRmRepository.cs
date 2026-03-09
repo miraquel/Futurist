@@ -347,4 +347,56 @@ public class AnlRmRepository : IAnlRmRepository
             command.DbTransaction);
         return await _sqlConnection.QueryAsync<BomStdVsActDet>(sqlCommand);
     }
+
+    public async Task<IEnumerable<Versions>> GetMaterialPlanVerIdsAsync(GetMaterialPlanVerIdsCommand command, CancellationToken cancellationToken)
+    {
+        const string query = """
+                             SELECT DISTINCT v.VerId, v.VerDate, v.Room, v.Notes, v.Cancel
+                             FROM MaterialPlan mp
+                             JOIN [Version] v ON v.VerId = mp.VerId
+                             WHERE mp.Room = @Room
+                             ORDER BY v.VerId
+                             """;
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+        var sqlCommand = new CommandDefinition(
+            query,
+            new { command.Room },
+            command.DbTransaction,
+            cancellationToken: cancellationToken);
+        return await _sqlConnection.QueryAsync<Versions>(sqlCommand);
+    }
+
+    public async Task<IEnumerable<int>> GetMaterialPlanYearsAsync(GetMaterialPlanYearsCommand command, CancellationToken cancellationToken)
+    {
+        const string query = """
+                             SELECT DISTINCT [Year]
+                             FROM MaterialPlan
+                             WHERE Room = @Room AND VerId = @VerId
+                             ORDER BY [Year]
+                             """;
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+        var sqlCommand = new CommandDefinition(
+            query,
+            new { command.Room, command.VerId },
+            command.DbTransaction,
+            cancellationToken: cancellationToken);
+        return await _sqlConnection.QueryAsync<int>(sqlCommand);
+    }
+
+    public async Task<IEnumerable<int>> GetMaterialPlanMonthsAsync(GetMaterialPlanMonthsCommand command, CancellationToken cancellationToken)
+    {
+        const string query = """
+                             SELECT DISTINCT [Month]
+                             FROM MaterialPlan
+                             WHERE Room = @Room AND VerId = @VerId AND [Year] = @Year
+                             ORDER BY [Month]
+                             """;
+        await _sqlConnection.ExecuteAsync("SET ARITHABORT ON", transaction: command.DbTransaction);
+        var sqlCommand = new CommandDefinition(
+            query,
+            new { command.Room, command.VerId, command.Year },
+            command.DbTransaction,
+            cancellationToken: cancellationToken);
+        return await _sqlConnection.QueryAsync<int>(sqlCommand);
+    }
 }

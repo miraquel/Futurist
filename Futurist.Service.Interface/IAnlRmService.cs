@@ -19,4 +19,7 @@ public interface IAnlRmService
         string itemId, CancellationToken cancellationToken);
     Task<ServiceResponse<IEnumerable<FgPlanCostPriceDto>>> GetFgPlanCostPriceAsync(int room, int verId, int year, int month);
     Task<ServiceResponse<IEnumerable<BomStdVsActDetDto>>> GetBomStdVsActDetAsync(int verId, int room, int tahun, int bulan, string productId);
+    Task<ServiceResponse<IEnumerable<VersionsDto>>> GetMaterialPlanVerIdsAsync(int room, CancellationToken cancellationToken);
+    Task<ServiceResponse<IEnumerable<int>>> GetMaterialPlanYearsAsync(int room, int verId, CancellationToken cancellationToken);
+    Task<ServiceResponse<IEnumerable<int>>> GetMaterialPlanMonthsAsync(int room, int verId, int year, CancellationToken cancellationToken);
 }
